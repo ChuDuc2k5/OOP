@@ -22,8 +22,9 @@ public sealed class CheckoutTests : IDisposable
         ApiFactory.Cleanup(path);
     }
 
-    private async Task<HttpClient> Login(string name = "user")
+    private async Task<HttpClient> Login(string name = "chuduc")
     {
+        await factory.ConfigurePayments();
         var client = factory.Client();
         var password = name == "admin" ? "Admin@12345" : name.StartsWith("staff") ? "Staff@12345" : "User@12345";
         Assert.Equal(200, (int)(await client.Login(name, password)).StatusCode);
@@ -133,7 +134,7 @@ public sealed class CheckoutTests : IDisposable
     public async Task TC20_TwoUsersOpenQr_OnlyLastAvailableStockIsReserved()
     {
         using var first = await Login();
-        using var second = await Login("user2");
+        using var second = await Login("nguyenvana");
         await factory.WithDb(async db =>
         {
             db.Drugs.Add(new("LAST", "Thuốc cuối", "Viên", 1000, 0));
@@ -155,7 +156,7 @@ public sealed class CheckoutTests : IDisposable
                 return e.Code;
             }
         }
-        var results = await Task.WhenAll(Task.Run(() => Execute(a, "UDEMO0003")), Task.Run(() => Execute(b, "UDEMO0004")));
+        var results = await Task.WhenAll(Task.Run(() => Execute(a, "U0000003")), Task.Run(() => Execute(b, "U0000004")));
         Assert.Single(results, x => x == "OK");
         Assert.Single(results, x => x == "INSUFFICIENT_STOCK");
         Assert.Equal(1, await factory.WithDb(db => db.Payments.CountAsync()));
@@ -208,8 +209,8 @@ public sealed class CheckoutTests : IDisposable
     }
 
     [Theory]
-    [InlineData("DEMO07")]
-    [InlineData("DEMO11")]
+    [InlineData("AMOX500")]
+    [InlineData("DIAZ5")]
     public async Task TC39_OtcPrescriptionOrControlledDrug_IsBlocked_KindCannotChange(string drug)
     {
         using var staff = await Login("staff");
@@ -235,12 +236,12 @@ public sealed class CheckoutTests : IDisposable
     public async Task TC40_PartialPrescriptionDispense_ThenRemaining_CannotExceedQuota()
     {
         using var staff = await Login("staff");
-        var first = await Draft(staff, "DEMO07", 10, "DT2610060001");
+        var first = await Draft(staff, "AMOX500", 10, "DT2610060001");
         await CounterCheckout(staff, first);
         Assert.Equal(10, await factory.WithDb(async db => (await db.PrescriptionItems.SingleAsync(x => x.ItemId == "PITEM0")).DispensedQuantity));
-        var second = await Draft(staff, "DEMO07", 20, "DT2610060001");
+        var second = await Draft(staff, "AMOX500", 20, "DT2610060001");
         await CounterCheckout(staff, second);
-        var last = await Draft(staff, "DEMO07", 1, "DT2610060001");
+        var last = await Draft(staff, "AMOX500", 1, "DT2610060001");
         await (await staff.PostAsJsonAsync("/api/staff/sales/" + last + "/checkout", new
         {
             cashReceived = true
@@ -304,7 +305,7 @@ public sealed class CheckoutTests : IDisposable
         Assert.Equal("AwaitingPayment", (await Ok(await user.GetAsync("/api/orders/" + id))).GetProperty("status").GetString());
         Assert.Equal(physical, await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity)));
         Assert.Equal(2, await factory.WithDb(db => db.StockReservations.SumAsync(x => x.Quantity)));
-        Assert.Equal(1, (await Ok(await staff.GetAsync("/api/staff/payments?search=user"))).GetProperty("total").GetInt32());
+        Assert.Equal(1, (await Ok(await staff.GetAsync("/api/staff/payments?search=chuduc"))).GetProperty("total").GetInt32());
     }
 
     [Fact]
@@ -318,9 +319,9 @@ public sealed class CheckoutTests : IDisposable
         {
             bankName = "Ngân hàng khác",
             accountNumber = "11111",
-            accountName = "TEN DEMO"
+            accountName = "TEN KIEM THU"
         }));
-        using var stream = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.demo-qr.png")!;
+        using var stream = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.drugs.PARA500.png")!;
         using var form = new MultipartFormDataContent();
         var file = new StreamContent(stream);
         file.Headers.ContentType = new("image/png");
@@ -351,7 +352,7 @@ public sealed class CheckoutTests : IDisposable
         await factory.WithDb(async db =>
         {
             var saved = await db.Payments.SingleAsync();
-            Assert.Equal(role == "admin" ? "UDEMO0001" : "UDEMO0002", saved.ApprovedByUserId);
+            Assert.Equal(role == "admin" ? "U0000001" : "U0000002", saved.ApprovedByUserId);
             Assert.Equal(new TestClock().Now, saved.ApprovedAt);
             Assert.Equal("BANK-001", saved.BankReference);
             Assert.Equal(physical, await db.DrugBatches.SumAsync(x => x.Quantity));
@@ -406,7 +407,7 @@ public sealed class CheckoutTests : IDisposable
                 return e.Code;
             }
         }
-        var results = await Task.WhenAll(Task.Run(() => Execute("UDEMO0001")), Task.Run(() => Execute("UDEMO0002")));
+        var results = await Task.WhenAll(Task.Run(() => Execute("U0000001")), Task.Run(() => Execute("U0000002")));
         Assert.Single(results, x => x == "OK");
         Assert.Single(results, x => x == "INVALID_STATE");
         Assert.Equal(1, await factory.WithDb(db => db.Payments.CountAsync(x => x.Status == PaymentStatus.Confirmed)));
@@ -432,7 +433,7 @@ public sealed class CheckoutTests : IDisposable
     {
         using var user = await Login();
         var payment = await Open(user, await Order(user));
-        using var caller = authenticated ? await Login("user2") : factory.Client();
+        using var caller = authenticated ? await Login("nguyenvana") : factory.Client();
         await caller.Csrf();
         var before = await factory.WithDb(PersistenceFixture.Snapshot);
         var status = authenticated ? 403 : 401;
@@ -452,7 +453,7 @@ public sealed class CheckoutTests : IDisposable
     {
         using var user = await Login();
         using var staff = await Login("staff");
-        var id = await Order(user, "DEMO07", 2, "DT2610060001");
+        var id = await Order(user, "AMOX500", 2, "DT2610060001");
         var payment = await Open(user, id);
         await Review(staff, payment.GetProperty("paymentId").GetString()!, amount: 14000);
         await factory.WithDb(db => db.Database.ExecuteSqlRawAsync("CREATE TRIGGER FailInvoice BEFORE INSERT ON Invoices BEGIN SELECT RAISE(ABORT, 'Simulated failure'); END;"));
@@ -468,7 +469,7 @@ public sealed class CheckoutTests : IDisposable
         var id = await Draft(staff);
         await Ok(await staff.PutAsJsonAsync("/api/staff/sales/" + id, new
         {
-            items = new[] { new { drugId = "PARA500", quantity = 2 }, new { drugId = "DEMO02", quantity = 1 } }
+            items = new[] { new { drugId = "PARA500", quantity = 2 }, new { drugId = "VITC500", quantity = 1 } }
         }));
         var before = await factory.WithDb(PersistenceFixture.Snapshot);
         await (await staff.PostAsJsonAsync("/api/staff/sales/" + id + "/checkout", new
@@ -547,7 +548,7 @@ public sealed class CheckoutTests : IDisposable
     public async Task TC54_Invoices_RespectUserStaffCreatorHandlerAndAdminScopes()
     {
         using var user = await Login();
-        using var otherUser = await Login("user2");
+        using var otherUser = await Login("nguyenvana");
         using var staff = await Login("staff");
         using var admin = await Login("admin");
         var orderId = await Order(user);
@@ -572,8 +573,8 @@ public sealed class CheckoutTests : IDisposable
     public async Task TC56_SameCheckoutServiceCall_WithSaleTypedSubtypes_ValidatesPolymorphically()
     {
         using var staff = await Login("staff");
-        var otcId = await Draft(staff, "DEMO07", 1);
-        var prescriptionId = await Draft(staff, "DEMO07", 1, "DT2610060001");
+        var otcId = await Draft(staff, "AMOX500", 1);
+        var prescriptionId = await Draft(staff, "AMOX500", 1, "DT2610060001");
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<PharmacyDbContext>();
         var checkout = scope.ServiceProvider.GetRequiredService<CheckoutService>();
@@ -581,9 +582,9 @@ public sealed class CheckoutTests : IDisposable
         Sale prescription = await db.Sales.SingleAsync(x => x.SaleId == prescriptionId);
         Assert.IsType<OTCSale>(otc);
         Assert.IsType<PrescriptionSale>(prescription);
-        var error = await Assert.ThrowsAsync<BusinessException>(() => checkout.Checkout(otc, "UDEMO0002", true));
+        var error = await Assert.ThrowsAsync<BusinessException>(() => checkout.Checkout(otc, "U0000002", true));
         Assert.Equal("PRESCRIPTION_REQUIRED", error.Code);
-        var completed = await checkout.Checkout(prescription, "UDEMO0002", true);
+        var completed = await checkout.Checkout(prescription, "U0000002", true);
         Assert.NotEmpty(completed.InvoiceId);
         Assert.Equal(1, await db.Invoices.CountAsync());
         Assert.Equal(1, (await db.PrescriptionItems.SingleAsync(x => x.ItemId == "PITEM0")).DispensedQuantity);
@@ -622,7 +623,7 @@ public sealed class CheckoutTests : IDisposable
         async Task<PaymentOpenResult> Execute()
         {
             using var scope = factory.Services.CreateScope();
-            return await scope.ServiceProvider.GetRequiredService<ManualPaymentService>().Open(orderId, "UDEMO0003");
+            return await scope.ServiceProvider.GetRequiredService<ManualPaymentService>().Open(orderId, "U0000003");
         }
         var results = await Task.WhenAll(Task.Run(Execute), Task.Run(Execute));
         Assert.Single(results, x => x.Created);
@@ -645,7 +646,7 @@ public sealed class CheckoutTests : IDisposable
             using var scope = factory.Services.CreateScope();
             try
             {
-                await scope.ServiceProvider.GetRequiredService<CheckoutService>().Fulfill(orderId, "UDEMO0002");
+                await scope.ServiceProvider.GetRequiredService<CheckoutService>().Fulfill(orderId, "U0000002");
                 return "OK";
             }
             catch (BusinessException e)
@@ -666,9 +667,9 @@ public sealed class CheckoutTests : IDisposable
     {
         using var user = await Login();
         using var staff = await Login("staff");
-        var orderId = await Order(user, "DEMO07", 20, "DT2610060001");
+        var orderId = await Order(user, "AMOX500", 20, "DT2610060001");
         var payment = await Open(user, orderId);
-        var draft = await Draft(staff, "DEMO07", 11, "DT2610060001");
+        var draft = await Draft(staff, "AMOX500", 11, "DT2610060001");
         await (await staff.PostAsJsonAsync("/api/staff/sales/" + draft + "/checkout", new
         {
             cashReceived = true
@@ -705,7 +706,7 @@ public sealed class CheckoutTests : IDisposable
     public async Task TC42_PaymentGetAndOpen_HideOtherOwners_RequireExistingPayment()
     {
         using var user = await Login();
-        using var other = await Login("user2");
+        using var other = await Login("nguyenvana");
         using var staff = await Login("staff");
         var orderId = await Order(user);
         await (await user.GetAsync("/api/orders/" + orderId + "/payment")).Error(404, "NOT_FOUND");
@@ -760,7 +761,7 @@ public sealed class CheckoutTests : IDisposable
             items = new[] { new { drugId = "PARA500", quantity = 3 } }
         }));
         var checkout = scope.ServiceProvider.GetRequiredService<CheckoutService>();
-        var result = await checkout.Checkout(stale, "UDEMO0002", true);
+        var result = await checkout.Checkout(stale, "U0000002", true);
         var invoice = await Ok(await staff.GetAsync("/api/invoices/" + result.InvoiceId));
         Assert.Equal(3, invoice.GetProperty("items")[0].GetProperty("quantity").GetInt32());
         Assert.Equal(3000, invoice.GetProperty("totalAmount").GetDecimal());

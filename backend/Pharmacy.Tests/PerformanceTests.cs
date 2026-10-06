@@ -48,7 +48,7 @@ public sealed class PerformanceTests
             using var guest = factory.Client();
             using var user = factory.Client();
             using var staff = factory.Client();
-            Assert.Equal(200, (int)(await user.Login("user", "User@12345")).StatusCode);
+            Assert.Equal(200, (int)(await user.Login("chuduc", "User@12345")).StatusCode);
             Assert.Equal(200, (int)(await staff.Login("staff", "Staff@12345")).StatusCode);
             var requests = new (HttpClient Client, string Url, int ExpectedTotal)[]
             {
@@ -135,10 +135,10 @@ internal static class LargeDataset
         await using var transaction = await db.Database.BeginTransactionAsync();
         var hasher = new PasswordHasher<UserAccount>();
         db.UserAccounts.AddRange(
-            new UserAccount("UDEMO0001", "admin", "Admin@12345", Role.Admin, hasher),
-            new UserAccount("UDEMO0002", "staff", "Staff@12345", Role.Staff, hasher),
-            new UserAccount("UDEMO0003", "user", "User@12345", Role.User, hasher),
-            new UserAccount("UDEMO0004", "user2", "User@12345", Role.User, hasher));
+            new UserAccount("U0000001", "admin", "Admin@12345", Role.Admin, hasher),
+            new UserAccount("U0000002", "staff", "Staff@12345", Role.Staff, hasher),
+            new UserAccount("U0000003", "chuduc", "User@12345", Role.User, hasher),
+            new UserAccount("U0000004", "nguyenvana", "User@12345", Role.User, hasher));
         var drugs = new List<Drug>();
         for (var i = 0; i < 500; i++)
         {
@@ -154,7 +154,7 @@ internal static class LargeDataset
         db.Drugs.AddRange(drugs);
         for (var i = 0; i < 1000; i++)
         {
-            var order = new Order($"DHLOAD{i:D4}", i % 2 == 0 ? "UDEMO0003" : "UDEMO0004",
+            var order = new Order($"DHLOAD{i:D4}", i % 2 == 0 ? "U0000003" : "U0000004",
                 clock.Now.AddMinutes(-i), SaleKind.OTC, "Khách đo tải", "0900000000", ReceiveMethod.Pickup);
             for (var line = 0; line < 3; line++)
             {
@@ -168,7 +168,7 @@ internal static class LargeDataset
             }
             db.Orders.Add(order);
         }
-        db.CartItems.AddRange(drugs.Take(10).Select(x => new CartItem("UDEMO0003", x.DrugId, 2)));
+        db.CartItems.AddRange(drugs.Take(10).Select(x => new CartItem("U0000003", x.DrugId, 2)));
         await db.SaveChangesAsync();
         await transaction.CommitAsync();
     }

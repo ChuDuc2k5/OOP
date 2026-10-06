@@ -11,12 +11,13 @@ using Pharmacy.Core.Common;
 using Pharmacy.Core.Data;
 using Pharmacy.Core.Domain;
 using Pharmacy.Core.Services;
-var seedDemoCatalog = args.Contains("--seed-demo-catalog", StringComparer.Ordinal);
-if (seedDemoCatalog)
+var catalogCommands = new[] { "--seed-catalog", "--seed-demo-catalog" };
+var seedCatalog = args.Any(x => catalogCommands.Contains(x, StringComparer.Ordinal));
+if (seedCatalog)
 {
     Console.OutputEncoding = System.Text.Encoding.UTF8;
 }
-var commandArgs = args.Where(x => x != "--seed-demo-catalog").ToArray();
+var commandArgs = args.Where(x => !catalogCommands.Contains(x, StringComparer.Ordinal)).ToArray();
 var builder = WebApplication.CreateBuilder(commandArgs);
 builder.Configuration.AddInMemoryCollection(EnvironmentFile.Read(Path.Combine(builder.Environment.ContentRootPath, ".env")));
 // Local secrets (gitignored): same shape as appsettings.json, overrides it and .env.
@@ -88,21 +89,21 @@ builder.Services.AddScoped<SaleService>();
 builder.Services.AddScoped<ManualPaymentService>();
 builder.Services.AddScoped<InvoiceService>();
 builder.Services.AddScoped<DbSeeder>();
-builder.Services.AddScoped<DemoCatalogSeeder>();
+builder.Services.AddScoped<CatalogSeeder>();
 var app = builder.Build();
-if (seedDemoCatalog)
+if (seedCatalog)
 {
     using var scope = app.Services.CreateScope();
     try
     {
         await scope.ServiceProvider.GetRequiredService<PharmacyDbContext>().Database.MigrateAsync();
-        var result = await scope.ServiceProvider.GetRequiredService<DemoCatalogSeeder>().SeedAsync();
-        Console.WriteLine($"Danh mục demo: thêm {result.DrugsAdded} thuốc, {result.BatchesAdded} lô, " +
+        var result = await scope.ServiceProvider.GetRequiredService<CatalogSeeder>().SeedAsync();
+        Console.WriteLine($"Danh mục: thêm {result.DrugsAdded} thuốc, {result.BatchesAdded} lô, " +
             $"gắn {result.ImagesAttached} ảnh; tạo {result.ImageFilesAdded} file ảnh mới.");
     }
     catch (Exception e)
     {
-        Console.Error.WriteLine($"Nạp danh mục demo thất bại ({e.GetType().Name}).");
+        Console.Error.WriteLine($"Nạp danh mục thất bại ({e.GetType().Name}).");
         Environment.ExitCode = 1;
     }
     await app.DisposeAsync();
