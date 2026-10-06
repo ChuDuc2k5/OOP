@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, use, useRef } from 'react';
 import { ActionButton } from '@/components/ActionButton';
+import { QueryBanner } from '@/components/QueryBanner';
 import { notify, notifyError } from '@/lib/feedback';
 import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
@@ -57,10 +58,9 @@ export default function OrderPaymentPage({
     if (!refresh) setError(null);
     try {
       // Fetch both payment info and order info
-      const [paymentData, orderData] = await Promise.all([
-        opened.current === orderId ? paymentApi.getPayment(orderId) : paymentApi.openOrGetPayment(orderId),
-        ordersApi.getOrderById(orderId).catch(() => null),
-      ]);
+      const orderData = await ordersApi.getOrderById(orderId);
+      const paymentData = opened.current === orderId || orderData.payment
+        ? await paymentApi.getPayment(orderId) : await paymentApi.openOrGetPayment(orderId);
       setPayment(paymentData);
       setOrder(orderData);
       opened.current = orderId;
@@ -110,6 +110,8 @@ export default function OrderPaymentPage({
       <Header />
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <QueryBanner param="created">Đặt hàng thành công – Mã đơn {orderId}</QueryBanner>
+        <Link href={`/orders/${orderId}`} className="inline-flex rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800">Đóng / Về đơn hàng</Link>
         {/* Navigation Breadcrumb */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-4">
           <div className="flex items-center space-x-2 text-xs text-slate-500">
@@ -229,7 +231,7 @@ export default function OrderPaymentPage({
               <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
               <div className="space-y-1 text-xs sm:text-sm leading-relaxed">
                 <strong className="font-bold block text-amber-900 uppercase tracking-wide text-xs">
-                  Cảnh báo thanh toán quan trọng (SRS 6.2):
+                  Cảnh báo thanh toán quan trọng:
                 </strong>
                 <p className="font-medium text-amber-900">
                   Vui lòng kiểm tra kỹ số tiền và nội dung chuyển khoản trước khi thanh toán. Chuyển thiếu số tiền yêu cầu sẽ không được duyệt. Nếu chuyển thừa, cửa hàng không chịu trách nhiệm đối với phần tiền chuyển thừa. Sau khi chuyển khoản, vui lòng chờ Admin hoặc nhân viên kiểm tra và xác nhận.

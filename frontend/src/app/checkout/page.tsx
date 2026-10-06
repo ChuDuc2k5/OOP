@@ -9,7 +9,8 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { cartApi, ordersApi, prescriptionsApi, ApiException } from '@/lib/api';
+import { cartApi, ordersApi, paymentApi, prescriptionsApi, ApiException } from '@/lib/api';
+import { notify } from '@/lib/feedback';
 import { CartView, PlaceOrderInput, PrescriptionView, ReceiveMethod, SaleKind } from '@/lib/types';
 import { formatVND } from '@/lib/format';
 import {
@@ -159,8 +160,19 @@ export default function CheckoutPage() {
     try {
       const createdOrder = await ordersApi.placeOrder(payload);
 
-      // Đặt hàng thành công!
-      router.push(`/orders/${createdOrder.orderId}?created=1`);
+      if (createdOrder.status === 'AwaitingPayment' && createdOrder.canPay) {
+        try {
+          await paymentApi.openOrGetPayment(createdOrder.orderId);
+          router.push(`/orders/${createdOrder.orderId}/payment?created=1`);
+        } catch (paymentError) {
+          const title = paymentError instanceof ApiException ? paymentError.title : 'Không thể mở thanh toán. Vui lòng thử lại tại đơn hàng.';
+          sessionStorage.setItem(`payment-error:${createdOrder.orderId}`, title);
+          router.push(`/orders/${createdOrder.orderId}?created=1`);
+        }
+      } else {
+        if (createdOrder.status === 'WaitingReview') notify({ kind: 'info', message: 'Đơn đang chờ dược sĩ kiểm tra đơn thuốc. Bạn sẽ thanh toán sau khi đơn thuốc được duyệt.' });
+        router.push(`/orders/${createdOrder.orderId}?created=1`);
+      }
     } catch (err: unknown) {
       if (err instanceof ApiException) {
         // Xử lý mã lỗi 409 PRICE_CHANGED
@@ -329,7 +341,7 @@ export default function CheckoutPage() {
                         <span>Giao tận nơi</span>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        Nhà thuốc giao thuốc đến địa chỉ của bạn (Miễn phí ship).
+                        Nhà thuốc giao thuốc đến địa chỉ của bạn.
                       </p>
                     </div>
                   </label>
@@ -514,12 +526,8 @@ export default function CheckoutPage() {
 
               <div className="space-y-2 border-t border-slate-100 pt-3 text-xs">
                 <div className="flex justify-between text-slate-600">
-                  <span>Tạm tính tiền thuốc:</span>
+                  <span>Tổng tiền thuốc:</span>
                   <span className="font-semibold text-slate-800">{formatVND(cart?.subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>Phí giao hàng:</span>
-                  <span className="font-medium text-emerald-600">0 ₫</span>
                 </div>
                 <div className="pt-2 border-t border-slate-100 flex justify-between items-baseline">
                   <span className="text-sm font-bold text-slate-900">Tổng thanh toán:</span>
@@ -551,7 +559,7 @@ export default function CheckoutPage() {
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4" />
-                    <span>Xác nhận đặt hàng</span>
+                    <span>Đặt hàng &amp; thanh toán</span>
                   </>
                 )}
               </ActionButton>

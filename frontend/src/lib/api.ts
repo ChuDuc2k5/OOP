@@ -691,14 +691,15 @@ async function requestApi<T>(
 // Các hàm gọi API tiện ích
 // ==========================================
 
-export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export async function apiFetch<T>(endpoint: string, options: RequestInit & { silent?: boolean } = {}): Promise<T> {
+  const { silent, ...requestOptions } = options;
   const writing = ['POST', 'PUT', 'PATCH', 'DELETE'].includes((options.method || 'GET').toUpperCase());
   try {
-    const result = await requestApi<T>(endpoint, options);
-    if (writing) mutationFeedback(endpoint, options, result);
+    const result = await requestApi<T>(endpoint, requestOptions);
+    if (writing && !silent) mutationFeedback(endpoint, requestOptions, result);
     return result;
   } catch (error) {
-    if (writing) notifyError(error);
+    if (writing && !silent) notifyError(error);
     throw error;
   }
 }
