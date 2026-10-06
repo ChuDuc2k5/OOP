@@ -365,7 +365,7 @@ namespace Pharmacy.Core.Data.Migrations.Postgres
 
                     b.ToTable("Payments", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_Payment_PaymentRules", "\"ExpectedAmount\" > 0 AND \"ExpectedAmount\" = trunc(\"ExpectedAmount\") AND (\"ReceivedAmount\" IS NULL OR (\"ReceivedAmount\" >= 0 AND \"ReceivedAmount\" = trunc(\"ReceivedAmount\"))) AND (\"Status\" <> 'Confirmed' OR (\"BankReference\" IS NOT NULL AND \"ApprovedByUserId\" IS NOT NULL AND \"ApprovedAt\" IS NOT NULL AND \"ReceivedAmount\" >= \"ExpectedAmount\"))");
+                            t.HasCheckConstraint("CK_Payment_PaymentRules", "\"ExpectedAmount\" > 0 AND \"ExpectedAmount\" = trunc(\"ExpectedAmount\") AND (\"ReceivedAmount\" IS NULL OR (\"ReceivedAmount\" >= 0 AND \"ReceivedAmount\" = trunc(\"ReceivedAmount\"))) AND (\"Status\" <> 'Confirmed' OR (\"ApprovedByUserId\" IS NOT NULL AND \"ApprovedAt\" IS NOT NULL AND \"ReceivedAmount\" >= \"ExpectedAmount\"))");
 
                             t.HasCheckConstraint("CK_Payment_PaymentStatus", "\"Status\" IN ('PendingReview','Confirmed','Closed') AND length(trim(\"BankName\")) > 0 AND length(trim(\"AccountNumber\")) > 0 AND length(trim(\"AccountName\")) > 0 AND length(trim(\"QrImagePath\")) > 0");
                         });
