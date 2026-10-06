@@ -53,7 +53,21 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
 ---
 
 ## Đã làm
-_(Dev cập nhật sau mỗi milestone)_
+- **M1 — `fe/m1-foundation`**:
+  - Chuyển đổi toàn bộ khung Vite sang Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, ESLint, giữ nguyên tên package `frontend` và cổng 3000.
+  - Cấu hình `next.config.mjs` với `rewrites` từ `/api/:path*` sang `${BACKEND_URL ?? 'http://localhost:5000'}/api/:path*`.
+  - Cập nhật `frontend/.env.example` với `BACKEND_URL=http://localhost:5000` và `NEXT_PUBLIC_USE_MOCK=false`.
+  - Xây dựng `lib/types.ts` đầy đủ 100% các kiểu dữ liệu, DTOs, Enums và ApiError từ `docs/API_CONTRACT.md`.
+  - Xây dựng `lib/format.ts` định dạng tiền tệ VND (`120.000 ₫`), ngày tháng (`dd/MM/yyyy`), ngày giờ (`dd/MM/yyyy HH:mm`) và nhãn trạng thái tiếng Việt theo chuẩn hợp đồng.
+  - Xây dựng `lib/api.ts` fetch wrapper với `credentials: "include"`, tự động lấy và gắn header `X-XSRF-TOKEN` cho POST/PUT/PATCH/DELETE, xử lý ngoại lệ `ApiException` ánh xạ RFC 7807 ProblemDetails.
+  - Xây dựng Mock Layer (`lib/mock-data.ts`) hỗ trợ kích hoạt qua `NEXT_PUBLIC_USE_MOCK=true` hoặc `?mock=true`, bao gồm tài khoản mẫu SRS §8 (`admin`, `staff`, `user`, `user2`), 14 loại thuốc mẫu chuẩn nghiệp vụ và dashboard summary.
+  - Xây dựng `AuthContext` và hooks bảo vệ phân quyền phía client (`useRequireAuth`, `useGuestOnly`), tự động điều hướng theo `homePath` khi đăng nhập và chặn truy cập trái phép vai trò.
+  - Xây dựng Layout Homepage (`Header`, `Footer`) và Dashboard Staff / Admin (`Sidebar` hiển thị tên tài khoản, vai trò, đăng xuất theo NFR-05).
+  - Hoàn thiện trang Đăng nhập (`/login`) và Đăng ký (`/register`): che ký tự mật khẩu, toggle ẩn/hiện, hiển thị lỗi theo từng trường nhập liệu (`errors.*`), giữ lại dữ liệu đã nhập khi phát sinh lỗi.
+  - Hoàn thiện Trang chủ (`/`) và Chi tiết thuốc (`/products/[drugId]`): tìm kiếm, bộ lọc danh mục/tồn kho, phân trang, ô kiểm tra `GET /api/health`, phân quyền xem giá (Guest không nhận và không thấy giá, nút "Mua" chuyển sang đăng nhập; User thấy giá VND).
+  - Tạo các route giữ chỗ cho các chức năng kế tiếp của M2 và M3.
+  - Kiểm tra `npm install`, `npm run lint` và `npm run build --workspace frontend` đạt kết quả tuyệt đối (0 error, 0 warning).
 
 ## Câu hỏi cho PO
-_(Dev ghi câu hỏi ở đây)_
+_(Hiện chưa có câu hỏi nào cho PO; hợp đồng API v1 và SRS v2.0 đã đầy đủ và rõ ràng cho milestone M1)_
+
