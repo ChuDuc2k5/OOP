@@ -48,6 +48,10 @@ public sealed class ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExce
         {
             await next(context);
         }
+        catch (InputValidationException e)
+        {
+            await ApiErrors.Write(context, 400, "VALIDATION_FAILED", e.Message, e.Errors);
+        }
         catch (AccountValidationException e)
         {
             await ApiErrors.Write(context, 400, "VALIDATION_FAILED", e.Message, e.Errors);

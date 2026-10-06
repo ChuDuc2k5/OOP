@@ -1,6 +1,6 @@
 # Backend — Pharmacy Management System
 
-.NET 10 / ASP.NET Core Web API / EF Core 10 / SQLite / xUnit. M1 gồm toàn bộ mô hình dữ liệu và F001–F003; các API sản phẩm, kho, đơn thuốc, giỏ, đơn hàng, thanh toán và checkout được triển khai ở M2–M4.
+.NET 10 / ASP.NET Core Web API / EF Core 10 / SQLite / xUnit. M1 gồm toàn bộ mô hình dữ liệu và F001–F003; M2 hoàn thành danh mục sản phẩm, nhập lô, tồn kho và báo cáo F004–F009. Đơn thuốc, giỏ, đơn hàng, thanh toán và checkout thuộc M3–M4.
 
 Chạy từ gốc repository:
 
@@ -46,7 +46,7 @@ Luồng gọi API:
 5. Sau login/logout gọi lại `/api/auth/csrf` để đọc token hiện tại. Server cũng tự cấp cookie request token phù hợp identity mới trong response login/logout.
 6. `GET /api/auth/me`; `POST /api/auth/logout`. Admin dùng `GET /api/admin/accounts?search=&role=&page=&pageSize=` và `POST /api/admin/accounts/staff` với body giống đăng ký.
 
-FE gọi cùng origin qua Next.js rewrites, `credentials: "include"`; không cần CORS. Không có redirect HTML khi bị chặn: 401/403 trả ProblemDetails JSON. Lỗi theo contract có `status`, `code`, `title` tiếng Việt và `errors` camelCase khi cần. Không phục vụ storage bằng static files; các endpoint ảnh có kiểm tra quyền sẽ được làm ở milestone tương ứng.
+FE gọi cùng origin qua Next.js rewrites, `credentials: "include"`; không cần CORS. Không có redirect HTML khi bị chặn: 401/403 trả ProblemDetails JSON. Lỗi theo contract có `status`, `code`, `title` tiếng Việt và `errors` camelCase khi cần. Storage không được phục vụ bằng static files; ảnh thuốc được đọc qua `/api/files/drugs/{fileName}` khi có thuốc tham chiếu đến file đó.
 
 Kiểm thử dùng `WebApplicationFactory` + SQLite file riêng trong temp, clock giả D=2026-10-06 và storage riêng; không dùng EF InMemory. TC-06/55 tạo dữ liệu trực tiếp qua domain vì API nghiệp vụ M2–M4 chưa có. TC-55 đóng host rồi tạo host mới trên cùng DB, đổi D và so sánh toàn bộ bảng domain, bao gồm giá, tồn, đã cấp, reservation, payment, allocation, invoice và QR.
 
@@ -75,4 +75,40 @@ Migration đầu tiên được commit cùng snapshot. Nếu cần tạo migrati
 dotnet ef migrations add TenMigration --project backend/Pharmacy.Core --startup-project backend/Pharmacy.Api --output-dir Data/Migrations
 ```
 
-Mã giao dịch dùng sequence SQLite atomic theo prefix/ngày, tồn tại qua restart, tối đa 9.999 mã/prefix/ngày; hết dải trả `INVALID_STATE`, không sinh mã sai định dạng. Các quy trình reserve/release/checkout sẽ dùng singleton `IInventoryLock` và transaction trong M2–M4; mô hình một tiến trình SQLite là phạm vi đã chốt.
+Mã giao dịch dùng sequence SQLite atomic theo prefix/ngày, tồn tại qua restart, tối đa 9.999 mã/prefix/ngày; hết dải trả `INVALID_STATE`, không sinh mã sai định dạng. Mô hình một tiến trình SQLite là phạm vi đã chốt.
+
+API M2 theo contract §4–§5:
+
+| Quyền | Endpoint |
+|---|---|
+| Guest và người đăng nhập | `GET /api/products`, `GET /api/products/{drugId}`, `GET /api/files/drugs/{fileName}` |
+| Admin | `GET/POST /api/admin/drugs`, `GET/PUT /api/admin/drugs/{drugId}`, `PATCH /api/admin/drugs/{drugId}/sale-status` |
+| Admin | `POST /api/admin/drugs/{drugId}/image` (multipart trường `file`), `POST /api/admin/drugs/{drugId}/batches` |
+| Staff/Admin | `GET /api/inventory`, `GET /api/inventory/{drugId}`, `GET /api/reports/low-stock`, `GET /api/reports/expiring?days=30` |
+
+Guest chỉ thấy thuốc đang bán và JSON không có thuộc tính `unitPrice`; người đăng nhập thấy giá. Danh sách hỗ trợ `search`, `page=1`, `pageSize=20` (tối đa 100), tìm mã/tên không phân biệt hoa thường, kể cả tiếng Việt có dấu. Không có endpoint xóa thuốc trong contract; tắt bán bằng `sale-status`.
+
+Nhập lô yêu cầu hạn dùng sau D, số lượng nguyên dương, số lô duy nhất trong cùng thuốc. Tồn khả dụng bằng `max(0, tồn còn hạn - giữ đang hoạt động)`; hết hạn khi hạn dùng ≤ D. Báo cáo gần hết hạn chỉ gồm lô còn hàng với `0 < daysRemaining ≤ days`; tồn thấp gồm cả bằng ngưỡng và bằng 0. Báo cáo chỉ đọc dữ liệu.
+
+`InventoryService.Reserve/Release/AllocateFEFO/Deduct` là API nội bộ, chưa có endpoint. Mỗi thao tác dùng singleton `IInventoryLock` và transaction; FEFO ở `Drug.PlanFEFO`, trừ lô ở `DrugBatch.Deduct`. Giữ hàng bảo vệ cả tồn khả dụng và hạn mức đơn thuốc, có tính idempotent; trừ kho online chỉ tiêu thụ reservation của chính đơn đó. Khi M3–M4 cần cập nhật thêm order/payment/invoice, gọi `InventoryService.Execute` và thực hiện toàn bộ thay đổi trong callback cùng transaction, không lồng transaction/khóa. Lỗi rollback cả dữ liệu và trạng thái tracking.
+
+| TC | Test method M2 |
+|---|---|
+| TC-09 | `TC09_GuestProducts_OmitPriceAndInternalData_ExcludeDisabledDrugs`, `TC09_InStock_UsesUnexpiredStockMinusActiveReservations` |
+| TC-10 | `TC10_AuthenticatedProducts_IncludePrice_UnicodeSearchAndPaginationWork` |
+| TC-11 | `TC11_AdminCreatesUpdatesAndTogglesDrug_ValidatesFieldsAndDuplicates`, `TC11_InvalidDrugInput_ReturnsFieldErrors_WithoutWriting`, `TC11_DrugImage_UploadsAndServesPublicly_RejectsInvalidFiles` |
+| TC-12 | `TC12_NonAdmin_CannotReadOrChangeCatalog` |
+| TC-14 | `TC14_AddValidBatch_IncreasesStock_AndReturnsContractDto` |
+| TC-15 | `TC15_DuplicateBatch_IsRejected_AndUniquenessIsPerDrug`, `TC15_InvalidBatch_ReturnsFieldError_WithoutChangingStock` |
+| TC-16 | `TC16_InventoryCountsExpiryAndReservations_ReleaseDoesNotDeductStock`, `TC16_ConcurrentReserve_LastStockIsNotOverbooked`, `TC16_PrescriptionReservations_ProtectQuota_AndReleaseBothLimits` |
+| TC-17 | `TC17_GuestAndUser_CannotReadInventoryOrReports` |
+| TC-18 | `TC18_ServiceDeduct_UsesFefo_MergesLines_AndRollsBackOnFailure`, `TC18_ReservedStock_IsProtectedAndConsumedOnlyByItsOrder`, `TC18_ConcurrentDeduct_RefreshesStaleContexts_AndNeverOverdraws`, `TC18_DomainFefo_SplitsBatches_AndBreaksTiesByBatchNumber` |
+| TC-19 | `TC19_ServiceDeduct_ExcludesD_UsesDPlusOne`, `TC19_DomainExpiryBoundary_OnlyDatesAfterDCanBeDeducted` (D, D+1, D+30, D+31) |
+| TC-22 | `TC22_ExpiringReport_UsesOpenClosedDayWindow_AndDoesNotWrite` |
+| TC-23 | `TC23_LowStockReport_IncludesEqualityAndZero_ExcludesAboveThreshold` |
+
+```powershell
+dotnet test Pharmacy.sln --filter "FullyQualifiedName~CatalogTests|FullyQualifiedName~InventoryTests|FullyQualifiedName~FefoDomainTests"
+```
+
+M2 chưa thay đổi schema nên dùng migration M1. Các truy vấn danh mục/kho hiện đọc snapshot rồi lọc bằng .NET để bảo đảm tìm tiếng Việt không phân biệt hoa thường; đo và tối ưu dữ liệu lớn thuộc M5.
