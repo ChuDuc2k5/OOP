@@ -32,6 +32,14 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 3. Endpoint contract §6, §7.1–7.3, `GET /api/dashboard/summary`.
 4. Test: TC-13 (phần đặt hàng), TC-21, TC-24..TC-34, TC-36, TC-37 (phần trạng thái).
 
+## M3.5 — `be/m3b-postgres` (Supabase, ưu tiên sau M3)
+
+1. Thêm provider Npgsql; `Database:Provider` = `Sqlite` (mặc định) | `Postgres`; chuỗi kết nối `ConnectionStrings:Default` từ `.env` (không commit bí mật).
+2. Migration tách theo provider (2 migrations assembly hoặc 2 thư mục), auto migrate + seed khi DB trống trên cả hai.
+3. Xử lý unique violation độc lập provider (SQLite 2067 / Postgres 23505); partial index tương thích Postgres; `DateOnly`/`DateTimeOffset` map đúng (timestamptz).
+4. Test tự động vẫn dùng SQLite; thêm hướng dẫn Supabase (Session pooler, Npgsql connection string, SSL) vào `backend/README.md`.
+5. Không seed thông tin ngân hàng/QR thật; Admin cấu hình qua F017.
+
 ## M4 — `be/m4-sale-payment-checkout` (F016–F020)
 
 1. `SaleService` (F016): nháp của mình, loại không đổi, `issues`/`canCheckout` từ `Sale.Validate` chạy thử.
