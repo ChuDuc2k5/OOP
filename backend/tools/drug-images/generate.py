@@ -253,15 +253,9 @@ def render(name, form, group):
 def main():
     catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
     OUT.mkdir(parents=True, exist_ok=True)
-    legacy_names = {
-        "PARA500": "Paracetamol 500mg", "DEMO02": "Vitamin C", "DEMO03": "Nước muối sinh lý",
-        "DEMO04": "Oresol", "DEMO05": "Cetirizine", "DEMO06": "Kẽm", "DEMO07": "Amoxicillin",
-        "DEMO08": "Cefixime", "DEMO09": "Metformin", "DEMO10": "Amlodipine", "DEMO11": "Diazepam",
-        "DEMO12": "Thuốc ngừng bán",
-    }
     count = 0
     for drug_id, spec in catalog["legacyImages"].items():
-        render(legacy_names[drug_id], spec["form"], spec["group"]).save(OUT / f"{drug_id}.png", optimize=True)
+        render(spec["name"], spec["form"], spec["group"]).save(OUT / f"{drug_id}.png", optimize=True)
         count += 1
     for drug in catalog["drugs"]:
         render(drug["name"], drug["form"], drug["group"]).save(OUT / f"{drug['id']}.png", optimize=True)
