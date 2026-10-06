@@ -91,16 +91,17 @@ public sealed class CheckoutService(
                 item.AddAllocation(new(ids.Item(), item.SaleItemId, allocation.BatchId, allocation.Quantity));
             }
         }
-        if (sale.Kind == SaleKind.Prescription)
+        var prescribed = new Dictionary<string, PrescriptionItem>();
+        if (sale.PrescriptionId is not null)
         {
-            var prescribed = await db.PrescriptionItems.Where(x => x.PrescriptionId == sale.PrescriptionId).ToListAsync(ct);
-            foreach (var item in sale.Items)
+            var lines = await db.PrescriptionItems.Where(x => x.PrescriptionId == sale.PrescriptionId).ToListAsync(ct);
+            foreach (var line in lines)
             {
-                var line = prescribed.Single(x => x.DrugId == item.DrugId);
                 await db.Entry(line).ReloadAsync(ct);
-                line.RecordDispense(item.Quantity);
+                prescribed.Add(line.DrugId, line);
             }
         }
+        sale.ApplyCompletionEffects(prescribed);
         sale.Complete(clock.Now, sale.Channel == SaleChannel.Counter ? PaymentMethod.Cash : PaymentMethod.ManualQR);
         var invoice = new Invoice(await ids.NextAsync("HD", ct), sale, clock.Now);
         db.Invoices.Add(invoice);

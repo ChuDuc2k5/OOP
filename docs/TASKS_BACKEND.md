@@ -93,6 +93,13 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 
 - Kiểm chứng M4 cuối cùng: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Pharmacy.sln 170 pass/0 fail/1 skip (smoke PostgreSQL opt-in). CheckoutTests có 38 trường hợp qua 31 method, phủ đủ 21 mã TC của M4. Không còn chức năng M4 để stub.
 
+- M5 (`be/m5-hardening`, 2026-10-06): chuyển kiểm tra chủ đơn online và ApplyCompletionEffects/RecordDispense về PrescriptionSale; CheckoutService/SaleEvaluation gọi qua Sale, bỏ phân nhánh Kind ngoài factory. TC-56 và regression M4 xanh, model/migration cả hai provider không đổi.
+- Báo cáo docs/TEST_REPORT_BE.md đối chiếu TRX cho đủ 56 TC backend: 56 Pass/0 Fail, nêu rõ phần giao diện không áp dụng backend. Chạy 2026-10-06 13:34:22–13:35:05 +07:00: build 0 warning/0 error; suite 175 pass/0 fail/1 skip PostgreSQL opt-in.
+- NFR-01: test tải opt-in PHARMACY_TEST_PERFORMANCE tạo SQLite temp riêng, 500 thuốc/2.000 lô/1.000 đơn, đo 20 GET mỗi endpoint, p95 products/cart/orders mine/staff orders/inventory = 23,29/22,44/9,72/14,19/43,73 ms; 100/100 dưới 2 giây. TestServer gồm đọc body, không gồm TCP/trình duyệt/Supabase; không sửa InventoryReader vì đạt ngưỡng. Seed từ chối DB đã có dữ liệu, cleanup DB/storage, số đo xuất JSON temp.
+- NFR-02/08: log chỉ loại exception + trace ID, không log nội dung exception/inner exception hoặc provider EF chứa dữ liệu; test login sai và lỗi DB chứa bí mật giả chứng minh log/500 không lộ mật khẩu/connection/stack trace và rollback. README bổ sung SDK/Node, restore/chạy SQLite, cấu hình Supabase .env/appsettings.Local.json, lưu ý npm nâng .env thành biến môi trường, test opt-in/tài khoản demo/giới hạn đo. Không git add/commit/push/merge/đổi nhánh.
+
+- Smoke HTTP hồi quy M5 pass hai luồng online OTC và tại quầy trên cổng tạm riêng với DB/storage/key temp; API smoke đã tắt, dữ liệu temp đã xóa, không dừng ứng dụng khác. Không phát sinh thay đổi contract.
+
 ## Câu hỏi cho PO
 - M3.5 không đổi API contract. Phạm vi IInventoryLock vẫn một tiến trình ứng dụng; dùng schema pharmacy không exposed qua Supabase Data API. Chưa có connection PostgreSQL để chạy smoke thật; cần chạy nhóm opt-in trên DB test riêng trước demo Supabase.
 - M3: DB M1 không có thời điểm tạo đơn thuốc. Migration giữ bản ghi cũ và dùng CreatedAt = UnixEpoch làm giá trị chưa biết; bản ghi mới lưu thời điểm thật. Không đổi API contract; README đã nêu giới hạn dữ liệu cũ.

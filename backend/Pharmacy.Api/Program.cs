@@ -19,6 +19,8 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Configuration.AddCommandLine(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+// Provider exceptions can contain data values; API errors log only type and trace ID.
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.None);
 builder.Services.AddOpenApi();
 builder.Services.AddControllers().AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.Configure<ApiBehaviorOptions>(o => o.InvalidModelStateResponseFactory = context =>

@@ -62,7 +62,8 @@ public sealed class ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExce
         }
         catch (DbUpdateConcurrencyException e)
         {
-            logger.LogWarning(e, "Database concurrency conflict");
+            logger.LogWarning("Database concurrency conflict ({ExceptionType}); trace {TraceId}",
+                e.GetType().Name, context.TraceIdentifier);
             await ApiErrors.Write(context, 409, "CONCURRENCY_CONFLICT", "Dữ liệu đã thay đổi, vui lòng tải lại.");
         }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
@@ -70,7 +71,8 @@ public sealed class ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExce
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unhandled API error");
+            logger.LogError("Unhandled API error ({ExceptionType}); trace {TraceId}",
+                e.GetType().Name, context.TraceIdentifier);
             if (context.Response.HasStarted)
             {
                 throw;
