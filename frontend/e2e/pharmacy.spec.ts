@@ -211,12 +211,11 @@ test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: lu�
   expect((await oneTapReview).postDataJSON()).toEqual({});
   await expect(staff.locator('main')).toContainText('Đã xác nhận tiền và lập hóa đơn HD');
   expect((await autoRefresh).ok()).toBeTruthy();
-  await expect(page.getByRole('status', { name: 'Trạng thái thanh toán' })).toContainText('Đã xác nhận');
   await expect(page.getByTestId('toast')).toContainText('Đã xác nhận thanh toán.');
-  await shot(page, 'TC45-F017-qr-confirmed', info);
+  await expect(page).toHaveURL(new RegExp(`/orders/${order.orderId}$`));
+  await ready(page);
   await shot(staff, 'TC45-F018-approved', info);
   await staff.getByRole('button', { name: 'Đóng', exact: true }).click();
-  await page.getByRole('link', { name: 'Đóng / Về đơn hàng', exact: true }).click(); await ready(page);
   await expect(page.getByRole('heading', { name: 'Đã thanh toán – Mời bạn đến quầy nhận thuốc' })).toBeVisible();
   await shot(page, 'TC45-F014-pickup-paid', info);
   await visit(staff, `/staff/orders/${order.orderId}`); await ready(staff);

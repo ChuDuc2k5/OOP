@@ -6,6 +6,7 @@ import { QueryBanner } from '@/components/QueryBanner';
 import { notify, notifyError } from '@/lib/feedback';
 import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -37,6 +38,7 @@ export default function OrderPaymentPage({
   const orderId = resolvedParams.id;
 
   const { user, loading: authLoading, authorized } = useRequireAuth(['User']);
+  const router = useRouter();
 
   const [payment, setPayment] = useState<PaymentView | null>(null);
   const [order, setOrder] = useState<OrderView | null>(null);
@@ -63,9 +65,15 @@ export default function OrderPaymentPage({
       setPayment(paymentData);
       setOrder(orderData);
       opened.current = orderId;
-      if (previous.current && previous.current !== 'Confirmed' && paymentData.status === 'Confirmed') {
-        notify({ kind: 'success', message: 'Đã xác nhận thanh toán. Nhà thuốc đang chuẩn bị hàng.', href: `/orders/${orderId}`, label: 'Về chi tiết đơn' });
-      } else if (manual) notify({ kind: 'info', message: `Đã làm mới: ${PAYMENT_STATUS_LABELS[paymentData.status]}.` });
+      if (paymentData.status !== 'PendingReview') {
+        // Payment is settled (confirmed or closed): the QR page has no further use, show the order status instead.
+        if (previous.current === 'PendingReview' && paymentData.status === 'Confirmed') {
+          notify({ kind: 'success', message: 'Đã xác nhận thanh toán. Đang chuyển về chi tiết đơn hàng…' });
+        }
+        router.replace(`/orders/${orderId}`);
+        return;
+      }
+      if (manual) notify({ kind: 'info', message: `Đã làm mới: ${PAYMENT_STATUS_LABELS[paymentData.status]}.` });
       previous.current = paymentData.status;
       setError(null);
     } catch (err: unknown) {
@@ -78,7 +86,7 @@ export default function OrderPaymentPage({
       setRefreshing(false);
       inFlight.current = false;
     }
-  }, [orderId]);
+  }, [orderId, router]);
 
   useEffect(() => {
     if (authorized && user) {
@@ -88,7 +96,7 @@ export default function OrderPaymentPage({
 
   useEffect(() => {
     if (!authorized || !payment?.paymentId) return;
-    const timer = setInterval(() => void fetchPaymentData(true), 15_000);
+    const timer = setInterval(() => void fetchPaymentData(true), 10_000);
     return () => clearInterval(timer);
   }, [authorized, payment?.paymentId, fetchPaymentData]);
 
