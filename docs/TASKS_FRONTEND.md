@@ -161,6 +161,13 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
 
   - Kiểm chứng cuối M8: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` 28/28 ca pass (3,1 phút) trên 1366/390 px, backend SQLite thật, mock tắt, cổng riêng 3017/5017. Đủ 49 route mỗi viewport, kể cả redirect. Đã xem bốn ảnh mới; tổng 105 ảnh, UTF-8/phạm vi sửa/diff sạch. Server thử nghiệm đã dừng; không commit hoặc đổi nhánh.
 
+- **M10 — `fe/m10-order-ready` (D15)**:
+  - Bổ sung readyAt vào OrderView/OrderRow và ready vào API Staff. Danh sách/chi tiết dùng chung quy tắc thao tác sau xuất kho: Pickup chưa ready → Đã chuẩn bị xong → POST ready, toast báo khách; đã ready → Khách đã nhận thuốc. Hiện Sẵn sàng từ HH:mm theo giờ Việt Nam. Delivery dùng Đã chuẩn bị xong – Bắt đầu giao → ship, rồi Đã giao xong. Cột việc cần làm phân biệt Chuẩn bị đơn/Chờ khách đến lấy/Đang giao; nút khóa khi gửi và không hiện khi chưa có hóa đơn.
+  - Khách đã thanh toán nhưng chưa ready thấy Nhà thuốc đang chuẩn bị đơn của bạn, không được mời đến quầy sớm. Polling hiện tại phát hiện readyAt và toast mời nhận thuốc, khối nổi bật/mã đơn lớn; giao hàng hiện Đơn hàng đang trên đường giao đến bạn và toast. Stepper Pickup thêm Sẵn sàng nhận trước Hoàn tất; badge chi tiết/danh sách chỉ hiện sẵn sàng ở Pickup Preparing có readyAt, trạng thái server vẫn giữ nguyên.
+  - E2e Pickup kiểm tra xác nhận tiền → đang chuẩn bị → nút ready ở chi tiết/danh sách → khách tự thấy sẵn sàng/toast/stepper trong 15 giây → badge danh sách → nhận thuốc → khách tự thấy hoàn tất. Delivery kiểm tra nhãn nút mới và thông báo giao hàng tự cập nhật. Ca TC32/TC33 tự cấu hình QR qua API Admin để độc lập với thứ tự thử nghiệm. Thêm ảnh TC37-F015-ready-pickup ở 1366/390 px và chụp lại TC37-F015-delivering cùng các luồng liên quan.
+
+  - Kiểm chứng cuối M10: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` 28/28 ca pass (3,6 phút), backend SQLite thật, mock tắt, cổng riêng 3017/5017. Đủ 49 route ở 1366/390 px. Đã sửa ca TC32/TC33: giữ route interceptor ổn định, chỉ trả lỗi cho POST đầu để không làm treo chuyển trang khi gỡ interceptor một lần; cấu hình QR độc lập. Đã xem ảnh ready/giao hàng, thêm hai ảnh và cập nhật hai ảnh yêu cầu (tổng 105 PNG). UTF-8/phạm vi sửa/diff sạch; server thử nghiệm đã dừng, không commit hoặc đổi nhánh.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 

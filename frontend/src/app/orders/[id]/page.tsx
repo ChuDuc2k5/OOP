@@ -89,10 +89,12 @@ export default function OrderDetailPage({
         if (data.status === 'Rejected') notify({ kind: 'info', message: `Đơn bị từ chối: ${data.note || 'Vui lòng liên hệ nhà thuốc để biết lý do.'}` });
         else if (data.status === 'Cancelled') notify({ kind: 'info', message: `Đơn đã hủy.${data.note ? ` ${data.note}` : ''}` });
         else if (data.status === 'Completed') notify({ kind: 'success', message: 'Đơn hàng đã hoàn tất.', href: data.invoiceId ? `/invoices/${data.invoiceId}` : undefined, label: data.invoiceId ? 'Xem hóa đơn' : undefined });
-        else if (data.status === 'Delivering') notify({ kind: 'info', message: 'Nhà thuốc đang giao hàng. Vui lòng giữ liên lạc để nhận thuốc.' });
+        else if (data.status === 'Delivering') notify({ kind: 'info', message: 'Đơn hàng đang trên đường giao đến bạn' });
       }
-      if (before && before.payment?.status !== 'Confirmed' && data.payment?.status === 'Confirmed' && !['Completed', 'Cancelled', 'Rejected', 'Delivering'].includes(data.status)) {
-        notify({ kind: 'success', message: data.receiveMethod === 'Pickup' ? 'Đã xác nhận thanh toán. Mời đến quầy nhận thuốc.' : 'Đã xác nhận thanh toán. Nhà thuốc đang chuẩn bị hàng.' });
+      if (before && !before.readyAt && data.readyAt && data.receiveMethod === 'Pickup' && data.status === 'Preparing') {
+        notify({ kind: 'success', message: 'Đơn đã sẵn sàng – Mời bạn đến quầy nhận thuốc' });
+      } else if (before && before.payment?.status !== 'Confirmed' && data.payment?.status === 'Confirmed' && !['Completed', 'Cancelled', 'Rejected', 'Delivering'].includes(data.status)) {
+        notify({ kind: 'success', message: 'Đã xác nhận thanh toán. Nhà thuốc đang chuẩn bị đơn của bạn.' });
       }
       if (autoQrPending.current && data.canPay && data.status === 'AwaitingPayment' && document.visibilityState === 'visible') {
         autoQrPending.current = false;
@@ -218,7 +220,7 @@ export default function OrderDetailPage({
                       order.status
                     )}`}
                   >
-                    {ORDER_STATUS_LABELS[order.status]}
+                    {order.status === 'Preparing' && order.receiveMethod === 'Pickup' && order.readyAt ? 'Sẵn sàng nhận' : ORDER_STATUS_LABELS[order.status]}
                   </span>
                   {order.payment && (
                     <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">

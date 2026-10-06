@@ -1,4 +1,4 @@
-import { test, expect, type Page, type TestInfo, type APIRequestContext } from '@playwright/test';
+import { test, expect, type Page, type TestInfo, type APIRequestContext, type Browser } from '@playwright/test';
 import { mkdir, readdir, writeFile, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 const visitedRoutes = new Set<string>();
@@ -69,7 +69,7 @@ async function api(request: APIRequestContext, path: string, method = 'GET', dat
   return response.status() === 204 ? null : response.json();
 }
 
-test.beforeAll(async ({ browser }) => {
+async function configurePayments(browser: Browser) {
   const context = await browser.newContext({ baseURL: 'http://localhost:3017' });
   try {
     await api(context.request, '/auth/login', 'POST', { username: 'admin', password: 'Admin@12345' });
@@ -85,7 +85,8 @@ test.beforeAll(async ({ browser }) => {
     expect(uploaded.ok(), await uploaded.text()).toBeTruthy();
     expect((await api(context.request, '/admin/payment-settings')).isConfigured).toBe(true);
   } finally { await context.close(); }
-});
+}
+test.beforeAll(async ({ browser }) => configurePayments(browser));
 
 test('TC01-F001: đăng ký tự đăng nhập và chuyển tới next an toàn', async ({ page }, info) => {
   await visit(page, '/register?next=/cart'); await ready(page);
@@ -216,7 +217,9 @@ test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: lu�
   await ready(page);
   await shot(staff, 'TC45-F018-approved', info);
   await staff.getByRole('button', { name: 'Đóng', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Đã thanh toán – Mời bạn đến quầy nhận thuốc' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Nhà thuốc đang chuẩn bị đơn của bạn.', exact: true })).toBeVisible();
+  await expect(page.locator('main')).not.toContainText('Mời bạn đến quầy');
+  await expect(page.getByRole('list', { name: 'Tiến trình đơn hàng' }).locator('[aria-current="step"]')).toContainText('Đang chuẩn bị');
   await shot(page, 'TC45-F014-pickup-paid', info);
   await visit(staff, `/staff/orders/${order.orderId}`); await ready(staff);
   await expect(staff.getByRole('button', { name: 'Nhận xử lý', exact: true })).toHaveCount(0);
@@ -224,13 +227,32 @@ test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: lu�
   await expect(invoiceLink).toBeVisible();
   const invoiceId = (await invoiceLink.getAttribute('href'))!.split('/').at(-1)!;
   await shot(staff, 'TC37-F019-fulfill', info);
+  await expect(staff.getByRole('button', { name: 'Đã chuẩn bị xong', exact: true })).toBeVisible();
+  await expect(staff.getByRole('button', { name: 'Khách đã nhận thuốc', exact: true })).toHaveCount(0);
   await visit(staff, '/staff/orders'); await ready(staff);
   const pickupRow = staff.getByRole('row').filter({ has: staff.getByRole('link', { name: order.orderId, exact: true }) });
+  await expect(pickupRow).toContainText('Chuẩn bị đơn');
+  await pickupRow.getByRole('button', { name: 'Đã chuẩn bị xong', exact: true }).click();
+  await expect(staff.getByTestId('toast')).toContainText('Đã báo khách đến nhận thuốc');
+  await expect(pickupRow).toContainText('Chờ khách đến lấy');
+  await expect(pickupRow).toContainText(/Sẵn sàng từ \d{2}:\d{2}/);
+  const readied = await api(staff.request, `/staff/orders/${order.orderId}`);
+  expect(readied.readyAt).toBeTruthy();
+  await expect(page.getByRole('heading', { name: 'Đơn đã sẵn sàng – Mời bạn đến quầy nhận thuốc', exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('toast')).toContainText('Đơn đã sẵn sàng – Mời bạn đến quầy nhận thuốc');
+  await expect(page.getByRole('list', { name: 'Tiến trình đơn hàng' }).locator('[aria-current="step"]')).toContainText('Sẵn sàng nhận');
+  await shot(page, 'TC37-F015-ready-pickup', info);
+  await visit(page, '/orders'); await ready(page);
+  const customerRow = page.getByRole('row').filter({ has: page.getByRole('link', { name: order.orderId, exact: true }) });
+  await expect(customerRow).toContainText('Sẵn sàng nhận');
+  await visit(page, `/orders/${order.orderId}`); await ready(page);
+  await expect(page.getByTestId('toast').filter({ hasText: 'Đơn đã sẵn sàng' })).toHaveCount(0, { timeout: 5_000 });
   await pickupRow.getByRole('button', { name: 'Khách đã nhận thuốc', exact: true }).click();
   await expect(pickupRow).toContainText('Hoàn tất');
   await visit(staff, `/staff/orders/${order.orderId}`); await ready(staff);
   await expect(staff.getByText('Đơn đã kết thúc, không còn thao tác xử lý.')).toBeVisible();
   await shot(staff, 'TC37-F015-completed', info);
+  await expect(page.locator('main')).toContainText('Đơn hàng đã hoàn tất.', { timeout: 15_000 });
   await staffContext.close();
 
   await login(page, 'chuduc'); await visit(page, `/invoices/${invoiceId}`); await ready(page);
@@ -327,13 +349,14 @@ test('TC32/TC42/TC45/TC37: giao hàng và thử xuất kho lại sau xác nhận
   await shot(staff, 'TC37-F019-fulfill-retry', info);
   await staff.getByRole('button', { name: 'Thử xuất kho lại', exact: true }).click();
   await expect(staff.getByRole('link', { name: /^Hóa đơn HD/ })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Đã thanh toán – Nhà thuốc đang chuẩn bị', exact: true })).toBeVisible({ timeout: 25_000 });
+  await expect(page.getByRole('heading', { name: 'Nhà thuốc đang chuẩn bị đơn của bạn.', exact: true })).toBeVisible({ timeout: 25_000 });
   await shot(page, 'TC45-F014-delivery-paid', info);
   await visit(staff, '/staff/orders'); await ready(staff);
   const deliveryRow = staff.getByRole('row').filter({ has: staff.getByRole('link', { name: order.orderId, exact: true }) });
-  await deliveryRow.getByRole('button', { name: 'Bắt đầu giao', exact: true }).click();
+  await deliveryRow.getByRole('button', { name: 'Đã chuẩn bị xong – Bắt đầu giao', exact: true }).click();
   await expect(deliveryRow.getByRole('button', { name: 'Đã giao xong', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Đã thanh toán – Nhà thuốc đang giao', exact: true })).toBeVisible({ timeout: 25_000 });
+  await expect(page.getByRole('heading', { name: 'Đơn hàng đang trên đường giao đến bạn', exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('toast')).toContainText('Đơn hàng đang trên đường giao đến bạn');
   await shot(page, 'TC37-F015-delivering', info);
   await deliveryRow.getByRole('button', { name: 'Đã giao xong', exact: true }).click();
   await expect(deliveryRow).toContainText('Hoàn tất');
@@ -367,7 +390,8 @@ test('TC31-F012: hết hàng bị khóa và backend từ chối số lượng v�
   await shot(page, 'TC31-F012-insufficient-stock', info);
 });
 
-test('TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt chưa mở QR', async ({ page }, info) => {
+test('TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt chưa mở QR', async ({ page, browser }, info) => {
+  await configurePayments(browser);
   await login(page, 'chuduc');
   const cart = await api(page.request, '/cart');
   for (const item of cart.items) await api(page.request, `/cart/items/${item.drugId}`, 'DELETE');
@@ -376,7 +400,14 @@ test('TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt 
   await page.getByLabel('Họ và tên người nhận').fill('Khách kiểm tra lỗi');
   await page.getByLabel('Số điện thoại liên hệ').fill('0901234567');
   await page.getByRole('radio', { name: /Nhận tại quầy nhà thuốc/ }).check();
-  await page.route('**/api/orders/*/payment', route => route.fulfill({ status: 409, contentType: 'application/problem+json', json: { status: 409, code: 'PAYMENT_NOT_CONFIGURED', title: 'PAYMENT_NOT_CONFIGURED' } }), { times: 1 });
+  let paymentFailureSent = false;
+  await page.route('**/api/orders/*/payment', route => {
+    if (route.request().method() === 'POST' && !paymentFailureSent) {
+      paymentFailureSent = true;
+      return route.fulfill({ status: 409, contentType: 'application/problem+json', json: { status: 409, code: 'PAYMENT_NOT_CONFIGURED', title: 'PAYMENT_NOT_CONFIGURED' } });
+    }
+    return route.continue();
+  });
   const placed = page.waitForResponse(r => r.url().endsWith('/api/orders') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Đặt hàng & thanh toán', exact: true }).click();
   const order = await (await placed).json();

@@ -44,6 +44,15 @@ export function formatDateTime(dateString: string | null | undefined): string {
   return formatDate(dateString) + ' ' + time;
 }
 
+export function formatTime(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '-';
+  return date.toLocaleTimeString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  });
+}
+
 /**
  * Nhãn tiếng Việt cho OrderStatus (theo API_CONTRACT §2)
  */
