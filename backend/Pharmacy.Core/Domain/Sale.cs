@@ -1,7 +1,7 @@
 using Pharmacy.Core.Common;
 namespace Pharmacy.Core.Domain;
 
-public sealed record ValidationResult(IReadOnlyList<string> Issues)
+public sealed record ValidationResult(IReadOnlyList<string> Issues, string? Code = null)
 {
     public bool IsValid => Issues.Count == 0;
 }
@@ -83,6 +83,18 @@ public abstract class Sale : VersionedEntity
     }
     public IReadOnlyCollection<SaleItem> Items => items.AsReadOnly();
     public abstract ValidationResult Validate(SaleContext ctx);
+    protected string? CommonError(SaleContext ctx)
+    {
+        if (Status != SaleStatus.Draft || items.Count == 0)
+        {
+            return "INVALID_STATE";
+        }
+        if (items.Any(x => !ctx.Drugs.ContainsKey(x.DrugId)))
+        {
+            return "NOT_FOUND";
+        }
+        return items.Any(x => !ctx.Drugs[x.DrugId].IsForSale) ? "NOT_FOR_SALE" : null;
+    }
     protected List<string> ValidateCommon(SaleContext ctx)
     {
         var issues = new List<string>();
@@ -164,12 +176,14 @@ public sealed class OTCSale : Sale
     public override ValidationResult Validate(SaleContext ctx)
     {
         var issues = ValidateCommon(ctx);
+        var code = CommonError(ctx);
         if (Items.Any(i => ctx.Drugs.TryGetValue(i.DrugId, out var d) && (d.RequiresPrescription || d.IsControlled)))
         {
             issues.Add("Bán OTC không được chứa thuốc cần đơn hoặc kiểm soát.");
+            code ??= "PRESCRIPTION_REQUIRED";
         }
 
-        return new(issues);
+        return new(issues, code);
     }
 }
 
@@ -195,10 +209,12 @@ public sealed class PrescriptionSale : Sale
     public override ValidationResult Validate(SaleContext ctx)
     {
         var issues = ValidateCommon(ctx);
+        var code = CommonError(ctx);
         var prescription = ctx.Prescription;
         if (prescription is null || prescription.PrescriptionId != PrescriptionId || !prescription.Validate(PatientId ?? "", ctx.BusinessDate))
         {
             issues.Add("Đơn thuốc không hợp lệ.");
+            code ??= "PRESCRIPTION_INVALID";
         }
         else
         {
@@ -208,11 +224,12 @@ public sealed class PrescriptionSale : Sale
                 if (prescribed is null || line.Quantity > prescribed.Remaining(ctx.ActivePrescriptionReservations?.GetValueOrDefault(prescribed.ItemId) ?? 0))
                 {
                     issues.Add("Thuốc ngoài đơn hoặc vượt hạn mức.");
+                    code ??= "PRESCRIPTION_INVALID";
                 }
             }
         }
 
-        return new(issues);
+        return new(issues, code);
     }
 }
 

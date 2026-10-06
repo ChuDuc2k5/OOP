@@ -6,7 +6,7 @@ using Pharmacy.Core.Services;
 namespace Pharmacy.Api.Controllers;
 
 [ApiController, Route("api/staff/orders"), Authorize(Policy = "Staff")]
-public sealed class StaffOrdersController(OrderService orders) : ControllerBase
+public sealed class StaffOrdersController(OrderService orders, CheckoutService checkout) : ControllerBase
 {
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -21,7 +21,7 @@ public sealed class StaffOrdersController(OrderService orders) : ControllerBase
     public Task<OrderView> Claim(string orderId, CancellationToken ct) => orders.StaffAction(orderId, UserId, "claim", ct);
 
     [HttpPost("{orderId}/fulfill")]
-    public Task<OrderView> Fulfill(string orderId, CancellationToken ct) => orders.StaffAction(orderId, UserId, "fulfill", ct);
+    public Task<CheckoutResult> Fulfill(string orderId, CancellationToken ct) => checkout.Fulfill(orderId, UserId, ct);
 
     [HttpPost("{orderId}/ship")]
     public Task<OrderView> Ship(string orderId, CancellationToken ct) => orders.StaffAction(orderId, UserId, "ship", ct);
