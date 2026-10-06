@@ -1,4 +1,5 @@
 "use client";
+import { ActionButton } from '@/components/ActionButton';
 import Image from "next/image";
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -118,16 +119,17 @@ function PrescriptionForm({
       onSubmit={(e) => {
         e.preventDefault();
         void action.run(
-          () =>
-            creating
-              ? staffPrescriptionsApi.create({
+          async () => {
+            if (creating) return staffPrescriptionsApi.create({
                   ...form,
                   prescriptionId: paperId.trim(),
-                })
-              : staffPrescriptionsApi.update(prescriptionId!, form),
+                });
+            await staffPrescriptionsApi.update(prescriptionId!, form);
+            return staffPrescriptionsApi.action(prescriptionId!, 'approve');
+          },
           (p) => {
             onSaved(p);
-            action.setSuccess("Đã lưu chi tiết đơn thuốc.");
+            action.setSuccess(creating ? 'Đã tiếp nhận đơn tại quầy.' : 'Đã lưu và chấp nhận đơn thuốc.');
           },
         );
       }}
@@ -167,12 +169,12 @@ function PrescriptionForm({
         errors={action.fields}
         disabled={action.busy}
       />
-      <button
+      <ActionButton busy={action.busy}
         className={buttonClass}
         disabled={action.busy || !form.items.length}
       >
-        {creating ? "Tiếp nhận đơn tại quầy" : "Lưu chi tiết"}
-      </button>
+        {creating ? "Tiếp nhận đơn tại quầy" : "Lưu & chấp nhận"}
+      </ActionButton>
     </form>
   );
 }
@@ -318,22 +320,7 @@ export function PrescriptionDetail({
                 prescriptionId={id}
                 onSaved={resource.setData}
               />
-              <button
-                className={buttonClass}
-                disabled={
-                  action.busy ||
-                  !p.items.length ||
-                  !p.prescriberName ||
-                  !p.issueDate ||
-                  !p.validUntil
-                }
-                onClick={() => {
-                  if (window.confirm("Chấp nhận đơn thuốc đã đối chiếu?"))
-                    void transition("approve");
-                }}
-              >
-                Chấp nhận đơn thuốc
-              </button>
+
             </>
           )}
           <ReasonActions

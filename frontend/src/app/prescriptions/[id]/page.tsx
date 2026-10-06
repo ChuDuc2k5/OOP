@@ -4,6 +4,7 @@ import React, { useEffect, useState, use, useCallback } from 'react';
 import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import { QueryBanner } from '@/components/QueryBanner';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
 import { ApiException, prescriptionsApi } from '@/lib/api';
@@ -108,6 +109,7 @@ export default function PrescriptionDetailPage({
           </div>
         ) : (
           <div className="space-y-6">
+            <QueryBanner param="sent">Đã gửi, chờ dược sĩ kiểm tra</QueryBanner>
             {/* Top Status Header Card */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">

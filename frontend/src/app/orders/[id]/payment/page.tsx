@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, use, useRef } from 'react';
+import { ActionButton } from '@/components/ActionButton';
+import { QueryBanner } from '@/components/QueryBanner';
+import { notify, notifyError } from '@/lib/feedback';
 import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -40,27 +43,41 @@ export default function OrderPaymentPage({
   const [order, setOrder] = useState<OrderView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const opened = useRef<string | null>(null);
+  const inFlight = useRef(false);
+  const previous = useRef<PaymentView['status'] | null>(null);
 
   // Copy indicator states
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  const fetchPaymentData = React.useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchPaymentData = React.useCallback(async (refresh = false, manual = false) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    if (refresh) setRefreshing(true); else setLoading(true);
+    if (!refresh) setError(null);
     try {
       // Fetch both payment info and order info
-      const [paymentData, orderData] = await Promise.all([
-        paymentApi.openOrGetPayment(orderId),
-        ordersApi.getOrderById(orderId).catch(() => null),
-      ]);
+      const orderData = await ordersApi.getOrderById(orderId);
+      const paymentData = opened.current === orderId || orderData.payment
+        ? await paymentApi.getPayment(orderId) : await paymentApi.openOrGetPayment(orderId);
       setPayment(paymentData);
       setOrder(orderData);
+      opened.current = orderId;
+      if (previous.current && previous.current !== 'Confirmed' && paymentData.status === 'Confirmed') {
+        notify({ kind: 'success', message: 'Đã xác nhận thanh toán. Nhà thuốc đang chuẩn bị hàng.', href: `/orders/${orderId}`, label: 'Về chi tiết đơn' });
+      } else if (manual) notify({ kind: 'info', message: `Đã làm mới: ${PAYMENT_STATUS_LABELS[paymentData.status]}.` });
+      previous.current = paymentData.status;
+      setError(null);
     } catch (err: unknown) {
       const msg =
         err instanceof ApiException ? err.title : 'Không thể tải thông tin thanh toán cho đơn hàng';
       setError(msg);
+      if (refresh) notifyError(err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
+      inFlight.current = false;
     }
   }, [orderId]);
 
@@ -69,6 +86,12 @@ export default function OrderPaymentPage({
       fetchPaymentData();
     }
   }, [authorized, user, fetchPaymentData]);
+
+  useEffect(() => {
+    if (!authorized || !payment?.paymentId) return;
+    const timer = setInterval(() => void fetchPaymentData(true), 15_000);
+    return () => clearInterval(timer);
+  }, [authorized, payment?.paymentId, fetchPaymentData]);
 
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
@@ -87,6 +110,8 @@ export default function OrderPaymentPage({
       <Header />
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <QueryBanner param="created">Đặt hàng thành công – Mã đơn {orderId}</QueryBanner>
+        <Link href={`/orders/${orderId}`} className="inline-flex rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800">Đóng / Về đơn hàng</Link>
         {/* Navigation Breadcrumb */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-4">
           <div className="flex items-center space-x-2 text-xs text-slate-500">
@@ -107,7 +132,7 @@ export default function OrderPaymentPage({
           </Link>
         </div>
 
-        {loading ? <LoadingState /> : error || !payment ? (
+        {loading ? <LoadingState /> : !payment ? (
           <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 space-y-3">
             <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto" />
             <h2 className="text-lg font-bold text-slate-800">Không thể mở cổng thanh toán</h2>
@@ -116,7 +141,7 @@ export default function OrderPaymentPage({
             </p>
             <div className="pt-2 flex justify-center gap-3">
               <button
-                onClick={fetchPaymentData}
+                onClick={() => void fetchPaymentData()}
                 className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700"
               >
                 Thử lại
@@ -131,6 +156,14 @@ export default function OrderPaymentPage({
           </div>
         ) : (
           <div className="space-y-6">
+            {error && <p role="alert" className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-950">{error} Dữ liệu đang hiển thị là lần tải gần nhất.</p>}
+            <section aria-label="Trạng thái thanh toán" role="status" className={`rounded-xl border p-4 ${payment.status === 'Confirmed' ? 'border-emerald-300 bg-emerald-50 text-emerald-950' : payment.status === 'Closed' ? 'border-slate-300 bg-slate-100 text-slate-900' : 'border-amber-300 bg-amber-50 text-amber-950'}`}>
+              <h2 className="font-bold">Thanh toán: {PAYMENT_STATUS_LABELS[payment.status]}</h2>
+              <p className="mt-1 text-sm">{payment.status === 'PendingReview' ? 'Nhà thuốc đang chờ đối chiếu tiền chuyển khoản. Bạn không cần thao tác thêm.' : payment.status === 'Confirmed' ? 'Đã xác nhận thanh toán. Theo dõi tiến độ tại chi tiết đơn.' : 'Yêu cầu thanh toán đã đóng. Vui lòng xem chi tiết đơn hoặc liên hệ nhà thuốc.'}</p>
+              {payment.reviewNote && <p className="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-950">Ghi chú đối chiếu: {payment.reviewNote}</p>}
+              <p className="mt-2 text-xs">Trạng thái tự làm mới mỗi 15 giây.</p>
+              {payment.status !== 'PendingReview' && <Link className="mt-2 inline-block font-bold underline" href={`/orders/${orderId}`}>Về chi tiết đơn</Link>}
+            </section>
             {/* Header Title Card */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
@@ -152,13 +185,14 @@ export default function OrderPaymentPage({
                 >
                   {PAYMENT_STATUS_LABELS[payment.status]}
                 </span>
-                <button
-                  onClick={fetchPaymentData}
+                <ActionButton busy={refreshing}
+                  onClick={() => void fetchPaymentData(true, true)}
                   title="Cập nhật trạng thái"
                   className="p-1.5 border border-slate-200 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-slate-50 transition"
                 >
                   <RefreshCw className="w-4 h-4" />
-                </button>
+                  <span className="ml-1 text-xs">Làm mới</span>
+                </ActionButton>
               </div>
             </div>
 
@@ -197,7 +231,7 @@ export default function OrderPaymentPage({
               <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
               <div className="space-y-1 text-xs sm:text-sm leading-relaxed">
                 <strong className="font-bold block text-amber-900 uppercase tracking-wide text-xs">
-                  Cảnh báo thanh toán quan trọng (SRS 6.2):
+                  Cảnh báo thanh toán quan trọng:
                 </strong>
                 <p className="font-medium text-amber-900">
                   Vui lòng kiểm tra kỹ số tiền và nội dung chuyển khoản trước khi thanh toán. Chuyển thiếu số tiền yêu cầu sẽ không được duyệt. Nếu chuyển thừa, cửa hàng không chịu trách nhiệm đối với phần tiền chuyển thừa. Sau khi chuyển khoản, vui lòng chờ Admin hoặc nhân viên kiểm tra và xác nhận.

@@ -1,10 +1,12 @@
 "use client";
+import { ActionButton } from '@/components/ActionButton';
 import Image from "next/image";
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { adminApi, inventoryApi, type ListQuery } from "@/lib/backoffice-api";
 import { ApiException } from "@/lib/api";
+import { notifyError } from '@/lib/feedback';
 import type {
   CreateBatchInput,
   CreateStaffInput,
@@ -113,9 +115,9 @@ export function Accounts() {
               disabled={action.busy}
             />
           </div>
-          <button className={buttonClass} disabled={action.busy}>
+          <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
             Tạo Staff
-          </button>
+          </ActionButton>
         </form>
       </Card>
     </RecordList>
@@ -175,6 +177,11 @@ function DrugForm({
 }) {
   const action = useAction();
   const [form, setForm] = useState<DrugCreate>(drug || emptyDrug);
+  const [created, setCreated] = useState<DrugAdmin | null>(null);
+  const [firstImage, setFirstImage] = useState<File | null>(null);
+  const [imageSaved, setImageSaved] = useState(false);
+  const [withBatch, setWithBatch] = useState(false);
+  const [firstBatch, setFirstBatch] = useState<CreateBatchInput>({ batchNumber: '', expiryDate: '', quantity: 1 });
   useEffect(() => {
     if (drug) setForm(drug);
   }, [drug]);
@@ -194,10 +201,15 @@ function DrugForm({
           isForSale: form.isForSale,
         };
         void action.run(
-          () =>
-            drug
-              ? adminApi.updateDrug(drug.drugId, input)
-              : adminApi.createDrug({ ...input, drugId: form.drugId.trim() }),
+          async () => {
+            if (drug) return adminApi.updateDrug(drug.drugId, input);
+            if (firstImage) validateImage(firstImage);
+            let value = created ? await adminApi.updateDrug(created.drugId, input) : await adminApi.createDrug({ ...input, drugId: form.drugId.trim() });
+            setCreated(value);
+            if (firstImage && !imageSaved) { value = await adminApi.drugImage(value.drugId, firstImage); setImageSaved(true); setCreated(value); }
+            if (withBatch) await adminApi.batch(value.drugId, firstBatch);
+            return value;
+          },
           (value) => {
             saved(value);
             action.setSuccess("Đã lưu thuốc.");
@@ -207,6 +219,7 @@ function DrugForm({
     >
       <Feedback {...action} />
       <Card>
+        {!drug && created && <p className="rounded-lg bg-blue-50 p-3 text-sm">Thuốc {created.drugId} đã được tạo. Nếu ảnh hoặc lô lỗi, có thể sửa và thử lại hoặc <Link href={`/admin/drugs/${encodeURIComponent(created.drugId)}`} className="font-semibold underline">mở chi tiết thuốc</Link>.</p>}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
             label="Mã thuốc"
@@ -214,7 +227,7 @@ function DrugForm({
             value={form.drugId}
             onChange={(e) => setForm({ ...form, drugId: e.target.value })}
             errors={action.fields}
-            disabled={!!drug || action.busy}
+            disabled={!!drug || !!created || action.busy}
             required
           />
           <Field
@@ -320,9 +333,20 @@ function DrugForm({
             {action.fields.requiresPrescription.join(" ")}
           </p>
         )}
-        <button className={buttonClass} disabled={action.busy}>
+        {!drug && <div className="space-y-4 border-t pt-4">
+          <label htmlFor="first-drug-image" className="block text-sm font-semibold">Ảnh thuốc (tùy chọn, PNG/JPG tối đa 5 MB)</label>
+          <input id="first-drug-image" type="file" accept="image/png,image/jpeg" disabled={action.busy} className="block w-full min-w-0 text-sm" onChange={e => { setFirstImage(e.target.files?.[0] || null); setImageSaved(false); }} />
+          {action.fields.file && <p className="text-sm text-rose-700">{action.fields.file.join(' ')}</p>}
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={withBatch} disabled={action.busy} onChange={e => setWithBatch(e.target.checked)} />Nhập lô đầu tiên</label>
+          {withBatch && <div className="grid gap-3 sm:grid-cols-3">
+            <Field label="Số lô đầu tiên" name="batchNumber" value={firstBatch.batchNumber} required disabled={action.busy} errors={action.fields} onChange={e => setFirstBatch(b => ({ ...b, batchNumber: e.target.value }))} />
+            <Field label="Hạn dùng lô đầu tiên" name="expiryDate" type="date" value={firstBatch.expiryDate} required disabled={action.busy} errors={action.fields} onChange={e => setFirstBatch(b => ({ ...b, expiryDate: e.target.value }))} />
+            <Field label="Số lượng lô đầu tiên" name="quantity" type="number" min={1} step={1} value={firstBatch.quantity} required disabled={action.busy} errors={action.fields} onChange={e => setFirstBatch(b => ({ ...b, quantity: Number(e.target.value) }))} />
+          </div>}
+        </div>}
+        <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
           {drug ? "Lưu thuốc" : "Thêm thuốc"}
-        </button>
+        </ActionButton>
       </Card>
     </form>
   );
@@ -423,6 +447,7 @@ function ImageUpload({
                 validateImage(selected);
                 setFile(selected);
               } catch (err) {
+                notifyError(err);
                 if (err instanceof ApiException) action.setFields(err.errors || {});
                 action.setError(
                   errorTitle(err),
@@ -432,9 +457,9 @@ function ImageUpload({
           }}
         />
         <p className="text-sm text-slate-600">{file ? file.name : "Chưa chọn ảnh"}</p>
-        <button className={buttonClass} disabled={action.busy || !file}>
+        <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy || !file}>
           Tải ảnh lên
-        </button>
+        </ActionButton>
       </form>
     </Card>
   );
@@ -511,9 +536,9 @@ function BatchForm({
             disabled={action.busy}
           />
         </div>
-        <button className={buttonClass} disabled={action.busy}>
+        <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
           Nhập lô
-        </button>
+        </ActionButton>
       </form>
     </Card>
   );
@@ -546,7 +571,7 @@ export function DrugDetail({
           <DrugForm drug={d} saved={r.setData} />
           <Card>
             <p>Trạng thái: {d.isForSale ? "Đang bán" : "Tắt bán"}</p>
-            <button
+            <ActionButton busy={action.busy}
               className={buttonClass}
               disabled={action.busy}
               onClick={() =>
@@ -557,7 +582,7 @@ export function DrugDetail({
               }
             >
               {d.isForSale ? "Tắt bán" : "Bật bán"}
-            </button>
+            </ActionButton>
           </Card>
           <ImageUpload
             title="Ảnh thuốc"
@@ -610,7 +635,7 @@ export function PaymentSettings() {
             >
               {r.data.isConfigured
                 ? "Đã cấu hình đầy đủ."
-                : "Chưa đủ thông tin tài khoản hoặc ảnh QR."}
+                : "Chưa cấu hình. Vui lòng nhập tài khoản nhận tiền và tải ảnh QR."}
             </p>
             <p className="text-sm text-slate-600">
               Thay đổi áp dụng cho lần mở thanh toán mới. Thanh toán đã mở giữ
@@ -649,9 +674,9 @@ export function PaymentSettings() {
                   />
                 ))}
               </div>
-              <button className={buttonClass} disabled={action.busy}>
+              <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
                 Lưu tài khoản
-              </button>
+              </ActionButton>
             </form>
           </Card>
           <ImageUpload

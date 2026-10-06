@@ -1,4 +1,5 @@
 'use client';
+import { ActionButton } from '@/components/ActionButton';
 
 import React, { useState, Suspense } from 'react';
 import { LoadingState } from '@/components/Status';
@@ -27,6 +28,7 @@ function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setGeneralError(null);
     setFieldErrors({});
 
@@ -131,7 +133,7 @@ function LoginForm() {
                   autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Nhập tên đăng nhập (vd: user, staff, admin)"
+                  placeholder="Nhập tên đăng nhập"
                   className={`block w-full pl-10 pr-3 py-2.5 text-sm rounded-lg border focus:outline-none transition ${
                     fieldErrors.username
                       ? 'border-rose-400 focus:ring-2 focus:ring-rose-500 bg-rose-50/20'
@@ -187,54 +189,15 @@ function LoginForm() {
 
             {/* Submit Button */}
             <div>
-              <button
+              <ActionButton busy={submitting}
                 type="submit"
                 disabled={submitting}
                 className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-60 transition"
               >
                 {submitting ? 'Đang xác thực...' : 'Đăng nhập'}
-              </button>
+              </ActionButton>
             </div>
           </form>
-
-          {/* Demo account quick hint */}
-          <div className="mt-6 pt-6 border-t border-slate-200">
-            <p className="text-xs text-slate-500 text-center mb-2 font-medium">
-              Gợi ý tài khoản demo kiểm thử (SRS §8):
-            </p>
-            <div className="grid grid-cols-3 gap-2 text-[11px] text-center font-mono">
-              <button
-                type="button"
-                onClick={() => {
-                  setUsername('user');
-                  setPassword('User@12345');
-                }}
-                className="p-1.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 rounded border border-slate-200 transition"
-              >
-                user / User@12345
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setUsername('staff');
-                  setPassword('Staff@12345');
-                }}
-                className="p-1.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 rounded border border-slate-200 transition"
-              >
-                staff / Staff@12345
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setUsername('admin');
-                  setPassword('Admin@12345');
-                }}
-                className="p-1.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 rounded border border-slate-200 transition"
-              >
-                admin / Admin@12345
-              </button>
-            </div>
-          </div>
         </div>
 
         <div className="mt-6 text-center">

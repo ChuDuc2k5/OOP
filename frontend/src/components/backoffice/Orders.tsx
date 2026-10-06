@@ -1,5 +1,7 @@
 "use client";
-import { use, useCallback } from "react";
+import { ActionButton } from '@/components/ActionButton';
+import { use, useCallback, useState } from "react";
+import { ReviewForm } from './Payments';
 import Link from "next/link";
 import { staffOrdersApi } from "@/lib/backoffice-api";
 import {
@@ -42,6 +44,7 @@ export function OrderList() {
         "Hình thức nhận",
         "Tổng tiền",
         "Người xử lý",
+        "Việc cần làm",
       ]}
       row={(o) => (
         <>
@@ -63,6 +66,7 @@ export function OrderList() {
           <td>{RECEIVE_METHOD_LABELS[o.receiveMethod]}</td>
           <td>{formatVND(o.totalAmount)}</td>
           <td>{o.handledByUsername || "Chưa nhận"}</td>
+          <td>{['Completed', 'Cancelled', 'Rejected'].includes(o.status) ? 'Đã kết thúc' : o.status === 'WaitingReview' ? 'Kiểm tra đơn thuốc' : o.paymentStatus === 'PendingReview' ? 'Chờ xác nhận tiền' : o.paymentStatus === 'Confirmed' ? o.receiveMethod === 'Pickup' ? 'Chờ khách đến lấy' : o.status === 'Delivering' ? 'Xác nhận giao xong' : 'Cần giao' : 'Chờ khách thanh toán'}</td>
         </>
       )}
     />
@@ -72,6 +76,7 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const base = useBasePath();
   const action = useAction();
+  const [fulfillError, setFulfillError] = useState('');
   const resource = useResource(useCallback(() => staffOrdersApi.get(id), [id]));
   const o = resource.data;
   const transition = (key: string, reason?: string) =>
@@ -97,7 +102,7 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
         }
       },
       (result) =>
-        action.setSuccess(`Đã xuất kho và lập hóa đơn ${result.invoiceId}.`),
+        { setFulfillError(''); action.setSuccess(`Đã xuất kho và lập hóa đơn ${result.invoiceId}.`); },
     );
   const unpaid =
     !!o &&
@@ -115,6 +120,8 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
     >
       <LoadState {...resource} retry={resource.reload} />
       <Feedback {...action} />
+      {fulfillError && o?.payment?.status === 'Confirmed' && !o.invoiceId && <p role="alert" className="rounded-lg border border-rose-300 bg-rose-50 p-4 text-rose-900">{fulfillError}</p>}
+      {o?.payment?.status === 'PendingReview' && <ReviewForm payment={{ paymentId: o.payment.paymentId, orderId: o.orderId, expectedAmount: o.payment.expectedAmount, customerUsername: o.customerUsername || '', status: 'PendingReview', createdAt: o.createdAt, receivedAmount: o.payment.receivedAmount, reviewNote: o.payment.reviewNote }} refresh={async failure => { setFulfillError(failure || ''); await resource.reload(); }} />}
       {!resource.loading && !resource.error && o && (
         <>
           <Card>
@@ -194,19 +201,10 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
           </Card>
           <Card>
             <div className="flex flex-wrap gap-3">
-              {!["Completed", "Cancelled", "Rejected"].includes(o.status) && (
-                <button
-                  className={buttonClass}
-                  disabled={action.busy}
-                  onClick={() => transition("claim")}
-                >
-                  Nhận xử lý
-                </button>
-              )}
               {o.status === "Preparing" &&
                 o.payment?.status === "Confirmed" &&
                 !o.invoiceId && (
-                  <button
+                  <ActionButton busy={action.busy}
                     className={buttonClass}
                     disabled={action.busy}
                     onClick={() => {
@@ -218,20 +216,20 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
                         void fulfill();
                     }}
                   >
-                    Xuất kho &amp; lập hóa đơn
-                  </button>
+                    Thử xuất kho lại
+                  </ActionButton>
                 )}
               {o.status === "Preparing" &&
                 o.payment?.status === "Confirmed" &&
                 o.invoiceId &&
                 o.receiveMethod === "Delivery" && (
-                  <button
+                  <ActionButton busy={action.busy}
                     className={buttonClass}
                     disabled={action.busy}
                     onClick={() => transition("ship")}
                   >
-                    Bắt đầu giao hàng
-                  </button>
+                    Bắt đầu giao
+                  </ActionButton>
                 )}
               {o.invoiceId &&
                 o.payment?.status === "Confirmed" &&
@@ -239,7 +237,7 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
                   o.receiveMethod === "Delivery") ||
                   (o.status === "Preparing" &&
                     o.receiveMethod === "Pickup")) && (
-                  <button
+                  <ActionButton busy={action.busy}
                     className={buttonClass}
                     disabled={action.busy}
                     onClick={() => {
@@ -247,8 +245,8 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
                         void transition("complete");
                     }}
                   >
-                    Hoàn tất đơn hàng
-                  </button>
+                    {o.receiveMethod === 'Pickup' ? 'Khách đã nhận thuốc' : 'Đã giao xong'}
+                  </ActionButton>
                 )}
             </div>
             {["Completed", "Cancelled", "Rejected"].includes(o.status) && (

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { LoadingState } from '@/components/Status';
+import { ActionLink } from '@/components/ActionLink';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
@@ -14,6 +15,7 @@ import {
   formatVND,
   getStatusBadgeClass,
   ORDER_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
   RECEIVE_METHOD_LABELS,
   SALE_KIND_LABELS,
 } from '@/lib/format';
@@ -231,16 +233,19 @@ function OrdersContent() {
                           >
                             {ORDER_STATUS_LABELS[order.status]}
                           </span>
+                          <span className={`mt-2 block w-fit rounded-full border px-2.5 py-1 text-[11px] font-semibold ${order.paymentStatus ? getStatusBadgeClass(order.paymentStatus) : 'border-slate-200 bg-slate-100 text-slate-700'}`}>
+                            Thanh toán: {order.paymentStatus ? PAYMENT_STATUS_LABELS[order.paymentStatus] : 'Chưa mở thanh toán'}
+                          </span>
                         </td>
                         <td className="p-4 text-right space-x-2">
-                          {order.status === 'AwaitingPayment' && (
-                            <Link
+                          {order.status === 'AwaitingPayment' && !['Confirmed', 'Closed'].includes(order.paymentStatus || '') && (
+                            <ActionLink
                               href={`/orders/${order.orderId}/payment`}
                               className="inline-flex items-center space-x-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition"
                             >
                               <CreditCard className="w-3.5 h-3.5" />
                               <span>Thanh toán</span>
-                            </Link>
+                            </ActionLink>
                           )}
                           <Link
                             href={`/orders/${order.orderId}`}

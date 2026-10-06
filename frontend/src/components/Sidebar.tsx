@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { ActionButton } from './ActionButton';
 import { ROLE_LABELS } from "@/lib/format";
 import {
   LayoutDashboard,
@@ -28,14 +29,16 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ role }: SidebarProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, loggingOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
+    try {
     await logout();
     router.push("/login");
+    } catch { /* Lỗi đã được hiển thị bởi toast. */ }
   };
 
   const staffNavItems = [
@@ -73,7 +76,7 @@ export default function Sidebar({ role }: SidebarProps) {
   return (
     <>
       {/* Mobile top bar with hamburger toggle */}
-      <div className="lg:hidden flex items-center justify-between bg-slate-900 text-white px-4 py-3 sticky top-0 z-30 shadow-md">
+      <div data-mobile-sidebar-header className="lg:hidden flex items-center justify-between bg-slate-900 text-white px-4 py-3 sticky top-0 z-30 shadow-md">
         <div className="flex items-center space-x-2 font-bold text-emerald-400">
           <Pill className="w-5 h-5 text-emerald-400" />
           <span>
@@ -153,13 +156,13 @@ export default function Sidebar({ role }: SidebarProps) {
                 </p>
               </div>
             </div>
-            <button
+              <ActionButton busy={loggingOut} compact
               onClick={handleLogout}
               className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-lg transition shrink-0"
               title="Đăng xuất"
             >
               <LogOut className="w-4 h-4" />
-            </button>
+            </ActionButton>
           </div>
         </div>
 

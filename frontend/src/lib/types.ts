@@ -86,6 +86,7 @@ export type CreateStaffInput = {
 // ==========================================
 
 export type Product = {
+  availableQuantity?: number;
   drugId: string;
   name: string;
   description?: string;
