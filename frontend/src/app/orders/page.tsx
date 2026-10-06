@@ -254,7 +254,7 @@ function OrdersContent() {
                               order.status
                             )}`}
                           >
-                            {ORDER_STATUS_LABELS[order.status]}
+                            {order.status === 'Preparing' && order.receiveMethod === 'Pickup' && order.readyAt ? 'Sẵn sàng nhận' : ORDER_STATUS_LABELS[order.status]}
                           </span>
                           <span className={`mt-2 block w-fit rounded-full border px-2.5 py-1 text-[11px] font-semibold ${order.paymentStatus ? getStatusBadgeClass(order.paymentStatus) : 'border-slate-200 bg-slate-100 text-slate-700'}`}>
                             Thanh toán: {order.paymentStatus ? PAYMENT_STATUS_LABELS[order.paymentStatus] : 'Chưa mở thanh toán'}
