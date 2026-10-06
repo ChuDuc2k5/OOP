@@ -241,9 +241,10 @@ type OrderView = {
   payment?: PaymentSummary;                        // null = chưa mở thanh toán
   invoiceId?: string;                              // có sau khi F019 xuất thành công
   handledByUsername?: string;
+  readyAt?: string;                                // D15: Pickup đã soạn xong, chờ khách tới lấy
   canCancel: boolean; canPay: boolean;             // server tính, FE chỉ hiển thị nút theo cờ
 }
-type OrderRow = Pick<OrderView, "orderId"|"createdAt"|"saleKind"|"status"|"totalAmount"|"receiveMethod"> & { paymentStatus?: PaymentStatus; customerUsername?: string; handledByUsername?: string }
+type OrderRow = Pick<OrderView, "orderId"|"createdAt"|"saleKind"|"status"|"totalAmount"|"receiveMethod"|"readyAt"> & { paymentStatus?: PaymentStatus; customerUsername?: string; handledByUsername?: string }
 type PlaceOrderInput = {
   saleKind: SaleKind;
   receiverName: string; phone: string; receiveMethod: ReceiveMethod; address?: string;  // address bắt buộc khi Delivery
@@ -267,6 +268,7 @@ Quy tắc đặt hàng: OTC có thuốc `requiresPrescription`/`isControlled` �
 | `GET /api/staff/orders/{orderId}` | – | `200 OrderView` (+ `customerUsername`) |
 | `POST /api/staff/orders/{orderId}/claim` | – | ghi `HandledBy = me` → `200 OrderView` |
 | `POST /api/staff/orders/{orderId}/fulfill` | – | Gọi **F019 CheckoutService**: `Preparing` + payment `Confirmed` + chưa có invoice → `200 { saleId, invoiceId }`. Lỗi → `409` (đơn vẫn `Preparing`, ghi `note`, thanh toán giữ nguyên) |
+| `POST /api/staff/orders/{orderId}/ready` | – | D15: Pickup, `Preparing`, đã có invoice → ghi `readyAt` (idempotent, gọi lại trả cùng giá trị) → `200 OrderView`; Delivery/chưa có hóa đơn → `409 INVALID_STATE` |
 | `POST /api/staff/orders/{orderId}/ship` | – | `Preparing` → `Delivering` (chỉ `Delivery`, phải có invoice) |
 | `POST /api/staff/orders/{orderId}/complete` | – | `Delivering` → `Completed` (Delivery) hoặc `Preparing` → `Completed` (Pickup, phải có invoice) |
 | `POST /api/staff/orders/{orderId}/reject` | `{ reason }` | `WaitingReview`/`AwaitingPayment` chưa thanh toán → `Rejected`, giải phóng giữ |
