@@ -15,6 +15,8 @@ import {
   LayoutDashboard,
   Pill,
   Search,
+  FileText,
+  Receipt,
 } from 'lucide-react';
 
 export default function Header() {
@@ -86,6 +88,22 @@ export default function Header() {
                 >
                   <ClipboardList className="w-5 h-5 text-slate-600" />
                   <span>Đơn hàng</span>
+                </Link>
+                <Link
+                  href="/prescriptions"
+                  className="flex items-center space-x-1 text-slate-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition"
+                  title="Đơn thuốc của tôi"
+                >
+                  <FileText className="w-5 h-5 text-slate-600" />
+                  <span>Đơn thuốc</span>
+                </Link>
+                <Link
+                  href="/invoices"
+                  className="flex items-center space-x-1 text-slate-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition"
+                  title="Hóa đơn mua hàng"
+                >
+                  <Receipt className="w-5 h-5 text-slate-600" />
+                  <span>Hóa đơn</span>
                 </Link>
               </>
             )}
@@ -240,6 +258,22 @@ export default function Header() {
                 >
                   <ClipboardList className="w-5 h-5 text-slate-500" />
                   <span>Đơn mua của tôi</span>
+                </Link>
+                <Link
+                  href="/prescriptions"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-slate-800 hover:bg-slate-50"
+                >
+                  <FileText className="w-5 h-5 text-slate-500" />
+                  <span>Đơn thuốc của tôi</span>
+                </Link>
+                <Link
+                  href="/invoices"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-slate-800 hover:bg-slate-50"
+                >
+                  <Receipt className="w-5 h-5 text-slate-500" />
+                  <span>Hóa đơn của tôi</span>
                 </Link>
               </>
             )}

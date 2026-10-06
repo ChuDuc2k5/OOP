@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/context/AuthContext';
 import { ApiException } from '@/lib/api';
+import { isSafeLocalUrl } from '@/lib/url';
 import {
   Pill,
   Lock,
@@ -123,7 +124,7 @@ function RegisterForm() {
         <p className="mt-2 text-center text-sm text-slate-600">
           Đã có tài khoản?{' '}
           <Link
-            href={`/login${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ''}`}
+            href={`/login${isSafeLocalUrl(nextPath) ? `?next=${encodeURIComponent(nextPath!)}` : ''}`}
             className="font-semibold text-emerald-600 hover:text-emerald-500 hover:underline"
           >
             Đăng nhập ngay
@@ -147,7 +148,7 @@ function RegisterForm() {
               <div className="pt-2">
                 <Link
                   href={`/login?username=${encodeURIComponent(successUsername)}${
-                    nextPath ? `&next=${encodeURIComponent(nextPath)}` : ''
+                    isSafeLocalUrl(nextPath) ? `&next=${encodeURIComponent(nextPath!)}` : ''
                   }`}
                   className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm transition"
                 >

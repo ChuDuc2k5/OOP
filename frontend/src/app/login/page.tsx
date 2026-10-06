@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/context/AuthContext';
 import { ApiException } from '@/lib/api';
+import { isSafeLocalUrl } from '@/lib/url';
 import { Pill, Lock, User as UserIcon, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
 
 function LoginForm() {
@@ -48,9 +49,9 @@ function LoginForm() {
         password,
       });
 
-      // Nếu có tham số next và user là role 'User', điều hướng về next
-      if (nextPath && me.role === 'User') {
-        router.replace(nextPath);
+      // Nếu có tham số next an toàn và user là role 'User', điều hướng về next; ngược lại dùng homePath
+      if (me.role === 'User' && isSafeLocalUrl(nextPath)) {
+        router.replace(nextPath!);
       } else {
         router.replace(me.homePath || '/');
       }
@@ -95,7 +96,7 @@ function LoginForm() {
         <p className="mt-2 text-center text-sm text-slate-600">
           Hoặc{' '}
           <Link
-            href={`/register${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ''}`}
+            href={`/register${isSafeLocalUrl(nextPath) ? `?next=${encodeURIComponent(nextPath!)}` : ''}`}
             className="font-semibold text-emerald-600 hover:text-emerald-500 hover:underline"
           >
             đăng ký tài khoản khách hàng mới
