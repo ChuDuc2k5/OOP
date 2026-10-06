@@ -1,1 +1,2 @@
-export { PrescriptionNew as default } from '@/components/backoffice/Prescriptions';
+import { redirect } from 'next/navigation';
+export default function Page() { redirect('/staff/prescriptions/new'); }

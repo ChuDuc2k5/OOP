@@ -1,1 +1,1 @@
-export { default } from '@/components/backoffice/Dashboard';
+export { default } from '@/components/backoffice/AdminDashboard';
