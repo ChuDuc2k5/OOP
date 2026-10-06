@@ -1,1 +1,2 @@
-export { default } from '@/components/backoffice/Payments';
+import { redirect } from 'next/navigation';
+export default function Page() { redirect('/staff/payments'); }
