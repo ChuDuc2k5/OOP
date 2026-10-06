@@ -75,6 +75,11 @@ builder.Services.AddScoped<InventoryReader>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<InventoryService>();
 builder.Services.AddScoped<InventoryReportService>();
+builder.Services.AddScoped<PrescriptionQuota>();
+builder.Services.AddScoped<PrescriptionService>();
+builder.Services.AddScoped<CartService>();
+builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<DbSeeder>();
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())

@@ -13,7 +13,8 @@ public sealed class Prescription
         string createdBy,
         string patientId,
         string patientName,
-        string? imagePath = null)
+        string? imagePath = null,
+        DateTimeOffset? createdAt = null)
     {
         PrescriptionId = Guard.Required(id);
         OwnerUserId = owner;
@@ -21,8 +22,16 @@ public sealed class Prescription
         PatientId = Guard.Required(patientId);
         PatientName = Guard.Required(patientName);
         ImagePath = imagePath;
+        CreatedAt = createdAt ?? DateTimeOffset.UnixEpoch;
     }
     public string PrescriptionId { get; private set; } = "";
+    public DateTimeOffset CreatedAt { get; private set; }
+    public void SetPatient(string patientId, string patientName)
+    {
+        Guard.State(Status == PrescriptionStatus.PendingReview);
+        PatientId = Guard.Required(patientId);
+        PatientName = Guard.Required(patientName);
+    }
     public string? OwnerUserId
     {
         get; private set;

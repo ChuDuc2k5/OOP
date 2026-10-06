@@ -1,6 +1,6 @@
 # Backend — Pharmacy Management System
 
-.NET 10 / ASP.NET Core Web API / EF Core 10 / SQLite / xUnit. M1 gồm toàn bộ mô hình dữ liệu và F001–F003; M2 hoàn thành danh mục sản phẩm, nhập lô, tồn kho và báo cáo F004–F009. Đơn thuốc, giỏ, đơn hàng, thanh toán và checkout thuộc M3–M4.
+.NET 10 / ASP.NET Core Web API / EF Core 10 / SQLite / xUnit. M1 gồm toàn bộ mô hình dữ liệu và F001–F003; M2 hoàn thành danh mục sản phẩm, nhập lô, tồn kho và báo cáo F004–F009. M3 hoàn thành đơn thuốc, giỏ và quản lý đơn hàng F010–F015; thanh toán và checkout thuộc M4.
 
 Chạy từ gốc repository:
 
@@ -48,7 +48,7 @@ Luồng gọi API:
 
 FE gọi cùng origin qua Next.js rewrites, `credentials: "include"`; không cần CORS. Không có redirect HTML khi bị chặn: 401/403 trả ProblemDetails JSON. Lỗi theo contract có `status`, `code`, `title` tiếng Việt và `errors` camelCase khi cần. Storage không được phục vụ bằng static files; ảnh thuốc được đọc qua `/api/files/drugs/{fileName}` khi có thuốc tham chiếu đến file đó.
 
-Kiểm thử dùng `WebApplicationFactory` + SQLite file riêng trong temp, clock giả D=2026-10-06 và storage riêng; không dùng EF InMemory. TC-06/55 tạo dữ liệu trực tiếp qua domain vì API nghiệp vụ M2–M4 chưa có. TC-55 đóng host rồi tạo host mới trên cùng DB, đổi D và so sánh toàn bộ bảng domain, bao gồm giá, tồn, đã cấp, reservation, payment, allocation, invoice và QR.
+Kiểm thử dùng `WebApplicationFactory` + SQLite file riêng trong temp, clock giả D=2026-10-06 và storage riêng; không dùng EF InMemory. TC-06/55 dựng fixture domain, gồm dữ liệu thanh toán/xuất kho thuộc M4. TC-55 đóng host rồi tạo host mới trên cùng DB, đổi D và so sánh toàn bộ bảng domain, bao gồm giá, tồn, đã cấp, reservation, payment, allocation, invoice và QR.
 
 | TC | Test method |
 |---|---|
@@ -112,3 +112,47 @@ dotnet test Pharmacy.sln --filter "FullyQualifiedName~CatalogTests|FullyQualifie
 ```
 
 M2 chưa thay đổi schema nên dùng migration M1. Các truy vấn danh mục/kho hiện đọc snapshot rồi lọc bằng .NET để bảo đảm tìm tiếng Việt không phân biệt hoa thường; đo và tối ưu dữ liệu lớn thuộc M5.
+
+API M3 theo contract §6, §7.1–7.3 và §9:
+
+| Quyền | Endpoint |
+|---|---|
+| User | `POST /api/prescriptions` (multipart `image`, `patientId`, `patientName`), `GET /api/prescriptions/mine`, `GET /api/prescriptions/usable` |
+| Chủ đơn thuốc hoặc Staff/Admin | `GET /api/prescriptions/{id}`, `GET /api/prescriptions/{id}/image` |
+| Staff/Admin | `GET /api/prescriptions`, `POST /api/prescriptions/counter`, `PUT /api/prescriptions/{id}/details`, `POST /api/prescriptions/{id}/approve`, `/reject`, `/cancel` |
+| User | `GET /api/cart`, `POST /api/cart/items`, `PUT/DELETE /api/cart/items/{drugId}` |
+| User | `POST /api/orders`, `GET /api/orders/mine`, `GET /api/orders/{orderId}`, `POST /api/orders/{orderId}/cancel` |
+| Staff/Admin | `GET /api/staff/orders`, `GET /api/staff/orders/{orderId}`, `POST /api/staff/orders/{orderId}/claim`, `/ship`, `/complete`, `/reject`, `/cancel`, `/fulfill` |
+| Staff/Admin | `GET /api/dashboard/summary` |
+
+Ảnh đơn thuốc kiểm tra quyền trước khi đọc file, không có URL public; người khác nhận 404. Tiếp nhận/duyệt đơn thuốc không xuất kho. Nhập chi tiết gộp thuốc trùng, chỉ sửa PendingReview; `ValidateQuota` kiểm tra trạng thái, người bệnh, ngày hiệu lực, thuốc trong đơn và lượng đã cấp + đang giữ cho đơn khác. Approve kiểm tra lại Order WaitingReview liên kết: đủ điều kiện sang AwaitingPayment, thiếu điều kiện giữ trạng thái và ghi note. Reject/Cancel đơn thuốc chuyển Order WaitingReview liên kết sang Rejected kèm lý do.
+
+Giỏ chỉ dành cho role User, cộng dồn cùng thuốc và báo issue khi tắt bán/thiếu khả dụng, không giữ kho. Đặt hàng chốt giá hiện tại, so `expectedTotal`, trả `PRICE_CHANGED` với CartView mới nếu khác; không dùng userId/giá từ client. Đặt thành công xóa dòng đã đặt trong cùng transaction. Đơn PendingReview chưa được thanh toán/giữ hàng; mở thanh toán và giữ hàng thuộc M4.
+
+Hủy/từ chối đơn dùng `InventoryService.Execute`: đổi trạng thái, giải phóng tồn/hạn mức và đóng Payment PendingReview trong một transaction. Không hủy đơn đã xác nhận thanh toán. Staff giao/hoàn tất cần Payment Confirmed và hóa đơn từ Sale Completed; cập nhật giao hàng không trừ kho. `canCancel`/`canPay` được tính trên server. `/fulfill` hiện trả 409 `INVALID_STATE` theo phạm vi M3; sẽ nối CheckoutService ở M4.
+
+Migration `PrescriptionCreatedAt` bổ sung thời điểm tạo đơn thuốc. Bản ghi mới/seed dùng IBusinessClock.Now; bản ghi từ DB M1 dùng `1970-01-01T00:00:00+00:00` để biểu thị thời điểm cũ chưa được lưu, không suy đoán ngày tạo. Test nâng cấp từ migration M1 xác nhận bảo toàn dữ liệu và không seed đè.
+
+Kiểm chứng M3: build 0 warning/0 error; toàn bộ 120 test pass (84 test M1–M2 và 36 trường hợp M3). Smoke HTTP tất cả route M3 đã pass, gồm ảnh riêng tư, luồng duyệt đơn liên kết, giỏ/đặt/hủy đơn, staff và dashboard. Ship/complete thành công được kiểm chứng bằng fixture Payment Confirmed + hóa đơn trong integration test, vì API thanh toán/xuất hóa đơn thuộc M4.
+
+```powershell
+dotnet test Pharmacy.sln --filter "FullyQualifiedName~OrderingTests"
+```
+
+| TC | Test method M3 |
+|---|---|
+| TC-13 | `TC13_OrderSnapshotsPrice_ChangedCartRequiresConfirmation` |
+| TC-21 | `TC21_CancelPrescriptionOrder_ReleasesStockQuotaAndClosesPaymentAtomically`, `TC21_CancellationFailure_RollsBackOrderReservationAndPayment` |
+| TC-24 | `TC24_OnlineAndCounterPrescriptions_PersistOwnerCreatorTimeAndNoStockChange`, `TC24_CounterDuplicateAndInvalidDetails_ReturnFieldErrorsWithoutWriting`, `TC24_MigrationFromM1_PreservesExistingPrescriptionAndDoesNotReseed` |
+| TC-25 | `TC25_PrescriptionImages_RejectInvalidFilesAndHideOtherOwners` |
+| TC-26 | `TC26_DetailsMergeDuplicates_ApproveTransitionsEligibleLinkedOrders`, `TC26_InvalidReviewAndDetails_DoNotPartiallyWrite`, `TC26_RejectOrCancelPrescription_RejectsWaitingOrdersWithReason` |
+| TC-27 | `TC27_ValidateQuota_RejectsInvalidPrescriptionCases` |
+| TC-28 | `TC28_UserCannotReview_ConcurrentReservationsRespectLastQuota`, `TC28_UserCannotCallStaffMutations_CompletedQuotaCannotBeCancelled` |
+| TC-29 | `TC29_CartAccumulatesUpdatesDeletes_WithoutReservationOrDeduction` |
+| TC-30 | `TC30_CartIsUserOnly_AllRoutesBlocked` |
+| TC-31 | `TC31_CartIssues_BlockInvalidOrder_KeepCartUnchanged` |
+| TC-32 | `TC32_PlaceOtc_SetsOwnerUniqueCodeAndTotal_ClearsCartWithoutReserving`, `TC32_OrderValidation_BlocksMissingAddressAndPrescriptionRequired`, `TC32_ConcurrentPlacement_OnlyOneOrderConsumesSameCart` |
+| TC-33 | `TC33_PendingPrescriptionOrder_WaitsWithoutReservation_ApprovedOrderChecksQuota` |
+| TC-34 | `TC34_GuestOrOtherOwner_CannotPlaceReadCancelOrUsePrescription` |
+| TC-36 | `TC36_StaffCannotShipCompleteOrFulfillBeforePaymentAndInvoice`, `TC36_UserCannotManageStaffOrdersOrDashboard` |
+| TC-37 | `TC37_StaffDeliveryLifecycle_RequiresInvoice_NeverDeductsAgain`, `TC37_StaffRejectCancel_RequiresReason_ReleasesPendingPayment` |
