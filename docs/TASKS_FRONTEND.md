@@ -117,6 +117,13 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
   - Bộ thử chạy production tại cổng 3017/5017, SQLite seed riêng và mock tắt; build `.next-e2e` tách khỏi `.next`, không dùng cổng 3000/5000 của người dùng. Hướng dẫn trong `frontend/README.md`.
   - Kiểm chứng cuối: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` Chromium 10/10 ca pass (1,5 phút), đủ 49 route mỗi viewport. Kiểm tra UTF-8 và phạm vi file sửa đạt. Server thử nghiệm đã dừng; chưa mở rộng sang Firefox/WebKit.
 
+  - Tiếp tục D6–D9: checkout “Đặt hàng & thanh toán” tạo đơn rồi mở QR ngay khi `canPay`; đơn thuốc chờ duyệt chưa mở QR, lỗi mở QR giữ đơn và báo title ở chi tiết. Đóng QR chỉ điều hướng; chi tiết đơn tự làm mới 15 giây và có nút xem lại QR khi chờ xác nhận.
+  - D7: đơn Pickup đã thanh toán có khối mời đến quầy và mã đơn lớn; Delivery hiển thị đang chuẩn bị/đang giao.
+  - D8: form xác nhận tiền dùng chung cho danh sách thanh toán và chi tiết đơn Staff/Admin, review đủ tiền gọi fulfill ngay; chuyển thiếu giữ chờ duyệt, lỗi fulfill giữ tiền đã xác nhận và cho thử xuất kho lại. Bỏ nút nhận xử lý; Pickup hoàn tất bằng “Khách đã nhận thuốc”, Delivery bằng “Bắt đầu giao” → “Đã giao xong”. Danh sách đơn có thanh toán và việc cần làm.
+  - D9: thuốc hết hàng vẫn hiển thị, khóa nút thêm giỏ màu xám; giới hạn lượng thêm theo tồn khả dụng khi đã biết từ cart/product, lỗi 409 INSUFFICIENT_STOCK hiện toast. Bỏ VAT, phí vận chuyển/giao hàng và mã SRS trên giao diện, giữ nguyên nội dung cảnh báo thanh toán với tiêu đề dễ hiểu.
+  - E2e bổ sung Pickup/Delivery, lỗi mở QR giữ đơn, đơn thuốc chờ duyệt, lỗi fulfill sau xác nhận tiền rồi thử lại, thuốc hết hàng và 409 thật; ảnh TC31/TC32/TC33/TC42/TC45/TC37 ở cả 1366/390 px. Mỗi ca giỏ có dữ liệu riêng để tránh ảnh hưởng giữa viewport.
+  - Kiểm chứng cuối D6–D9: `npm run lint` sạch, `npm run build --workspace frontend` pass, `npm run test:e2e --workspace frontend` 16/16 ca pass (2,4 phút), backend SQLite thật, mock tắt, đủ 49 route mỗi viewport. Thêm 24 ảnh (tổng 77 ảnh, có ảnh lịch sử trước D6); danh mục ở `docs/screenshots/README.md`. Server thử nghiệm 3017/5017 đã đóng, không đổi nhánh hoặc commit.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 

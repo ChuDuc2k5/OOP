@@ -41,7 +41,7 @@ NEXT_PUBLIC_USE_MOCK=false
 
 > **Lưu ý về Mock Mode:** Khi đặt `NEXT_PUBLIC_USE_MOCK=true` (hoặc gắn `?mock=true` trên URL ở môi trường development), ứng dụng sẽ kích hoạt tầng Mock dữ liệu chuẩn theo SRS §8 và API Contract v1 (gồm 14 loại thuốc, tài khoản demo, tóm tắt dashboard, phân quyền giá Guest/User). Khi mock tắt, mọi API chỉ gọi backend thật; lỗi HTTP hoặc lỗi mạng được trả dưới dạng `ApiException`, không thay bằng dữ liệu giả.
 
-Luồng thanh toán: đặt hàng thành công → `/orders/{id}` → người dùng bấm **Mở thanh toán QR** → trang QR gọi `POST /api/orders/{id}/payment` (idempotent). Thông tin nhận tiền và ảnh QR lấy nguyên từ `PaymentView`; QR là ảnh cố định, khách tự nhập đúng số tiền và nội dung chuyển khoản. Hóa đơn dùng `InvoiceView` từ backend, gồm `items[].allocations` để hiển thị lô xuất, hạn dùng và số lượng.
+Luồng thanh toán: **Đặt hàng & thanh toán** → tạo đơn → nếu `AwaitingPayment` và `canPay`, mở payment ngay và chuyển tới QR. Đơn `WaitingReview` chuyển tới chi tiết, chờ dược sĩ duyệt trước khi thanh toán. Mở payment lỗi vẫn giữ đơn đã tạo, báo lỗi ở chi tiết và cho thử mở QR lại. Nút **Đóng / Về đơn hàng** chỉ điều hướng, không đổi trạng thái. Thông tin nhận tiền và ảnh QR lấy nguyên từ `PaymentView`; QR là ảnh cố định, khách tự nhập đúng số tiền và nội dung chuyển khoản. Hóa đơn dùng `InvoiceView` từ backend, gồm `items[].allocations` để hiển thị lô xuất, hạn dùng và số lượng.
 
 ---
 
@@ -137,6 +137,8 @@ Chạy lệnh từ gốc repository với SQLite riêng dành cho kiểm thử v
 
 Toast dùng chung cho thao tác ghi, tự đóng sau khoảng 4 giây và có nút đóng. Giỏ hàng đồng bộ từ backend sau thay đổi, badge chỉ hiện với khách hàng đã đăng nhập. Nút gửi có spinner và khóa khi đang xử lý. Chi tiết đơn có tiến trình, hộp “Bước tiếp theo” và banner sau đặt hàng; đơn thuốc có banner sau gửi ảnh. Trang QR tự kiểm tra trạng thái mỗi 15 giây, có nút làm mới và thông báo khi được xác nhận; không có nút xác nhận tự chuyển tiền.
 
+Theo D6–D9, chi tiết đơn tự làm mới mỗi 15 giây, giữ nút xem lại QR khi chờ xác nhận. Đơn Pickup đã thanh toán hiện lời mời đến quầy và mã đơn lớn; Delivery hiện đang chuẩn bị/đang giao. Form **Xác nhận đã nhận tiền** dùng chung cho Staff/Admin ở danh sách thanh toán và chi tiết đơn: review đủ tiền → fulfill ngay; lỗi xuất kho giữ thanh toán và nút **Thử xuất kho lại**. Pickup có **Khách đã nhận thuốc**, Delivery có **Bắt đầu giao** rồi **Đã giao xong**. Thuốc hết hàng vẫn được hiển thị nhưng khóa thêm giỏ; số lượng vượt tồn bị backend từ chối bằng lỗi 409 và toast.
+
 ## Kiểm thử giao diện M4/M5 với backend thật
 
 Yêu cầu Node.js 20+, .NET SDK phù hợp với backend và cổng 3017/5017 trống. Chạy từ thư mục gốc:
@@ -158,9 +160,9 @@ Trình duyệt mặc định nằm trong thư mục tạm `pharmacy-playwright`.
 Hai project chạy tuần tự ở 1366×900 và 390×844:
 
 - Guest: danh sách và chi tiết thuốc không có giá.
-- User: đặt OTC → chi tiết đơn chưa mở payment → bấm mở QR; kiểm tra ảnh và số tiền trong viewport.
+- User: đặt OTC tại quầy/giao hàng → QR ngay → đóng về đơn vẫn chờ xác nhận; kiểm tra ảnh, số tiền, banner đặt hàng và trạng thái tự cập nhật. Đơn thuốc chờ duyệt chưa mở QR; lỗi mở QR giữ đơn và cho thử lại.
 - User: thêm giỏ từ chi tiết/thẻ sản phẩm, toast và liên kết xem giỏ; badge sau thêm/đổi/xóa; khóa bấm lặp, giữ giỏ khi lỗi mạng, tự đóng toast. Kiểm tra banner đặt hàng, hộp bước tiếp theo khi chờ duyệt, ghi chú chuyển thiếu và QR tự cập nhật khi Staff duyệt đủ. Gửi ảnh đơn thuốc và kiểm tra banner chờ dược sĩ.
-- Staff: đối chiếu chuyển thiếu/đủ → nhận xử lý → xuất kho/lập hóa đơn → hoàn tất.
+- Staff: xác nhận chuyển thiếu/đủ → tự xuất kho/lập hóa đơn → khách nhận tại quầy hoặc bắt đầu giao/giao xong. Ngắt request fulfill để kiểm tra thanh toán vẫn Confirmed và thử xuất kho lại thành công. Thuốc hết hàng bị khóa; thêm quá tồn trả 409 INSUFFICIENT_STOCK thật từ backend.
 - User: hóa đơn có allocations lô xuất; bị chuyển về trang chủ khi vào `/staff`.
 - Staff: tạo nháp OTC, lưu dòng, xác nhận nhận tiền mặt và checkout theo `canCheckout`.
 - Admin: lỗi theo trường giữ dữ liệu; lưu tài khoản, chọn ảnh PNG, xem trước và tải QR.

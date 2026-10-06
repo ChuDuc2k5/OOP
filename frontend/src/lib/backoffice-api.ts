@@ -45,9 +45,10 @@ function query(params: ListQuery = {}) {
   return values.size ? `?${values}` : "";
 }
 const id = encodeURIComponent;
-const post = <T>(path: string, body?: unknown) =>
+const post = <T>(path: string, body?: unknown, silent = false) =>
   apiFetch<T>(path, {
     method: "POST",
+    silent,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 const put = <T>(path: string, body: unknown) =>
@@ -93,14 +94,14 @@ export const staffOrdersApi = {
       `/api/staff/orders/${id(key)}/${action}`,
       reason === undefined ? undefined : { reason },
     ),
-  fulfill: (key: string) =>
-    post<FulfillResult>(`/api/staff/orders/${id(key)}/fulfill`),
+  fulfill: (key: string, silent = false) =>
+    post<FulfillResult>(`/api/staff/orders/${id(key)}/fulfill`, undefined, silent),
 };
 export const staffPaymentsApi = {
   list: (params: ListQuery) =>
     apiFetch<Paged<PaymentRow>>(`/api/staff/payments${query(params)}`),
-  review: (key: string, input: PaymentReviewInput) =>
-    post<PaymentReviewResult>(`/api/staff/payments/${id(key)}/review`, input),
+  review: (key: string, input: PaymentReviewInput, silent = false) =>
+    post<PaymentReviewResult>(`/api/staff/payments/${id(key)}/review`, input, silent),
   note: (key: string, note: string) =>
     post<PaymentView>(`/api/staff/payments/${id(key)}/note`, { note }),
 };

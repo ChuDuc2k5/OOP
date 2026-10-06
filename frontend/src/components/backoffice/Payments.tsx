@@ -1,7 +1,9 @@
 "use client";
 import { ActionButton } from '@/components/ActionButton';
 import { useState } from "react";
-import { staffPaymentsApi, type ListQuery } from "@/lib/backoffice-api";
+import { staffPaymentsApi, staffOrdersApi, type ListQuery } from "@/lib/backoffice-api";
+import { ApiException } from '@/lib/api';
+import { notify } from '@/lib/feedback';
 import type { PaymentRow, PaymentReviewResult } from "@/lib/types";
 import { formatDateTime, formatVND, ORDER_STATUS_LABELS } from "@/lib/format";
 import {
@@ -23,14 +25,14 @@ function localNow() {
     .toISOString()
     .slice(0, 16);
 }
-function ReviewForm({
+export function ReviewForm({
   payment,
   refresh,
   close,
 }: {
   payment: PaymentRow;
-  refresh: () => void;
-  close: () => void;
+  refresh: (failure?: string) => void | Promise<void>;
+  close?: () => void;
 }) {
   const action = useAction();
   const [reference, setReference] = useState("");
@@ -39,6 +41,25 @@ function ReviewForm({
   const [note, setNote] = useState("");
   const [result, setResult] = useState<PaymentReviewResult | null>(null);
   const [reviewNote, setReviewNote] = useState(payment.reviewNote || "");
+  const [invoiceId, setInvoiceId] = useState('');
+  const [fulfillError, setFulfillError] = useState('');
+  async function fulfillConfirmed() {
+    try {
+      const invoice = await staffOrdersApi.fulfill(payment.orderId, true);
+      const message = `Đã xác nhận tiền và lập hóa đơn ${invoice.invoiceId}`;
+      setInvoiceId(invoice.invoiceId);
+      setFulfillError('');
+      action.setSuccess(message);
+      notify({ kind: 'success', message });
+      await refresh();
+    } catch (error) {
+      const title = error instanceof ApiException ? error.title : 'Không thể xuất kho. Vui lòng thử lại.';
+      const message = `Đã xác nhận tiền nhưng chưa xuất kho được: ${title}`;
+      setFulfillError(message);
+      notify({ kind: 'error', message });
+      await refresh(message);
+    }
+  }
   const pending = !result?.approved;
   return (
     <Card>
@@ -47,14 +68,14 @@ function ReviewForm({
           Đối chiếu {payment.orderId} · Yêu cầu{" "}
           {formatVND(payment.expectedAmount)}
         </h2>
-        <ActionButton busy={action.busy}
+        {close && <ActionButton busy={action.busy}
           type="button"
           className={buttonClass}
           onClick={close}
           disabled={action.busy}
         >
           Đóng
-        </ActionButton>
+        </ActionButton>}
       </div>
       <p>
         Khách hàng: {payment.customerUsername} · Mã thanh toán:{" "}
@@ -68,7 +89,7 @@ function ReviewForm({
         >
           <strong>
             {result.approved
-              ? "Đã xác nhận đủ tiền"
+              ? invoiceId ? `Đã xác nhận tiền và lập hóa đơn ${invoiceId}` : 'Đã xác nhận tiền'
               : "Chuyển thiếu – chưa duyệt thanh toán"}
           </strong>
           <p>
@@ -79,6 +100,7 @@ function ReviewForm({
           <p>Đơn hàng: {ORDER_STATUS_LABELS[result.orderStatus]}</p>
         </div>
       )}
+      {fulfillError && <div role="alert" className="space-y-3 rounded-lg border border-rose-300 bg-rose-50 p-4 text-rose-900"><p>{fulfillError}</p><ActionButton busy={action.busy} className={buttonClass} onClick={() => void action.run(fulfillConfirmed)}>Thử xuất kho lại</ActionButton></div>}
       {reviewNote && (
         <p className="rounded bg-amber-50 p-3 text-sm">
           Ghi chú đối chiếu: {reviewNote}
@@ -97,11 +119,15 @@ function ReviewForm({
                     receivedAmount: Number(amount),
                     receivedAt: new Date(receivedAt).toISOString(),
                     note: note.trim() || undefined,
-                  }),
-                (value) => {
+                  }, true),
+                async (value) => {
                   setResult(value);
                   setReviewNote(value.payment.reviewNote || "");
-                  refresh();
+                  if (value.approved) await fulfillConfirmed();
+                  else {
+                    notify({ kind: 'info', message: `Chuyển thiếu – chưa duyệt thanh toán. ${value.payment.reviewNote || ''}` });
+                    await refresh();
+                  }
                 },
               );
             }}
@@ -148,7 +174,7 @@ function ReviewForm({
               />
             </div>
             <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
-              Đối chiếu &amp; duyệt thanh toán
+              Xác nhận đã nhận tiền
             </ActionButton>
           </form>
           <form

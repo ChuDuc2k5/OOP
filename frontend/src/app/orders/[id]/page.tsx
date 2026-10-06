@@ -1,7 +1,7 @@
 'use client';
 import { ActionButton } from '@/components/ActionButton';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, use, useRef } from 'react';
 import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -53,23 +53,27 @@ export default function OrderDetailPage({
   const [order, setOrder] = useState<OrderView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const refreshing = useRef(false);
 
   // Cancel order modal
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
 
-  const fetchOrderDetail = React.useCallback(async () => {
-    setLoading(true);
+  const fetchOrderDetail = React.useCallback(async (background = false) => {
+    if (refreshing.current) return;
+    refreshing.current = true;
+    if (!background) setLoading(true);
     setError(null);
     try {
       const data = await ordersApi.getOrderById(orderId);
       setOrder(data);
     } catch (err: unknown) {
       const msg = err instanceof ApiException ? err.title : 'Không tìm thấy thông tin đơn hàng';
-      setError(msg);
+      if (!background) setError(msg);
     } finally {
       setLoading(false);
+      refreshing.current = false;
     }
   }, [orderId]);
 
@@ -78,6 +82,11 @@ export default function OrderDetailPage({
       fetchOrderDetail();
     }
   }, [authorized, user, fetchOrderDetail]);
+  useEffect(() => {
+    if (!authorized || !order || ['Completed', 'Cancelled', 'Rejected'].includes(order.status)) return;
+    const timer = setInterval(() => void fetchOrderDetail(true), 15_000);
+    return () => clearInterval(timer);
+  }, [authorized, order, fetchOrderDetail]);
 
   const handleCancelOrder = async () => {
     if (cancelling) return;
@@ -177,13 +186,13 @@ export default function OrderDetailPage({
                   </Link>
                 )}
 
-                {order.canPay && (
+                {(order.canPay || order.payment?.status === 'PendingReview') && (
                   <ActionLink
                     href={`/orders/${order.orderId}/payment`}
                     className="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition"
                   >
                     <CreditCard className="w-4 h-4" />
-                    <span>Mở thanh toán QR</span>
+                    <span>{order.payment?.status === 'PendingReview' ? 'Xem lại mã QR' : 'Mở thanh toán QR'}</span>
                   </ActionLink>
                 )}
 

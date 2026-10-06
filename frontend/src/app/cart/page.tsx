@@ -292,14 +292,10 @@ export default function CartPage() {
 
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between text-slate-600">
-                  <span>Tổng tiền sản phẩm:</span>
+                  <span>Tổng tiền thuốc:</span>
                   <span className="font-semibold text-slate-800 text-sm">
                     {formatVND(cart.subtotal)}
                   </span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>Phí vận chuyển:</span>
-                  <span className="font-medium text-emerald-600">Miễn phí (SRS 1.2)</span>
                 </div>
                 <div className="pt-3 border-t border-slate-100 flex justify-between items-baseline">
                   <span className="text-sm font-bold text-slate-900">Tổng thanh toán:</span>
@@ -307,9 +303,6 @@ export default function CartPage() {
                     {formatVND(cart.subtotal)}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400">
-                  * Giá bán đã bao gồm thuế VAT theo quy định dược phẩm hiện hành.
-                </p>
               </div>
 
               {hasIssues && (

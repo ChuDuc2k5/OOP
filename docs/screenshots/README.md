@@ -1,8 +1,8 @@
 # Bằng chứng kiểm thử giao diện M4/M5
 
-53 ảnh PNG từ Playwright Chromium ở 1366×900 và 390×844, chạy frontend production qua `/api` ở cổng 3017 với backend thật cổng 5017, SQLite riêng và seed. Lần chạy cuối M5: 10/10 ca pass (1,5 phút), đối chiếu đủ 49 route ở mỗi viewport. Mã trong tên ảnh tương ứng luồng TC/F; menu mobile chỉ có ảnh 390 px.
+77 ảnh PNG từ Playwright Chromium ở 1366×900 và 390×844, chạy frontend production qua `/api` ở cổng 3017 với backend thật cổng 5017, SQLite riêng và seed. Lần chạy cuối D6–D9: 16/16 ca pass (2,4 phút), đối chiếu đủ 49 route ở mỗi viewport. Đợt này thêm 24 ảnh và cập nhật ảnh luồng hiện có. Mã trong tên ảnh tương ứng luồng TC/F; menu mobile chỉ có ảnh 390 px.
 
-M5 bổ sung 12 ảnh (6 nhóm × 2 viewport) bên dưới và chụp lại các luồng hiện có, gồm banner đặt hàng trong `TC32-F014-order-before-qr-*`. Toast dành chỗ ở đầu trang để không che nút chính trên mobile. Các ảnh QR thể hiện chờ duyệt, ghi chú chuyển thiếu và xác nhận qua tự làm mới.
+M5 ban đầu bổ sung 12 ảnh phản hồi thao tác. D6–D9 bổ sung ảnh Pickup/Delivery, thử xuất kho lại, hết hàng/409, lỗi mở QR và đơn thuốc chờ duyệt ở hai viewport; banner đặt hàng hiện trên ảnh QR `TC42-F017-qr-*`. `TC32-F014-order-before-qr-*` là ảnh lưu của luồng trước D6, được giữ để đối chiếu lịch sử. Toast dành chỗ ở đầu trang để không che nút chính trên mobile.
 
 Các nhóm: Guest không thấy giá; checkout/đơn trước QR; mở QR; duyệt thiếu/đủ; xuất kho/hoàn tất; hóa đơn của User; chặn User vào Staff; bán OTC tại quầy; lỗi theo trường; Admin cấu hình QR; loading/rỗng/lỗi mạng; kho, thuốc/nhập lô và sidebar.
 
@@ -39,3 +39,15 @@ Chạy lại: `npm run test:e2e --workspace frontend`. Hướng dẫn cài đặ
 | TC46-F017-user-review-note | [TC46-F017-user-review-note-1366.png](TC46-F017-user-review-note-1366.png) | [TC46-F017-user-review-note-390.png](TC46-F017-user-review-note-390.png) |
 | TC45-F017-qr-confirmed | [TC45-F017-qr-confirmed-1366.png](TC45-F017-qr-confirmed-1366.png) | [TC45-F017-qr-confirmed-390.png](TC45-F017-qr-confirmed-390.png) |
 | TC24-F010-sent-banner | [TC24-F010-sent-banner-1366.png](TC24-F010-sent-banner-1366.png) | [TC24-F010-sent-banner-390.png](TC24-F010-sent-banner-390.png) |
+| TC32-F014-pickup-qr-closed | [TC32-F014-pickup-qr-closed-1366.png](TC32-F014-pickup-qr-closed-1366.png) | [TC32-F014-pickup-qr-closed-390.png](TC32-F014-pickup-qr-closed-390.png) |
+| TC45-F014-pickup-paid | [TC45-F014-pickup-paid-1366.png](TC45-F014-pickup-paid-1366.png) | [TC45-F014-pickup-paid-390.png](TC45-F014-pickup-paid-390.png) |
+| TC42-F017-delivery-qr | [TC42-F017-delivery-qr-1366.png](TC42-F017-delivery-qr-1366.png) | [TC42-F017-delivery-qr-390.png](TC42-F017-delivery-qr-390.png) |
+| TC37-F019-fulfill-retry | [TC37-F019-fulfill-retry-1366.png](TC37-F019-fulfill-retry-1366.png) | [TC37-F019-fulfill-retry-390.png](TC37-F019-fulfill-retry-390.png) |
+| TC45-F014-delivery-paid | [TC45-F014-delivery-paid-1366.png](TC45-F014-delivery-paid-1366.png) | [TC45-F014-delivery-paid-390.png](TC45-F014-delivery-paid-390.png) |
+| TC37-F015-delivering | [TC37-F015-delivering-1366.png](TC37-F015-delivering-1366.png) | [TC37-F015-delivering-390.png](TC37-F015-delivering-390.png) |
+| TC37-F015-delivery-completed | [TC37-F015-delivery-completed-1366.png](TC37-F015-delivery-completed-1366.png) | [TC37-F015-delivery-completed-390.png](TC37-F015-delivery-completed-390.png) |
+| TC31-F012-out-of-stock-home | [TC31-F012-out-of-stock-home-1366.png](TC31-F012-out-of-stock-home-1366.png) | [TC31-F012-out-of-stock-home-390.png](TC31-F012-out-of-stock-home-390.png) |
+| TC31-F012-out-of-stock-detail | [TC31-F012-out-of-stock-detail-1366.png](TC31-F012-out-of-stock-detail-1366.png) | [TC31-F012-out-of-stock-detail-390.png](TC31-F012-out-of-stock-detail-390.png) |
+| TC31-F012-insufficient-stock | [TC31-F012-insufficient-stock-1366.png](TC31-F012-insufficient-stock-1366.png) | [TC31-F012-insufficient-stock-390.png](TC31-F012-insufficient-stock-390.png) |
+| TC32-F013-payment-open-error | [TC32-F013-payment-open-error-1366.png](TC32-F013-payment-open-error-1366.png) | [TC32-F013-payment-open-error-390.png](TC32-F013-payment-open-error-390.png) |
+| TC33-F013-waiting-prescription | [TC33-F013-waiting-prescription-1366.png](TC33-F013-waiting-prescription-1366.png) | [TC33-F013-waiting-prescription-390.png](TC33-F013-waiting-prescription-390.png) |

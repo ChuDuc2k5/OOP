@@ -107,9 +107,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                 busy={adding}
                 disabled={!product.inStock}
                 onClick={add}
-                className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
-                aria-label={`Thêm ${product.name} vào giỏ`}
-              ><ShoppingCart className="h-4 w-4" /><span>{product.inStock ? 'Thêm vào giỏ' : 'Hết hàng'}</span></ActionButton> : <Link
+                className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white disabled:bg-slate-200 disabled:text-slate-500"
+                aria-label={product.inStock ? `Thêm ${product.name} vào giỏ` : 'Tạm hết hàng'}
+              ><ShoppingCart className="h-4 w-4" /><span>{product.inStock ? 'Thêm vào giỏ' : 'Tạm hết hàng'}</span></ActionButton> : <Link
                 href={`/products/${product.drugId}`}
                 className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm ${
                   product.inStock
@@ -127,12 +127,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <Lock className="w-3.5 h-3.5 shrink-0" />
                 <span>Đăng nhập để xem giá bán</span>
               </div>
-              <Link
+              {product.inStock ? <Link
                 href={`/login?next=${encodeURIComponent(`/products/${product.drugId}`)}`}
                 className="w-full text-center block bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-2 rounded-lg transition"
               >
                 Đăng nhập để mua
-              </Link>
+              </Link> : <button disabled className="w-full rounded-lg bg-slate-200 py-2 text-xs font-semibold text-slate-500">Tạm hết hàng</button>}
             </div>
           )}
         </div>
