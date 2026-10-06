@@ -10,7 +10,9 @@ import { OrderProgress } from '@/components/orders/OrderProgress';
 import { ActionLink } from '@/components/ActionLink';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { ApiException, ordersApi } from '@/lib/api';
+import { ApiException, ordersApi, paymentApi } from '@/lib/api';
+import { notify, notifyError } from '@/lib/feedback';
+import { useVisiblePolling } from '@/hooks/useVisiblePolling';
 import { OrderView } from '@/lib/types';
 import {
   formatDateTime,
@@ -54,6 +56,12 @@ export default function OrderDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const refreshing = useRef(false);
+  const previous = useRef<OrderView | null>(null);
+  const generation = useRef(0);
+  const autoQrPending = useRef(false);
+  const [updating, setUpdating] = useState(false);
+  const [openingPayment, setOpeningPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   // Cancel order modal
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -62,38 +70,82 @@ export default function OrderDetailPage({
 
   const fetchOrderDetail = React.useCallback(async (background = false) => {
     if (refreshing.current) return;
+    const version = generation.current;
     refreshing.current = true;
-    if (!background) setLoading(true);
+    setUpdating(true);
+    if (!background && !previous.current) setLoading(true);
     setError(null);
     try {
+      const baseline = previous.current;
       const data = await ordersApi.getOrderById(orderId);
+      if (version !== generation.current) return;
+      if (previous.current !== baseline && previous.current && ['Completed', 'Cancelled', 'Rejected'].includes(previous.current.status)) return;
+      const before = previous.current;
+      previous.current = data;
       setOrder(data);
+      if (data.payment) setPaymentError('');
+      if (before?.status === 'WaitingReview' && data.status === 'AwaitingPayment' && data.canPay) autoQrPending.current = true;
+      if (before && data.status !== before.status) {
+        if (data.status === 'Rejected') notify({ kind: 'info', message: `Đơn bị từ chối: ${data.note || 'Vui lòng liên hệ nhà thuốc để biết lý do.'}` });
+        else if (data.status === 'Cancelled') notify({ kind: 'info', message: `Đơn đã hủy.${data.note ? ` ${data.note}` : ''}` });
+        else if (data.status === 'Completed') notify({ kind: 'success', message: 'Đơn hàng đã hoàn tất.', href: data.invoiceId ? `/invoices/${data.invoiceId}` : undefined, label: data.invoiceId ? 'Xem hóa đơn' : undefined });
+        else if (data.status === 'Delivering') notify({ kind: 'info', message: 'Nhà thuốc đang giao hàng. Vui lòng giữ liên lạc để nhận thuốc.' });
+      }
+      if (before && before.payment?.status !== 'Confirmed' && data.payment?.status === 'Confirmed' && !['Completed', 'Cancelled', 'Rejected', 'Delivering'].includes(data.status)) {
+        notify({ kind: 'success', message: data.receiveMethod === 'Pickup' ? 'Đã xác nhận thanh toán. Mời đến quầy nhận thuốc.' : 'Đã xác nhận thanh toán. Nhà thuốc đang chuẩn bị hàng.' });
+      }
+      if (autoQrPending.current && data.canPay && data.status === 'AwaitingPayment' && document.visibilityState === 'visible') {
+        autoQrPending.current = false;
+        setOpeningPayment(true);
+        setPaymentError('');
+        notify({ kind: 'info', message: 'Đơn thuốc đã được duyệt. Đang mở mã QR thanh toán…' });
+        try {
+          await paymentApi.openOrGetPayment(orderId, true);
+          if (version === generation.current && previous.current?.status === 'AwaitingPayment') router.replace(`/orders/${orderId}/payment`);
+        } catch (err) {
+          if (version === generation.current) {
+            const title = err instanceof ApiException ? err.title : 'Không thể mở thanh toán. Vui lòng thử lại.';
+            setPaymentError(title);
+            notifyError(err);
+          }
+        } finally {
+          if (version === generation.current) setOpeningPayment(false);
+        }
+      }
     } catch (err: unknown) {
+      if (version !== generation.current) return;
       const msg = err instanceof ApiException ? err.title : 'Không tìm thấy thông tin đơn hàng';
-      if (!background) setError(msg);
+      setError(msg);
     } finally {
-      setLoading(false);
-      refreshing.current = false;
+      if (version === generation.current) {
+        setLoading(false);
+        setUpdating(false);
+        refreshing.current = false;
+      }
     }
-  }, [orderId]);
+  }, [orderId, router]);
 
   useEffect(() => {
+    const version = ++generation.current;
+    refreshing.current = false;
+    previous.current = null;
+    setOrder(null);
+    autoQrPending.current = false;
+    setPaymentError('');
     if (authorized && user) {
-      fetchOrderDetail();
+      void fetchOrderDetail();
     }
+    return () => { generation.current = version + 1; };
   }, [authorized, user, fetchOrderDetail]);
-  useEffect(() => {
-    if (!authorized || !order || ['Completed', 'Cancelled', 'Rejected'].includes(order.status)) return;
-    const timer = setInterval(() => void fetchOrderDetail(true), 15_000);
-    return () => clearInterval(timer);
-  }, [authorized, order, fetchOrderDetail]);
+  const autoUpdating = useVisiblePolling(() => fetchOrderDetail(true), authorized && !!order && !['Completed', 'Cancelled', 'Rejected'].includes(order.status), 10_000);
 
   const handleCancelOrder = async () => {
-    if (cancelling) return;
+    if (cancelling || openingPayment) return;
     setCancelling(true);
     setCancelError(null);
     try {
       const updated = await ordersApi.cancelOrder(orderId);
+      previous.current = updated;
       setOrder(updated);
       setShowCancelModal(false);
     } catch (err: unknown) {
@@ -131,7 +183,11 @@ export default function OrderDetailPage({
           </Link>
         </div>
 
-        {loading ? <LoadingState /> : error || !order ? (
+        <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-500">
+          <span>{autoUpdating ? 'Tự cập nhật mỗi 10 giây' : 'Tự cập nhật đang tạm dừng'}</span>
+          <ActionButton type="button" busy={updating || openingPayment} disabled={updating || openingPayment || loading} onClick={() => void fetchOrderDetail(true)} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-emerald-700"><RefreshCw className="h-3.5 w-3.5" />Làm mới</ActionButton>
+        </div>
+        {loading ? <LoadingState /> : !order ? (
           <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 space-y-3">
             <XCircle className="w-12 h-12 text-rose-500 mx-auto" />
             <h2 className="text-lg font-bold text-slate-800">Không tìm thấy đơn hàng</h2>
@@ -147,6 +203,8 @@ export default function OrderDetailPage({
           </div>
         ) : (
           <div className="space-y-6">
+            {(error || paymentError) && <p role="alert" className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-950">{paymentError || error}</p>}
+            {openingPayment && <p role="status" className="text-sm text-emerald-800">Đang mở mã QR thanh toán…</p>}
             <OrderProgress order={order} />
             {/* Top Status Banner Card */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -186,7 +244,7 @@ export default function OrderDetailPage({
                   </Link>
                 )}
 
-                {(order.canPay || order.payment?.status === 'PendingReview') && (
+                {!openingPayment && (order.canPay || order.payment?.status === 'PendingReview') && (
                   <ActionLink
                     href={`/orders/${order.orderId}/payment`}
                     className="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition"
@@ -199,6 +257,7 @@ export default function OrderDetailPage({
                 {order.canCancel && (
                   <button
                     onClick={() => setShowCancelModal(true)}
+                    disabled={openingPayment}
                     className="inline-flex items-center space-x-1.5 px-4 py-2 border border-rose-300 hover:bg-rose-50 text-rose-600 rounded-xl text-xs font-semibold transition"
                   >
                     <XCircle className="w-4 h-4" />
@@ -398,8 +457,8 @@ export default function OrderDetailPage({
                 </ActionButton>
                 <ActionButton busy={cancelling}
                   type="button"
-                  onClick={handleCancelOrder}
-                  disabled={cancelling}
+                    onClick={handleCancelOrder}
+                    disabled={cancelling || openingPayment}
                   className="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs"
                 >
                   {cancelling ? 'Đang hủy...' : 'Đồng ý hủy đơn'}
