@@ -138,6 +138,14 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
 
   - Kiểm chứng cuối D11: `npm run lint` sạch, `npm run build --workspace frontend` pass, `npm run test:e2e --workspace frontend` 24/24 ca pass (2,5 phút), Chromium ở 1366/390 px với backend SQLite thật, đủ 49 route mỗi viewport. Rà nguồn không còn demo/mock mode hoặc gợi ý tài khoản hiển thị; chụp lại ảnh liên quan và cập nhật danh mục. Server thử nghiệm 3017/5017 đã dừng.
 
+- **M6 — `fe/m6-rx-review` (D12)**:
+  - PrescriptionView bổ sung linkedOrders theo contract. Staff/Admin dùng chung trang duyệt: ảnh lớn có phóng to trong dialog, hai cột ở desktop và một cột ở mobile. Khi chưa có items, tự gộp thuốc/số lượng từ các đơn WaitingReview, ghi rõ mã đơn và yêu cầu đối chiếu ảnh; giữ chi tiết đã nhập khi đã có items. Ngày mặc định hôm nay tại Việt Nam, hiệu lực +30 ngày, focus người kê và đánh dấu bắt buộc.
+  - Có khối đơn hàng liên quan với liên kết/trạng thái/dòng thuốc; phần tìm/sửa thuốc thu gọn khi có đơn online và mở sẵn với đơn tại quầy. Danh sách đối chiếu hiển thị tên và số lượng ngay trên mobile, không cần cuộn ngang để thấy lượng kê. Nút Lưu & chấp nhận khóa khi thiếu thông tin, dòng không hợp lệ hoặc đang gửi; giải thích phần thiếu, PUT details rồi approve. Toast dựa trên trạng thái backend trả về, chỉ nêu những đơn đã chuyển sang Chờ thanh toán; Từ chối vẫn bắt lý do.
+  - Danh sách đơn Staff/Admin có liên kết Kiểm tra đơn thuốc cho WaitingReview (lấy prescriptionId từ GET chi tiết vì OrderRow chưa chứa mã này); dashboard dẫn tới danh sách lọc PendingReview. Bỏ hộp chờ duyệt trùng trên trang khách, gộp ghi chú vào Bước tiếp theo và gộp thông báo thanh toán xác nhận trên QR.
+  - E2e mở rộng luồng checkout tải ảnh → hai đơn WaitingReview dùng cùng đơn thuốc → Staff thấy dòng tự gộp, ngày/hiệu lực/focus/thiếu người kê → phóng to ảnh → Lưu & chấp nhận → khách Chờ thanh toán → mở QR. Kiểm tra linkedOrders không lộ cho khách, bộ lọc dashboard, liên kết danh sách, hai/một cột và form đơn tại quầy mở sẵn. Bổ sung 6 ảnh TC26-F011/TC33-F014 ở 1366/390 px trong danh mục ảnh.
+
+  - Kiểm chứng cuối D12: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` 24/24 ca pass (2,6 phút), backend SQLite thật, mock tắt, 1366/390 px và đủ 49 route mỗi viewport. Đã xem ảnh mới ở cả hai kích thước; số lượng đối chiếu thấy ngay trên mobile. Thêm 6 ảnh, tổng 99 ảnh trong danh mục. Kiểm tra UTF-8/phạm vi sửa và diff sạch; server thử nghiệm 3017/5017 đã dừng, không commit hoặc đổi nhánh.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 

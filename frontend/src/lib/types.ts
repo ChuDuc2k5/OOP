@@ -202,6 +202,11 @@ export type PrescriptionView = {
   reviewNote?: string;
   createdAt: string;
   items: PrescriptionItemView[];
+  linkedOrders: {
+    orderId: string;
+    status: OrderStatus;
+    items: { drugId: string; drugName: string; unit: string; quantity: number }[];
+  }[];
 };
 
 export type PrescriptionRow = Pick<
