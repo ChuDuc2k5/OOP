@@ -51,7 +51,17 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 ---
 
 ## Đã làm
-_(Dev cập nhật sau mỗi milestone)_
+- M1 (`be/m1-foundation`, 2026-10-06): thêm Pharmacy.Core/Pharmacy.Tests vào solution; toàn bộ entity theo SRS 7.4/CL-01, Sale TPH và Validate đa hình, collection chỉ đọc, phương thức bảo vệ tồn/đã cấp/trạng thái.
+- DbContext + migration InitialFoundation: FK Restrict, unique/partial index, CHECK số lượng/giá/role/trạng thái, Version concurrency token tự tăng trên năm entity yêu cầu. Auto migrate lúc khởi động.
+- IBusinessClock theo múi giờ Việt Nam (override chỉ Development/Test), IdGenerator có sequence SQLite atomic/persist, IInventoryLock, IFileStorage kiểm tra magic/MIME/extension/5 MB/path traversal; BusinessException và ProblemDetails tiếng Việt, log lỗi nội bộ, không trả stack trace.
+- F001–F003, csrf/me, cookie HttpOnly/SameSite=Lax, policy role, PasswordHasher; 401/403 JSON; đăng ký bỏ qua trường ngoài DTO và không tự login; token được cấp lại sau login/logout.
+- Seed chỉ khi domain DB trống; không sửa DB có dữ liệu một phần. Bốn account demo, 12 thuốc, các biên hạn/tồn, ba đơn thuốc, cấu hình ngân hàng và QR demo từ resource nguồn. DB/storage/key runtime được ignore.
+- TC-01..TC-08, TC-55 có integration test WebApplicationFactory + SQLite file tạm/clock giả. TC-06/55 dùng fixture domain gồm giỏ/đơn/nháp/kho/đã cấp/giữ/thanh toán/phân bổ/hóa đơn; TC-55 restart host trên cùng DB với ngày khác và kiểm tra QR không bị ghi đè. Thêm test nền tảng cho ràng buộc, concurrency, cấp mã đồng thời, file storage và lỗi.
+- Kiểm chứng: `dotnet build Pharmacy.sln` 0 warning/0 error; `dotnet test Pharmacy.sln` 43 pass/0 fail. Smoke HTTP: health 200, csrf 204, register 201, login/me 200, logout 204 và me sau logout 401, demo Admin/accounts/OpenAPI 200; đã tắt API.
+- Cách chạy, cấu hình, demo account và bảng TC ↔ tên test có trong `backend/README.md`. PO đã commit code M1 trên `be/m1-foundation`; phần sửa review do PO commit. Không push/merge/đổi nhánh.
+- Sửa review M1: khôi phục tiếng Việt và lưu UTF-8; tách câu lệnh, khối điều khiển và constructor dài để dễ đọc; seed có mô tả/đơn vị thực tế cho từng thuốc và Vitamin C đang bán nhưng tồn bằng 0. Bổ sung kiểm tra các dữ liệu seed này vào test hiện có.
 
 ## Câu hỏi cho PO
-_(Dev ghi câu hỏi ở đây)_
+- **Đã trả lời:** PO chốt DB ở `backend/data`, dùng `Data Source=../data/pharmacy.db`; giữ nguyên cấu hình hiện tại.
+- **Đã trả lời:** PO chấp nhận cookie secret `pharmacy.antiforgery` HttpOnly, đi cùng request token `XSRF-TOKEN` JS-readable/header theo contract.
+- **Đã trả lời:** PO chấp nhận giới hạn 9.999 mã/prefix/ngày; giữ sequence bền vững và trả `409 INVALID_STATE` khi hết dải.
