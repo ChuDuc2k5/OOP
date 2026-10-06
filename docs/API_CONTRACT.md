@@ -225,7 +225,7 @@ type CartView = { items: CartLine[]; subtotal: number }
 | `PUT /api/cart/items/{drugId}` | `{ quantity }` (nguyên dương) | `200 CartView` |
 | `DELETE /api/cart/items/{drugId}` | – | `200 CartView` |
 
-Guest gọi → `401`; S/A gọi → `403`. Thêm giỏ **không** giữ kho.
+Guest gọi → `401`; S/A gọi → `403`. Thêm giỏ **không** giữ kho. Thêm mới hoặc tăng số lượng khi tồn khả dụng không đủ (kể cả = 0) → `409 INSUFFICIENT_STOCK`, giỏ không đổi; giảm/xóa luôn được phép (D9).
 
 ### 7.2 Đơn hàng của User (F013, F014)
 ```ts
