@@ -705,6 +705,86 @@ public sealed class OrderingTests : IDisposable
         Assert.Equal(0, await factory.WithDb(db => db.Orders.CountAsync()));
     }
 
+    [Theory]
+    [InlineData("staff")]
+    [InlineData("admin")]
+    public async Task TC25_D12_LinkedOrders_StaffSeesSnapshotsAllStatusesInCreatedOrder_UserSeesEmpty(string role)
+    {
+        using var user = await Login();
+        using var staff = await Login(role);
+        await Add(user, "AMOX500", 2);
+        await Add(user, "PARA500", 3);
+        var waiting = await Ok(await user.PostAsJsonAsync("/api/orders",
+            Place(17000, "Prescription", "DT2610060003")), 201);
+        var orderId = waiting.GetProperty("orderId").GetString();
+        await factory.WithDb(async db =>
+        {
+            var previous = new Order("DH2610069000", "U0000003", new TestClock().Now.AddDays(-1),
+                SaleKind.Prescription, "Chu Đức", "0900000000", ReceiveMethod.Pickup,
+                prescriptionId: "DT2610060003", patientId: "BN001", waitingReview: true);
+            previous.AddItem(new("LINKED-OLD-LINE", previous.OrderId, "AMOX500", "Tên thuốc lúc đặt", "Viên", 1, 7000));
+            previous.Cancel();
+            db.Orders.Add(previous);
+            var unrelated = new Order("DH2610069001", "U0000003", new TestClock().Now.AddDays(-2),
+                SaleKind.Prescription, "Chu Đức", "0900000000", ReceiveMethod.Pickup,
+                prescriptionId: "DT2610060001", patientId: "BN001");
+            unrelated.AddItem(new("UNRELATED-LINE", unrelated.OrderId, "AMOX500", "Không liên kết", "Viên", 1, 7000));
+            db.Orders.Add(unrelated);
+            var drug = await db.Drugs.SingleAsync(x => x.DrugId == "AMOX500");
+            drug.Update("Tên thuốc sau khi đặt", "Hộp", drug.UnitPrice, drug.LowStockThreshold, true, false, true);
+            await db.SaveChangesAsync();
+        });
+        var detail = await Ok(await staff.GetAsync("/api/prescriptions/DT2610060003"));
+        var linked = detail.GetProperty("linkedOrders");
+        Assert.Equal(2, linked.GetArrayLength());
+        Assert.Equal("DH2610069000", linked[0].GetProperty("orderId").GetString());
+        Assert.Equal("Cancelled", linked[0].GetProperty("status").GetString());
+        Assert.Equal("Tên thuốc lúc đặt", linked[0].GetProperty("items")[0].GetProperty("drugName").GetString());
+        Assert.Equal(orderId, linked[1].GetProperty("orderId").GetString());
+        Assert.Equal("WaitingReview", linked[1].GetProperty("status").GetString());
+        Assert.Equal(3, linked[1].EnumerateObject().Count());
+        var lines = linked[1].GetProperty("items");
+        Assert.Equal(2, lines.GetArrayLength());
+        foreach (var line in lines.EnumerateArray())
+        {
+            var expected = waiting.GetProperty("items").EnumerateArray()
+                .Single(x => x.GetProperty("drugId").GetString() == line.GetProperty("drugId").GetString());
+            Assert.Equal(4, line.EnumerateObject().Count());
+            foreach (var field in new[] { "drugId", "drugName", "unit", "quantity" })
+            {
+                Assert.Equal(expected.GetProperty(field).ToString(), line.GetProperty(field).ToString());
+            }
+        }
+        var owner = await Ok(await user.GetAsync("/api/prescriptions/DT2610060003"));
+        Assert.Empty(owner.GetProperty("linkedOrders").EnumerateArray());
+        var usable = await Ok(await user.GetAsync("/api/prescriptions/usable"));
+        Assert.All(usable.EnumerateArray(), x => Assert.Empty(x.GetProperty("linkedOrders").EnumerateArray()));
+        var changed = await Ok(await staff.PutAsJsonAsync("/api/prescriptions/DT2610060003/details", Details()));
+        Assert.Equal(2, changed.GetProperty("linkedOrders").GetArrayLength());
+        var rejected = await Ok(await staff.PostAsJsonAsync("/api/prescriptions/DT2610060003/reject",
+            new { reason = "Cần bổ sung thông tin" }));
+        Assert.Equal("Rejected", rejected.GetProperty("linkedOrders")[1].GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task TC24_D12_CounterPrescriptionWithoutOrders_ReturnsEmptyLinkedOrders()
+    {
+        using var staff = await Login("staff");
+        var counter = await Ok(await staff.PostAsJsonAsync("/api/prescriptions/counter", new
+        {
+            prescriptionId = "D12COUNTER",
+            patientId = "BN001",
+            patientName = "Chu Đức",
+            prescriberName = "BS. Nguyễn Văn Minh",
+            issueDate = "2026-10-06",
+            validUntil = "2026-11-05",
+            items = new[] { new { drugId = "AMOX500", quantity = 10 } }
+        }), 201);
+        Assert.Empty(counter.GetProperty("linkedOrders").EnumerateArray());
+        var detail = await Ok(await staff.GetAsync("/api/prescriptions/D12COUNTER"));
+        Assert.Empty(detail.GetProperty("linkedOrders").EnumerateArray());
+    }
+
     [Fact]
     public async Task TC33_PendingPrescriptionOrder_WaitsWithoutReservation_ApprovedOrderChecksQuota()
     {

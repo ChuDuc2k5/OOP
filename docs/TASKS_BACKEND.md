@@ -123,6 +123,11 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 
 - Kiểm chứng M9 lúc 17:23 +07:00 ngày 2026-10-06: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Pharmacy.sln 190 pass/0 fail/2 skip (PostgreSQL/performance opt-in). Rà *.cs/*.md/*.json backend ngoài bin/obj chỉ còn alias lệnh cũ trong Program.cs. Windows không chặn binary trong lượt này.
 
+- M10 (`be/m10-linked-orders`, 2026-10-06): theo D12 và contract §6, PrescriptionView thêm linkedOrders {orderId, status, items[{drugId, drugName, unit, quantity}]}. Staff/Admin nhận mọi đơn liên kết đúng PrescriptionId, mọi trạng thái, sắp createdAt tăng dần rồi OrderId; dòng thuốc lấy bản chụp OrderItem, không dùng tên/đơn vị/giá hiện tại. User nhận [] ở Get/Upload/Usable và không truy vấn đơn liên kết. Counter/Details/Review trả qua mapper chung có linkedOrders; controller giữ mỏng. Không thay schema/migration/contract.
+- Test TC25_D12_LinkedOrders_StaffSeesSnapshotsAllStatusesInCreatedOrder_UserSeesEmpty có hai trường hợp Staff/Admin: WaitingReview đúng hai dòng/số lượng, tên/đơn vị bản chụp dù thuốc đã sửa, không lộ giá/trường thừa, có đơn Cancelled trước đó theo createdAt, loại đơn của đơn thuốc khác; User Get/Usable nhận []; Details/Reject trả liên kết và trạng thái mới. TC24_D12_CounterPrescriptionWithoutOrders_ReturnsEmptyLinkedOrders kiểm tra Counter tạo/Get đều []. README cập nhật bảng TC. Không git add/commit/đổi nhánh.
+
+- Kiểm chứng M10: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Pharmacy.sln 193 pass/0 fail/2 skip (PostgreSQL/performance opt-in). Windows không chặn binary trong lượt này.
+
 ## Câu hỏi cho PO
 - M3.5 không đổi API contract. Phạm vi IInventoryLock vẫn một tiến trình ứng dụng; dùng schema pharmacy không exposed qua Supabase Data API. Chưa có connection PostgreSQL để chạy smoke thật; cần chạy nhóm opt-in trên DB test riêng trước demo Supabase.
 - M3: DB M1 không có thời điểm tạo đơn thuốc. Migration giữ bản ghi cũ và dùng CreatedAt = UnixEpoch làm giá trị chưa biết; bản ghi mới lưu thời điểm thật. Không đổi API contract; README đã nêu giới hạn dữ liệu cũ.
