@@ -39,22 +39,22 @@ BACKEND_URL=http://localhost:5000
 NEXT_PUBLIC_USE_MOCK=false
 ```
 
-> **Lưu ý về Mock Mode:** Khi đặt `NEXT_PUBLIC_USE_MOCK=true` (hoặc gắn `?mock=true` trên URL ở môi trường development), ứng dụng sẽ kích hoạt tầng Mock dữ liệu chuẩn theo SRS §8 và API Contract v1 (gồm 14 loại thuốc, tài khoản demo, tóm tắt dashboard, phân quyền giá Guest/User). Khi mock tắt, mọi API chỉ gọi backend thật; lỗi HTTP hoặc lỗi mạng được trả dưới dạng `ApiException`, không thay bằng dữ liệu giả.
+> **Chế độ phát triển:** Khi đặt `NEXT_PUBLIC_USE_MOCK=true` (hoặc gắn `?mock=true` trên URL ở môi trường development), ứng dụng kích hoạt tầng giả lập nội bộ. Giao diện không hiển thị dấu hiệu chế độ này hoặc gợi ý tài khoản. Khi mock tắt, mọi API chỉ gọi backend thật; lỗi HTTP hoặc lỗi mạng được trả dưới dạng `ApiException`, không thay bằng dữ liệu giả.
 
 Luồng thanh toán: **Đặt hàng & thanh toán** → tạo đơn → nếu `AwaitingPayment` và `canPay`, mở payment ngay và chuyển tới QR. Đơn `WaitingReview` chuyển tới chi tiết, chờ dược sĩ duyệt trước khi thanh toán. Mở payment lỗi vẫn giữ đơn đã tạo, báo lỗi ở chi tiết và cho thử mở QR lại. Nút **Đóng / Về đơn hàng** chỉ điều hướng, không đổi trạng thái. Thông tin nhận tiền và ảnh QR lấy nguyên từ `PaymentView`; QR là ảnh cố định, khách tự nhập đúng số tiền và nội dung chuyển khoản. Hóa đơn dùng `InvoiceView` từ backend, gồm `items[].allocations` để hiển thị lô xuất, hạn dùng và số lượng.
 
 ---
 
-## 4. Tài khoản thử nghiệm (Demo Accounts - SRS §8)
+## 4. Tài khoản khởi tạo
 
-Hệ thống hỗ trợ các tài khoản mẫu phục vụ kiểm thử và chấm đồ án:
+Backend khởi tạo các tài khoản sau khi database trống:
 
 | Tên đăng nhập | Mật khẩu | Vai trò (Role) | Giao diện sau đăng nhập (`homePath`) |
 |---|---|---|---|
 | `admin` | `Admin@12345` | `Admin` | `/admin` (Bảng điều khiển Quản trị viên) |
 | `staff` | `Staff@12345` | `Staff` | `/staff` (Bảng điều khiển Nhân viên) |
-| `user` | `User@12345` | `User` | `/` (Trang chủ sản phẩm có giá & giỏ hàng) |
-| `user2` | `User@12345` | `User` | `/` (Khách hàng 2) |
+| `chuduc` | `User@12345` | `User` | `/` (Chu Đức) |
+| `nguyenvana` | `User@12345` | `User` | `/` (Nguyễn Văn A) |
 
 ---
 
@@ -78,11 +78,9 @@ frontend/
 │   │       └── page.tsx              # Dashboard bảng điều khiển Admin
 │   ├── components/                   # UI components tái sử dụng
 │   │   ├── Header.tsx                # Header điều hướng chính
-│   │   ├── Footer.tsx                # Footer thông tin nhà thuốc & demo
+│   │   ├── Footer.tsx                # Footer thông tin nhà thuốc
 │   │   ├── Sidebar.tsx               # Menu thanh bên cho Staff/Admin (NFR-05)
-│   │   ├── ProductCard.tsx           # Thẻ sản phẩm với logic ẩn giá cho Guest
-│   │   ├── HealthBadge.tsx           # Thẻ kiểm tra GET /api/health
-│   │   └── MilestonePlaceholder.tsx  # Thông báo lộ trình cho các route M2/M3
+│   │   └── ProductCard.tsx           # Thẻ sản phẩm với logic ẩn giá cho Guest
 │   ├── context/
 │   │   └── AuthContext.tsx           # Context quản lý phiên đăng nhập & route guard
 │   └── lib/
@@ -155,7 +153,7 @@ npm run test:e2e --workspace frontend
 
 Playwright là devDependency của workspace frontend, dùng `package-lock.json` ở gốc. Thêm hoặc cập nhật bằng `npm install -D @playwright/test --workspace frontend`; không tạo lockfile riêng trong frontend.
 
-Lệnh e2e tự build backend và frontend với proxy backend cổng 5017, chạy frontend production ở cổng 3017 và trực tiếp chạy DLL backend trong môi trường Development với SQLite riêng trong thư mục tạm. Build kiểm thử nằm trong `frontend/.next-e2e`, tách khỏi `.next` của môi trường làm việc. Backend tự seed tài khoản, thuốc, lô và QR. Ngày nghiệp vụ cố định 06/10/2026 để lô seed còn hạn. Mock luôn tắt; database làm việc của dev không được dùng. Runner kiểm tra cổng trước khi chạy và dừng các tiến trình do nó khởi tạo qua IPC sau kiểm thử; không đóng server của người dùng ở cổng 3000/5000.
+Lệnh e2e tự build backend và frontend với proxy backend cổng 5017, chạy frontend production ở cổng 3017 và trực tiếp chạy DLL backend trong môi trường Development với SQLite riêng trong thư mục tạm. Build kiểm thử nằm trong `frontend/.next-e2e`, tách khỏi `.next` của môi trường làm việc. Backend tự seed tài khoản, thuốc và lô; bước chuẩn bị đăng nhập Admin qua API, cấu hình tài khoản nhận tiền và tải ảnh QR từ fixture `e2e/fixtures/payment-qr.png`. Tài khoản khách là `chuduc` và `nguyenvana`; thuốc dùng mã có nghĩa như `VITC500`, `AMOX500`. Ngày nghiệp vụ cố định 06/10/2026 để lô seed còn hạn. Mock luôn tắt; database làm việc của dev không được dùng. Runner kiểm tra cổng trước khi chạy và dừng các tiến trình do nó khởi tạo qua IPC sau kiểm thử; không đóng server của người dùng ở cổng 3000/5000.
 
 Trình duyệt mặc định nằm trong thư mục tạm `pharmacy-playwright`. Có thể đổi bằng biến môi trường `PLAYWRIGHT_BROWSERS_PATH` trước cả lệnh install và test. Nếu máy không tải được Chromium, cài trình duyệt ở môi trường có quyền truy cập mạng rồi chạy lại; không bỏ qua kiểm thử để báo pass.
 
@@ -166,10 +164,10 @@ Hai project chạy tuần tự ở 1366×900 và 390×844:
 - User: thêm giỏ từ chi tiết/thẻ sản phẩm, toast và liên kết xem giỏ; badge sau thêm/đổi/xóa; khóa bấm lặp, giữ giỏ khi lỗi mạng, tự đóng toast. Kiểm tra banner đặt hàng, hộp bước tiếp theo khi chờ duyệt, ghi chú chuyển thiếu và QR tự cập nhật khi Staff duyệt đủ. Gửi ảnh đơn thuốc và kiểm tra banner chờ dược sĩ.
 - Staff: xác nhận chuyển thiếu/đủ → tự xuất kho/lập hóa đơn → khách nhận tại quầy hoặc bắt đầu giao/giao xong. Ngắt request fulfill để kiểm tra thanh toán vẫn Confirmed và thử xuất kho lại thành công. Thuốc hết hàng bị khóa; thêm quá tồn trả 409 INSUFFICIENT_STOCK thật từ backend.
 - User: hóa đơn có allocations lô xuất; bị chuyển về trang chủ khi vào `/staff`.
-- Đăng ký: 201 → GET me → phiên User và `next` an toàn. Checkout: loại OTC tự động, tải ảnh đơn thuốc tại chỗ, giỏ hỗn hợp OTC/kê đơn chờ kiểm tra.
+- Đăng ký: cookie XSRF-TOKEN cũ → 400 ANTIFORGERY_INVALID → lấy token mới và gửi lại → 201 → GET me → phiên User và `next` an toàn. Checkout: loại OTC tự động, tải ảnh đơn thuốc tại chỗ, giỏ hỗn hợp OTC/kê đơn chờ kiểm tra. Lỗi PAYMENT_NOT_CONFIGURED giữ đơn và hiển thị thông báo tiếng Việt, không lộ mã lỗi.
 - Staff: duyệt tiền với số tiền/giờ điền sẵn; lưu/chấp nhận đơn thuốc một nút; bán OTC tại quầy một màn hình, checkout lỗi giữ nháp rồi thử lại không tạo nháp mới. Admin: thêm thuốc kèm ảnh và lô đầu tiên.
 - Admin: lỗi theo trường giữ dữ liệu; lưu tài khoản, chọn ảnh PNG, xem trước và tải QR.
-- Rà các route khách/Staff/Admin: loading, rỗng, lỗi mạng, chiều rộng trang, bảng cuộn trong khung và sidebar mobile. Lỗi mạng được tạo bằng cách ngắt request, không thay response backend bằng mock.
+- Rà các route khách/Staff/Admin: loading, rỗng, lỗi mạng, chiều rộng trang, bảng cuộn trong khung và sidebar mobile; không hiển thị dấu hiệu chế độ phát triển hoặc gợi ý tài khoản. Lỗi mạng được tạo bằng cách ngắt request; trạng thái QR chưa cấu hình được kiểm tra thêm bằng phản hồi lỗi có kiểm soát.
 
 Ảnh có mã TC/F và hậu tố 1366/390 trong `docs/screenshots/`; danh mục ở `docs/screenshots/README.md`. Báo cáo HTML ở `frontend/playwright-report/`, trace khi lỗi ở `frontend/test-results/` (đều được gitignore).
 
