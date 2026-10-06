@@ -327,7 +327,7 @@ Không có nút "Tôi đã chuyển khoản", không upload biên lai.
 ### 8.2 Duyệt thanh toán (F018) — S,A
 ```ts
 type PaymentRow = { paymentId: string; orderId: string; customerUsername: string; expectedAmount: number; status: PaymentStatus; createdAt: string; reviewNote?: string; receivedAmount?: number }
-type PaymentReviewInput = { bankReference: string; receivedAmount: number; receivedAt: string; note?: string }
+type PaymentReviewInput = { bankReference?: string; receivedAmount?: number; receivedAt?: string; note?: string }  // D13: thiếu receivedAmount → = expectedAmount; thiếu receivedAt → thời điểm hiện tại; bankReference tùy chọn (nếu có: unique giữa các payment Confirmed)
 type PaymentReviewResult = { approved: boolean; payment: PaymentView; orderStatus: OrderStatus }
 ```
 | Method & URL | Body / Query | Response |
@@ -360,6 +360,21 @@ type InvoiceRow = Pick<InvoiceView, "invoiceId"|"issuedAt"|"kind"|"channel"|"tot
 | `GET /api/invoices/{invoiceId}` | như trên | `200 InvoiceView`; ngoài phạm vi → `404` |
 
 ---
+
+## 8.5 Báo cáo doanh thu (D14) — chỉ A
+```ts
+type RevenueReport = {
+  from: string; to: string;                      // yyyy-MM-dd (mặc định: 30 ngày gần nhất tới hôm nay)
+  totalRevenue: number; invoiceCount: number; itemsSold: number;
+  byChannel: { channel: SaleChannel; revenue: number; invoiceCount: number }[];
+  byPaymentMethod: { method: PaymentMethod; revenue: number }[];
+  daily: { date: string; revenue: number; invoiceCount: number }[];   // đủ mọi ngày trong khoảng, ngày không bán = 0
+  topDrugs: { drugId: string; drugName: string; quantity: number; revenue: number }[];   // tối đa 10
+  today: number; last7Days: number; thisMonth: number;               // doanh thu nhanh theo ngày nghiệp vụ
+}
+```
+| `GET /api/admin/reports/revenue?from=&to=` | A | `200 RevenueReport`; `from > to` hoặc khoảng > 366 ngày → `400` |
+|---|---|---|
 
 ## 9. Dashboard
 ```ts
