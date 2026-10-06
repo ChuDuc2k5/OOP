@@ -40,6 +40,12 @@ public sealed class PostgresSmokeTests
             var count = await db.UserAccounts.CountAsync();
             await new DbSeeder(db, clock, new PasswordHasher<UserAccount>(), ids, new StorageOptions(storage)).SeedAsync();
             Assert.Equal(count, await db.UserAccounts.CountAsync());
+            var catalogSeeder = new DemoCatalogSeeder(db, clock, new StorageOptions(storage));
+            await catalogSeeder.SeedAsync();
+            var catalogCount = await db.Drugs.CountAsync();
+            Assert.Equal(new DemoCatalogSeedResult(0, 0, 0, 0), await catalogSeeder.SeedAsync());
+            Assert.Equal(catalogCount, await db.Drugs.CountAsync());
+            Assert.Equal(count, await db.UserAccounts.CountAsync());
             var suffix = Guid.NewGuid().ToString("N");
             var drugId = "PG" + suffix;
             var batchId = "PB" + suffix;
