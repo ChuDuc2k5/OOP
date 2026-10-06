@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { paymentApi, ordersApi } from '@/lib/api';
+import { ApiException, paymentApi, ordersApi } from '@/lib/api';
 import { OrderView, PaymentView } from '@/lib/types';
 import { formatVND, PAYMENT_STATUS_LABELS, getStatusBadgeClass } from '@/lib/format';
 import {
@@ -56,7 +56,7 @@ export default function OrderPaymentPage({
       setOrder(orderData);
     } catch (err: unknown) {
       const msg =
-        err instanceof Error ? err.message : 'Không thể tải thông tin thanh toán cho đơn hàng';
+        err instanceof ApiException ? err.title : 'Không thể tải thông tin thanh toán cho đơn hàng';
       setError(msg);
     } finally {
       setLoading(false);
@@ -222,7 +222,7 @@ export default function OrderPaymentPage({
               <div className="md:col-span-5 bg-white rounded-2xl border border-slate-200 p-6 flex flex-col items-center justify-center text-center shadow-xs">
                 <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">
                   <QrCode className="w-4 h-4 text-emerald-600" />
-                  <span>Quét mã VietQR để thanh toán</span>
+                  <span>QR tài khoản nhận tiền</span>
                 </div>
 
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 inline-block shadow-inner">
@@ -237,14 +237,14 @@ export default function OrderPaymentPage({
                     <div className="w-56 h-56 flex flex-col items-center justify-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-300 p-4 space-y-2">
                       <QrCode className="w-16 h-16 text-slate-300" />
                       <span className="text-[11px] text-center">
-                        Mã VietQR tự động theo chuẩn Napas 247
+                        Không tải được ảnh QR. Vui lòng thử lại.
                       </span>
                     </div>
                   )}
                 </div>
 
                 <p className="text-[11px] text-slate-500 mt-4 leading-normal">
-                  Sử dụng App Ngân hàng hoặc Ví điện tử bất kỳ quét mã QR để điền tự động số tiền và nội dung.
+                  QR là ảnh cố định. Quét mã QR để mở tài khoản nhận, sau đó tự nhập đúng số tiền và nội dung chuyển khoản bên dưới.
                 </p>
               </div>
 
@@ -340,17 +340,17 @@ export default function OrderPaymentPage({
                       <div>
                         <span className="text-blue-900 font-bold block">Nội dung chuyển khoản (bắt buộc):</span>
                         <span className="text-[11px] text-blue-700">
-                          Chính xác mã đơn hàng để hệ thống tự động nhận diện
+                          Nhập đúng nội dung bên dưới để nhân viên đối chiếu giao dịch
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="font-mono font-black text-base text-blue-800 tracking-wider bg-white px-2 py-0.5 rounded border border-blue-200">
-                          {payment.transferContent || payment.orderId}
+                          {payment.transferContent}
                         </span>
                         <button
                           type="button"
                           onClick={() =>
-                            copyToClipboard(payment.transferContent || payment.orderId, 'content')
+                            copyToClipboard(payment.transferContent, 'content')
                           }
                           className="inline-flex items-center space-x-1 px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition shadow-xs"
                           title="Sao chép nội dung chuyển khoản"

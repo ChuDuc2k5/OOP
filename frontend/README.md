@@ -39,7 +39,9 @@ BACKEND_URL=http://localhost:5000
 NEXT_PUBLIC_USE_MOCK=false
 ```
 
-> **Lưu ý về Mock Mode:** Khi đặt `NEXT_PUBLIC_USE_MOCK=true` (hoặc gắn `?mock=true` trên URL), ứng dụng sẽ kích hoạt tầng Mock dữ liệu chuẩn theo SRS §8 và API Contract v1 (gồm 14 loại thuốc, tài khoản demo, tóm tắt dashboard, phân quyền giá Guest/User).
+> **Lưu ý về Mock Mode:** Khi đặt `NEXT_PUBLIC_USE_MOCK=true` (hoặc gắn `?mock=true` trên URL ở môi trường development), ứng dụng sẽ kích hoạt tầng Mock dữ liệu chuẩn theo SRS §8 và API Contract v1 (gồm 14 loại thuốc, tài khoản demo, tóm tắt dashboard, phân quyền giá Guest/User). Khi mock tắt, mọi API chỉ gọi backend thật; lỗi HTTP hoặc lỗi mạng được trả dưới dạng `ApiException`, không thay bằng dữ liệu giả.
+
+Luồng thanh toán: đặt hàng thành công → `/orders/{id}` → người dùng bấm **Mở thanh toán QR** → trang QR gọi `POST /api/orders/{id}/payment` (idempotent). Thông tin nhận tiền và ảnh QR lấy nguyên từ `PaymentView`; QR là ảnh cố định, khách tự nhập đúng số tiền và nội dung chuyển khoản. Hóa đơn dùng `InvoiceView` từ backend, gồm `items[].allocations` để hiển thị lô xuất, hạn dùng và số lượng.
 
 ---
 

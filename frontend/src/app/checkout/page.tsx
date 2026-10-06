@@ -155,11 +155,7 @@ export default function CheckoutPage() {
       const createdOrder = await ordersApi.placeOrder(payload);
 
       // Đặt hàng thành công!
-      if (createdOrder.canPay) {
-        router.push(`/orders/${createdOrder.orderId}/payment`);
-      } else {
-        router.push(`/orders/${createdOrder.orderId}`);
-      }
+      router.push(`/orders/${createdOrder.orderId}`);
     } catch (err: unknown) {
       if (err instanceof ApiException) {
         // Xử lý mã lỗi 409 PRICE_CHANGED

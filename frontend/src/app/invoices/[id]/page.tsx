@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { invoicesApi } from '@/lib/api';
+import { ApiException, invoicesApi } from '@/lib/api';
 import { InvoiceView } from '@/lib/types';
 import {
   formatDate,
@@ -53,7 +53,7 @@ export default function InvoiceDetailPage({
       const data = await invoicesApi.getInvoiceById(invoiceId);
       setInvoice(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không tìm thấy hóa đơn';
+      const msg = err instanceof ApiException ? err.title : 'Không tìm thấy hóa đơn';
       setError(msg);
     } finally {
       setLoading(false);

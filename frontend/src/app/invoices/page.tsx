@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { invoicesApi } from '@/lib/api';
+import { ApiException, invoicesApi } from '@/lib/api';
 import { InvoiceRow, Paged } from '@/lib/types';
 import {
   formatDate,
@@ -53,7 +53,7 @@ function InvoicesContent() {
       });
       setData(res);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể tải danh sách hóa đơn';
+      const msg = err instanceof ApiException ? err.title : 'Không thể tải danh sách hóa đơn';
       setError(msg);
     } finally {
       setLoading(false);

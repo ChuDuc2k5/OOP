@@ -109,15 +109,8 @@ export async function ensureCsrfToken(): Promise<string | null> {
 
   let token = getXsrfToken();
   if (!token) {
-    try {
-      await fetch('/api/auth/csrf', {
-        method: 'GET',
-        credentials: 'include',
-      });
-      token = getXsrfToken();
-    } catch (err) {
-      console.warn('Không thể lấy CSRF token:', err);
-    }
+    await apiFetch<void>('/api/auth/csrf');
+    token = getXsrfToken();
   }
   return token;
 }
@@ -127,18 +120,11 @@ export async function ensureCsrfToken(): Promise<string | null> {
  */
 export async function refreshCsrf(): Promise<void> {
   if (isMockMode()) return;
-  try {
-    await fetch('/api/auth/csrf', {
-      method: 'GET',
-      credentials: 'include',
-    });
-  } catch (err) {
-    console.warn('Lỗi khi làm mới CSRF:', err);
-  }
+  await apiFetch<void>('/api/auth/csrf');
 }
 
 /**
- * Mock dispatcher xử lý các API khi NEXT_PUBLIC_USE_MOCK=true hoặc endpoint backend M4 chưa sẵn sàng
+ * Mock dispatcher chỉ xử lý các API khi isMockMode() được bật
  */
 async function handleMockRequest<T>(
   endpoint: string,
@@ -625,11 +611,6 @@ export async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  // Các endpoint backend M4 chưa có: payment & invoices -> fallback mock nếu backend 404
-  const isPendingBackendM4 =
-    (endpoint.startsWith('/api/orders/') && endpoint.endsWith('/payment')) ||
-    endpoint.startsWith('/api/invoices');
-
   if (isMockMode()) {
     return handleMockRequest<T>(endpoint, options);
   }
@@ -660,22 +641,12 @@ export async function apiFetch<T>(
   try {
     response = await fetch(endpoint, fetchOptions);
   } catch (error) {
-    if (isPendingBackendM4) {
-      console.info(`[Backend M4 pending: Fallback mock cho ${endpoint}]`);
-      return handleMockRequest<T>(endpoint, options);
-    }
     console.warn(`Lỗi khi gọi ${endpoint}:`, error);
     throw new ApiException({
       status: 503,
       code: 'NETWORK_ERROR',
-      title: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra backend hoặc bật NEXT_PUBLIC_USE_MOCK=true.',
+      title: 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.',
     });
-  }
-
-  // Nếu endpoint payment hoặc invoices trả về 404/501 từ backend (do backend M4 chưa làm), fallback mock
-  if (isPendingBackendM4 && (response.status === 404 || response.status === 501)) {
-    console.info(`[Backend M4 404/501: Fallback mock cho ${endpoint}]`);
-    return handleMockRequest<T>(endpoint, options);
   }
 
   // 204 No Content
