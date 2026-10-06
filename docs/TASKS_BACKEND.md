@@ -112,6 +112,11 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 
 - Kiểm chứng M7: dotnet build Pharmacy.sln cuối 0 warning/0 error. Lượt test đầu (5 trường hợp guard và trước bổ sung assert ship/complete tự gán) đạt 187 pass/0 fail/2 skip (PostgreSQL/performance opt-in). Sau bổ sung trường hợp POST cộng dồn khi hết hàng và kiểm tra ship/complete từ HandledBy null, dotnet test Pharmacy.sln bị Windows Application Control chặn Pharmacy.Tests.dll, FileLoadException 0x800711C7 trước discovery; retry --no-build --no-restore cùng binary vẫn bị chặn. Mã cuối đã build thành công nhưng cần PO chạy lại toàn bộ test ở worktree khác; không thay/tắt bảo vệ máy.
 
+- M8 (`be/m8-register-login`, 2026-10-06): theo D10 và contract §3, đăng ký User thành công tự đăng nhập, vẫn trả 201 Me và cấp lại XSRF-TOKEN theo principal mới. Register/Login dùng chung helper cấp cookie; validate/trùng tên không cấp phiên đăng nhập, role gửi lên vẫn bị bỏ qua. Không đổi schema hoặc contract.
+- Cập nhật TC-01..TC-03 cho đăng nhập tự động: /me trả 200 ngay, logout trước khi thử login/validation tiếp; đăng ký lỗi vẫn Guest, role Admin/Staff không nâng quyền. Thêm TC01_Register_AutomaticallySignsIn_AndIssuesUsableUserCsrfToken kiểm tra cookie như login, token Guest cũ bị từ chối, token mới logout được và đăng ký tiếp khi đã login trả 403. README cập nhật bảng TC-01. Không git add/commit/đổi nhánh.
+
+- Kiểm chứng M8: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Pharmacy.sln 189 pass/0 fail/2 skip (PostgreSQL và performance opt-in chưa bật). Windows Application Control không chặn binary trong lượt này.
+
 ## Câu hỏi cho PO
 - M3.5 không đổi API contract. Phạm vi IInventoryLock vẫn một tiến trình ứng dụng; dùng schema pharmacy không exposed qua Supabase Data API. Chưa có connection PostgreSQL để chạy smoke thật; cần chạy nhóm opt-in trên DB test riêng trước demo Supabase.
 - M3: DB M1 không có thời điểm tạo đơn thuốc. Migration giữ bản ghi cũ và dùng CreatedAt = UnixEpoch làm giá trị chưa biết; bản ghi mới lưu thời điểm thật. Không đổi API contract; README đã nêu giới hạn dữ liệu cũ.
