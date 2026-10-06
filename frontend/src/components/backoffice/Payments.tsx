@@ -36,7 +36,7 @@ export function ReviewForm({
 }) {
   const action = useAction();
   const [reference, setReference] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(String(payment.expectedAmount));
   const [receivedAt, setReceivedAt] = useState(localNow);
   const [note, setNote] = useState("");
   const [result, setResult] = useState<PaymentReviewResult | null>(null);

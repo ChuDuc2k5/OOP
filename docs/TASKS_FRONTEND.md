@@ -124,6 +124,14 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
   - E2e bổ sung Pickup/Delivery, lỗi mở QR giữ đơn, đơn thuốc chờ duyệt, lỗi fulfill sau xác nhận tiền rồi thử lại, thuốc hết hàng và 409 thật; ảnh TC31/TC32/TC33/TC42/TC45/TC37 ở cả 1366/390 px. Mỗi ca giỏ có dữ liệu riêng để tránh ảnh hưởng giữa viewport.
   - Kiểm chứng cuối D6–D9: `npm run lint` sạch, `npm run build --workspace frontend` pass, `npm run test:e2e --workspace frontend` 16/16 ca pass (2,4 phút), backend SQLite thật, mock tắt, đủ 49 route mỗi viewport. Thêm 24 ảnh (tổng 77 ảnh, có ảnh lịch sử trước D6); danh mục ở `docs/screenshots/README.md`. Server thử nghiệm 3017/5017 đã đóng, không đổi nhánh hoặc commit.
 
+  - D10 (mục 1–7): đăng ký 201 tự GET me, cập nhật auth/CSRF, toast thành công và chuyển tới next an toàn hoặc trang chủ. Checkout tự xác định OTC/Prescription từ giỏ, bỏ lựa chọn loại đơn; giỏ kê đơn/kiểm soát cho chọn đơn đã gửi hoặc tải ảnh PNG/JPG ≤5 MB tại chỗ, dùng id mới và chờ dược sĩ. Giỏ hỗn hợp được gửi cho backend kiểm tra, lỗi title/field giữ dữ liệu.
+  - Lưu thông tin người nhận sau tạo đơn thành công trong localStorage theo userId (try/catch); tự điền lần sau, mặc định username. Form xác nhận tiền điền sẵn expectedAmount và giờ hiện tại. Đơn thuốc có nút “Lưu & chấp nhận” gọi PUT details rồi approve; từ chối vẫn bắt lý do.
+  - Bán tại quầy Staff/Admin dùng cùng một màn hình tìm thuốc từ GET products có giá, sửa/xóa số lượng, tổng tiền; hiện mã đơn/mã người bệnh khi có thuốc kê đơn. Một nút tạo đúng loại nháp → PUT dòng → checkout tiền mặt → hóa đơn. Lỗi hiển thị issues/title và giữ liên kết nháp; thử lại dùng nháp hiện tại, không tạo lặp.
+  - Admin thêm thuốc cho chọn ảnh và lô đầu tiên tùy chọn ngay tại form; gọi create → image → batch. Khi bước sau lỗi, giữ thuốc đã tạo để thử lại hoặc mở chi tiết, không tạo lại mã thuốc.
+  - E2e D10 bổ sung đăng ký tự đăng nhập/next, OTC tự động, tải ảnh tại checkout với giỏ hỗn hợp, tiền/giờ điền sẵn, lưu/chấp nhận đơn thuốc, bán tại quầy lỗi rồi thử lại cùng nháp, thêm thuốc kèm ảnh/lô. Chụp ảnh TC01/TC33/TC45/TC38/TC26/TC11/TC14 ở 1366/390 px; danh mục trong `docs/screenshots/README.md`.
+
+  - Kiểm chứng cuối D10: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` 22/22 ca pass (2,6 phút), backend SQLite thật và mock tắt, đủ 49 route mỗi viewport. Thêm 16 ảnh, tổng 93 ảnh; server thử nghiệm 3017/5017 đã dừng.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 
