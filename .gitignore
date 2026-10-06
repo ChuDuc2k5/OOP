@@ -55,3 +55,38 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# ---- Project ----
+# SRS working files (kept locally, not part of the product)
+/.srs-work/
+/srs-format/
+/diagrams/
+/SRS_OOP.docx
+/SRS_Pharmacy_Management_System_v1.2.pdf
+/Danh_sach_diagram_va_kiem_tra.md
+
+# Backend runtime data
+backend/data/
+backend/storage/*
+!backend/storage/qr/
+backend/storage/qr/*
+!backend/storage/qr/demo-qr.png
+*.db
+*.db-shm
+*.db-wal
+
+# Frontend
+node_modules/
+.next/
+out/
+.env*.local
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vs/
+.idea/
+.vscode/
