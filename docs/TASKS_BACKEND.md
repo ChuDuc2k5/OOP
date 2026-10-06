@@ -32,6 +32,14 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 3. Endpoint contract §6, §7.1–7.3, `GET /api/dashboard/summary`.
 4. Test: TC-13 (phần đặt hàng), TC-21, TC-24..TC-34, TC-36, TC-37 (phần trạng thái).
 
+## M3.5 — `be/m3b-postgres` (Supabase, ưu tiên sau M3)
+
+1. Thêm provider Npgsql; `Database:Provider` = `Sqlite` (mặc định) | `Postgres`; chuỗi kết nối `ConnectionStrings:Default` từ `.env` (không commit bí mật).
+2. Migration tách theo provider (2 migrations assembly hoặc 2 thư mục), auto migrate + seed khi DB trống trên cả hai.
+3. Xử lý unique violation độc lập provider (SQLite 2067 / Postgres 23505); partial index tương thích Postgres; `DateOnly`/`DateTimeOffset` map đúng (timestamptz).
+4. Test tự động vẫn dùng SQLite; thêm hướng dẫn Supabase (Session pooler, Npgsql connection string, SSL) vào `backend/README.md`.
+5. Không seed thông tin ngân hàng/QR thật; Admin cấu hình qua F017.
+
 ## M4 — `be/m4-sale-payment-checkout` (F016–F020)
 
 1. `SaleService` (F016): nháp của mình, loại không đổi, `issues`/`canCheckout` từ `Sale.Validate` chạy thử.
@@ -51,7 +59,37 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 ---
 
 ## Đã làm
-_(Dev cập nhật sau mỗi milestone)_
+- M1 (`be/m1-foundation`, 2026-10-06): thêm Pharmacy.Core/Pharmacy.Tests vào solution; toàn bộ entity theo SRS 7.4/CL-01, Sale TPH và Validate đa hình, collection chỉ đọc, phương thức bảo vệ tồn/đã cấp/trạng thái.
+- DbContext + migration InitialFoundation: FK Restrict, unique/partial index, CHECK số lượng/giá/role/trạng thái, Version concurrency token tự tăng trên năm entity yêu cầu. Auto migrate lúc khởi động.
+- IBusinessClock theo múi giờ Việt Nam (override chỉ Development/Test), IdGenerator có sequence SQLite atomic/persist, IInventoryLock, IFileStorage kiểm tra magic/MIME/extension/5 MB/path traversal; BusinessException và ProblemDetails tiếng Việt, log lỗi nội bộ, không trả stack trace.
+- F001–F003, csrf/me, cookie HttpOnly/SameSite=Lax, policy role, PasswordHasher; 401/403 JSON; đăng ký bỏ qua trường ngoài DTO và không tự login; token được cấp lại sau login/logout.
+- Seed chỉ khi domain DB trống; không sửa DB có dữ liệu một phần. Bốn account demo, 12 thuốc, các biên hạn/tồn, ba đơn thuốc, cấu hình ngân hàng và QR demo từ resource nguồn. DB/storage/key runtime được ignore.
+- TC-01..TC-08, TC-55 có integration test WebApplicationFactory + SQLite file tạm/clock giả. TC-06/55 dùng fixture domain gồm giỏ/đơn/nháp/kho/đã cấp/giữ/thanh toán/phân bổ/hóa đơn; TC-55 restart host trên cùng DB với ngày khác và kiểm tra QR không bị ghi đè. Thêm test nền tảng cho ràng buộc, concurrency, cấp mã đồng thời, file storage và lỗi.
+- Kiểm chứng: `dotnet build Pharmacy.sln` 0 warning/0 error; `dotnet test Pharmacy.sln` 43 pass/0 fail. Smoke HTTP: health 200, csrf 204, register 201, login/me 200, logout 204 và me sau logout 401, demo Admin/accounts/OpenAPI 200; đã tắt API.
+- Cách chạy, cấu hình, demo account và bảng TC ↔ tên test có trong `backend/README.md`. PO đã commit code M1 trên `be/m1-foundation`; phần sửa review do PO commit. Không push/merge/đổi nhánh.
+- Sửa review M1: khôi phục tiếng Việt và lưu UTF-8; tách câu lệnh, khối điều khiển và constructor dài để dễ đọc; seed có mô tả/đơn vị thực tế cho từng thuốc và Vitamin C đang bán nhưng tồn bằng 0. Bổ sung kiểm tra các dữ liệu seed này vào test hiện có.
+
+- M2 (`be/m2-catalog-inventory`, 2026-10-06): hoàn thành F004–F009 với ProductService, InventoryService, InventoryReportService và controller mỏng theo contract §4–§5. Guest không có thuộc tính unitPrice, chỉ thấy thuốc đang bán; tìm mã/tên không phân biệt hoa thường cả tiếng Việt, inStock theo tồn khả dụng. Admin tạo/sửa/tắt bán, upload ảnh qua IFileStorage; ảnh đọc qua endpoint riêng.
+- Nhập lô kiểm tra expiryDate > D, số lượng nguyên dương, tuple thuốc/số lô duy nhất và lỗi 409 DUPLICATE. Tồn thực tế/còn hạn/giữ/khả dụng theo BR-02; lô sắp hạn rồi số lô. Báo cáo chỉ đọc, tồn thấp gồm bằng ngưỡng/bằng 0, gần hết hạn đúng biên 0 < daysRemaining ≤ days.
+- API nội bộ Reserve/Release/AllocateFEFO/Deduct dùng IInventoryLock và transaction, FEFO nằm ở Drug.PlanFEFO/DrugBatch.Deduct. Giữ hàng idempotent và bảo vệ hạn mức đơn thuốc; trừ kho bảo vệ reservation đơn khác, consume của chính đơn; Execute cho phép workflow M3–M4 lưu thay đổi trong cùng transaction và rollback toàn bộ khi lỗi. Test đồng thời với hai scope riêng kiểm tra không giữ/trừ vượt tồn, kể cả context đã tải dữ liệu cũ.
+- M2 có test TC-09..TC-12, TC-14..TC-19, TC-22, TC-23 và unit domain FEFO/biên D, D+1, D+30, D+31. README đã cập nhật endpoint, API nội bộ, cách chạy và bảng TC ↔ tên test. Không thay đổi schema/migration M1.
+- Kiểm chứng M2: `dotnet build Pharmacy.sln` 0 warning/0 error; `dotnet test Pharmacy.sln` 84 pass/0 fail/0 skip. Smoke HTTP tất cả endpoint M2: sản phẩm Guest/người đăng nhập, Admin tạo/sửa/tắt bán/ảnh, nhập lô và lỗi trùng/hạn dùng, kho, báo cáo, phân quyền Guest/User/Staff. API đã tắt, DB/storage/key smoke trong temp đã xóa. Không git add/commit/push/merge/đổi nhánh.
+
+- M3 (`be/m3-prescription-cart-order`, 2026-10-06) đã hoàn thành trong worktree, chưa git add/commit: PrescriptionService, CartService, OrderService, DashboardService và controller mỏng theo contract §6, §7.1–7.3, §9. Ảnh đơn thuốc private theo chủ/Staff/Admin; tiếp nhận, gộp dòng, approve/reject/cancel, BR-06/BR-07 và chuyển Order WaitingReview liên kết theo D4.
+- Giỏ chỉ role User, cộng dồn và issue theo tồn khả dụng, không giữ kho. Đặt hàng kiểm tra expectedTotal/PRICE_CHANGED, OTC cần đơn, chủ/hiệu lực/hạn mức đơn thuốc; giá dòng được chốt trên server và xóa giỏ trong transaction. Hủy/từ chối đơn dùng InventoryService.Execute để Release hàng/hạn mức và đóng Payment PendingReview atomically; staff claim/ship/complete theo trạng thái, không xuất kho lặp. Fulfill là stub 409 INVALID_STATE theo phạm vi M3.
+- Migration PrescriptionCreatedAt tạo bằng dotnet ef, giữ dữ liệu DB M1; thời điểm tạo cũ chưa được lưu dùng UnixEpoch, bản ghi mới/seed dùng IBusinessClock.Now. Có test nâng cấp DB M1 và không seed đè.
+- Kiểm chứng M3: build 0 warning/0 error, toàn bộ 120 test pass/0 fail/0 skip (36 trường hợp M3); TC-13 phần giá chốt, TC-21, TC-24..TC-34, TC-36/37 phần trạng thái. Có test lỗi đóng Payment rollback cả Order/reservation/Payment, hai scope giữ hạn mức cuối, đặt cùng giỏ đồng thời, ảnh sai loại/quá lớn và quyền dữ liệu. README có bảng TC ↔ tên test đầy đủ.
+- Smoke HTTP tất cả route M3 pass; ship/complete/fulfill chặn khi chưa thanh toán/xuất, luồng thành công ship/complete kiểm chứng bằng fixture domain trong integration test. API đã tắt và DB/storage/key smoke tạm đã xóa. Không git add/commit/push/merge/đổi nhánh.
+
+- M3.5 (`be/m3b-postgres`, 2026-10-06): thêm Npgsql.EntityFrameworkCore.PostgreSQL 10.0.2, chọn Sqlite/Postgres qua cấu hình hoặc .env. API nạp backend/Pharmacy.Api/.env khi chạy npm run dev:api; môi trường/command line ưu tiên hơn .env. Template không chứa bí mật; README có hướng dẫn Session pooler/Npgsql/SSL và cách chuyển về SQLite.
+- PostgreSQL dùng PostgresPharmacyDbContext và bộ migration/snapshot riêng trong Data/Migrations/Postgres; giữ nguyên hai migration SQLite và snapshot hiện có, không có pending model changes ở cả hai. Auto migrate/seed dùng chung, seed chỉ khi DB domain trống, ảnh local và ngân hàng/QR demo. Schema pharmacy riêng cho dữ liệu và migration history; factory design-time ở Core sinh script không khởi động API hoặc đọc connection string thật.
+- CHECK tương thích PostgreSQL (quoted identifiers, boolean, regex username, numeric/trunc), unique/partial index và Version concurrency token. DateOnly map date, DateTimeOffset map timestamptz qua UTC converter. IdGenerator dùng INSERT ON CONFLICT RETURNING atomic có transaction trên hai provider. Helper độc lập provider xử lý SQLite 2067/1555 và Postgres 23505. Đọc tồn/giỏ/dashboard dùng RepeatableRead trên PostgreSQL.
+- Kiểm chứng M3.5: build 0 warning/0 error; test 132 pass/0 fail/1 skip. Test SQLite không cần mạng; thêm test model/migration/SQL/UTC/error helper/DI/.env và smoke opt-in PHARMACY_TEST_POSTGRES (thiếu biến thì skip). Script idempotent PostgreSQL đã sinh bằng dotnet ef trong Data/Migrations/Postgres/InitialPostgres.sql; chưa có PostgreSQL thật để kiểm chứng SSL, migration/seed và thao tác runtime trên Supabase. Lần kiểm chứng dùng RestoreSources cache local do TLS NuGet của máy lỗi; không sửa nguồn repository. Không git add/commit/push/merge/đổi nhánh.
 
 ## Câu hỏi cho PO
-_(Dev ghi câu hỏi ở đây)_
+- M3.5 không đổi API contract. Phạm vi IInventoryLock vẫn một tiến trình ứng dụng; dùng schema pharmacy không exposed qua Supabase Data API. Chưa có connection PostgreSQL để chạy smoke thật; cần chạy nhóm opt-in trên DB test riêng trước demo Supabase.
+- M3: DB M1 không có thời điểm tạo đơn thuốc. Migration giữ bản ghi cũ và dùng CreatedAt = UnixEpoch làm giá trị chưa biết; bản ghi mới lưu thời điểm thật. Không đổi API contract; README đã nêu giới hạn dữ liệu cũ.
+- M2 không phát sinh câu hỏi mới; giữ URL/DTO/mã lỗi theo API contract §4–§5, không thêm endpoint xóa thuốc hoặc endpoint reserve/release/checkout.
+- **Đã trả lời:** PO chốt DB ở `backend/data`, dùng `Data Source=../data/pharmacy.db`; giữ nguyên cấu hình hiện tại.
+- **Đã trả lời:** PO chấp nhận cookie secret `pharmacy.antiforgery` HttpOnly, đi cùng request token `XSRF-TOKEN` JS-readable/header theo contract.
+- **Đã trả lời:** PO chấp nhận giới hạn 9.999 mã/prefix/ngày; giữ sequence bền vững và trả `409 INVALID_STATE` khi hết dải.

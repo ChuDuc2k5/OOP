@@ -97,7 +97,7 @@ Do server sinh, dạng chuỗi dễ đọc, unique:
 | Backend URL | `http://localhost:5000` (`launchSettings.json`, profile `http`) |
 | Frontend URL | `http://localhost:3000` |
 | `frontend/.env.local` | `BACKEND_URL=http://localhost:5000` |
-| `ConnectionStrings:Default` | `Data Source=data/pharmacy.db` (tương đối với `backend/Pharmacy.Api`) |
+| `ConnectionStrings:Default` | `Data Source=../data/pharmacy.db` (tương đối với `backend/Pharmacy.Api` ⇒ `backend/data/`); cookie phụ `pharmacy.antiforgery` (HttpOnly) chứa secret antiforgery |
 | Health | `GET /api/health` (giữ endpoint có sẵn) |
 
 ## 10. Nhật ký quyết định
