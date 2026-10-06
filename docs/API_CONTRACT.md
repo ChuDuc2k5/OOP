@@ -87,7 +87,7 @@ type AccountRow = { userId: string; username: string; role: Role }
 | Method & URL | Quyền | Body / Query | Response |
 |---|---|---|---|
 | `GET /api/auth/csrf` | tất cả | – | `204` + cookie `XSRF-TOKEN` |
-| `POST /api/auth/register` | G (đã login → 403) | `{ username, password, confirmPassword }` — mọi trường khác (vd `role`) **bị bỏ qua** | `201 Me` (role luôn `User`, **không** tự đăng nhập) |
+| `POST /api/auth/register` | G (đã login → 403) | `{ username, password, confirmPassword }` — mọi trường khác (vd `role`) **bị bỏ qua** | `201 Me` (role luôn `User`) + **tự đăng nhập** (set cookie, cấp lại XSRF) — D10 |
 | `POST /api/auth/login` | G | `{ username, password }` | `200 Me` + set cookie; sai → `401 INVALID_CREDENTIALS` |
 | `POST /api/auth/logout` | U,S,A | – | `204`, xóa cookie |
 | `GET /api/auth/me` | U,S,A | – | `200 Me`; Guest → `401` |
