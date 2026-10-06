@@ -880,6 +880,72 @@ public sealed class OrderingTests : IDisposable
     }
 
     [Theory]
+    [InlineData("staff")]
+    [InlineData("admin")]
+    public async Task TC37_D15_ReadyPickup_IsIdempotent_SetsHandler_VisibleInCustomerDetailAndLists(string role)
+    {
+        using var user = await Login();
+        using var staff = await Login(role);
+        var id = await Order(user);
+        await Confirm(id, true);
+        var before = await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity));
+        var ready = await Ok(await staff.PostAsync("/api/staff/orders/" + id + "/ready", null));
+        var time = ready.GetProperty("readyAt").GetDateTimeOffset();
+        Assert.Equal(new TestClock().Now, time);
+        Assert.Equal("Preparing", ready.GetProperty("status").GetString());
+        Assert.Equal(role, ready.GetProperty("handledByUsername").GetString());
+        var snapshot = await factory.WithDb(PersistenceFixture.Snapshot);
+        var repeated = await Ok(await staff.PostAsync("/api/staff/orders/" + id + "/ready", null));
+        Assert.Equal(time, repeated.GetProperty("readyAt").GetDateTimeOffset());
+        Assert.Equal(snapshot, await factory.WithDb(PersistenceFixture.Snapshot));
+        var detail = await Ok(await user.GetAsync("/api/orders/" + id));
+        Assert.Equal(time, detail.GetProperty("readyAt").GetDateTimeOffset());
+        foreach (var (client, url) in new[] { (user, "/api/orders/mine"), (staff, "/api/staff/orders") })
+        {
+            var list = await Ok(await client.GetAsync(url));
+            Assert.Equal(time, list.GetProperty("items")[0].GetProperty("readyAt").GetDateTimeOffset());
+        }
+        await (await user.PostAsync("/api/staff/orders/" + id + "/ready", null)).Error(403, "FORBIDDEN");
+        var completed = await Ok(await staff.PostAsync("/api/staff/orders/" + id + "/complete", null));
+        Assert.Equal("Completed", completed.GetProperty("status").GetString());
+        Assert.Equal(time, completed.GetProperty("readyAt").GetDateTimeOffset());
+        await (await staff.PostAsync("/api/staff/orders/" + id + "/ready", null)).Error(409, "INVALID_STATE");
+        Assert.Equal(before, await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity)));
+    }
+
+    [Theory]
+    [InlineData("Delivery", true)]
+    [InlineData("Pickup", false)]
+    public async Task TC37_D15_ReadyRejectsDeliveryOrMissingInvoice_WithoutWriting(string receive, bool invoice)
+    {
+        using var user = await Login();
+        using var staff = await Login("staff");
+        var id = await Order(user, receive);
+        var initial = await Ok(await user.GetAsync("/api/orders/" + id));
+        Assert.Equal(JsonValueKind.Null, initial.GetProperty("readyAt").ValueKind);
+        await Confirm(id, invoice);
+        var before = await factory.WithDb(PersistenceFixture.Snapshot);
+        await (await staff.PostAsync("/api/staff/orders/" + id + "/ready", null)).Error(409, "INVALID_STATE");
+        Assert.Equal(before, await factory.WithDb(PersistenceFixture.Snapshot));
+    }
+
+    [Fact]
+    public void TC37_D15_DomainReady_PreservesFirstTime_RequiresPickupPreparingAndInvoice()
+    {
+        var clock = new TestClock();
+        var order = new Order("READY", "U0000003", clock.Now, SaleKind.OTC,
+            "Chu Đức", "0900000000", ReceiveMethod.Pickup);
+        Assert.Throws<BusinessException>(() => order.MarkReady(clock.Now, true));
+        order.MarkPreparing();
+        Assert.Throws<BusinessException>(() => order.MarkReady(clock.Now, false));
+        order.MarkReady(clock.Now, true);
+        order.MarkReady(clock.Now.AddHours(1), true);
+        Assert.Equal(clock.Now, order.ReadyAt);
+        order.MarkDelivered(true);
+        Assert.Equal(OrderStatus.Completed, order.Status);
+    }
+
+    [Theory]
     [InlineData("Delivery")]
     [InlineData("Pickup")]
     public async Task TC37_StaffDeliveryLifecycle_RequiresInvoice_NeverDeductsAgain(string receive)

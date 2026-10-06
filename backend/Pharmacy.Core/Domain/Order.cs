@@ -98,6 +98,7 @@ public sealed class Order : VersionedEntity
         get; private set;
     }
     public IReadOnlyCollection<OrderItem> Items => items.AsReadOnly();
+    public DateTimeOffset? ReadyAt { get; private set; }
     public void AddItem(OrderItem item)
     {
         Guard.State(item.OrderId == OrderId && Status is OrderStatus.AwaitingPayment or OrderStatus.WaitingReview);
@@ -131,6 +132,11 @@ public sealed class Order : VersionedEntity
     {
         Guard.State(Status == OrderStatus.Preparing && ReceiveMethod == ReceiveMethod.Delivery && hasInvoice);
         Status = OrderStatus.Delivering;
+    }
+    public void MarkReady(DateTimeOffset now, bool hasInvoice)
+    {
+        Guard.State(ReceiveMethod == ReceiveMethod.Pickup && Status == OrderStatus.Preparing && hasInvoice);
+        ReadyAt ??= now;
     }
     public void MarkDelivered(bool hasInvoice)
     {
