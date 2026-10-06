@@ -16,7 +16,7 @@ API tại `http://localhost:5000`; `GET /api/health` trả `{ "status": "ok", "s
 
 | Cấu hình | Mặc định, tương đối với `backend/Pharmacy.Api` |
 |---|---|
-| `Database:Provider` | `Sqlite` (Postgres chưa triển khai) |
+| `Database:Provider` | `Sqlite` (mặc định) hoặc `Postgres` |
 | `ConnectionStrings:Default` | `Data Source=../data/pharmacy.db` |
 | `Storage:Root` | `../storage` |
 | `DataProtection:KeyPath` | `../data/keys` |
@@ -72,10 +72,10 @@ dotnet test Pharmacy.sln --filter "FullyQualifiedName~AuthTests"
 Migration đầu tiên được commit cùng snapshot. Nếu cần tạo migration tiếp theo, cài `dotnet-ef` 10.0.11 rồi chạy:
 
 ```powershell
-dotnet ef migrations add TenMigration --project backend/Pharmacy.Core --startup-project backend/Pharmacy.Api --output-dir Data/Migrations
+dotnet ef migrations add TenMigration --context PharmacyDbContext --project backend/Pharmacy.Core --startup-project backend/Pharmacy.Core --output-dir Data/Migrations
 ```
 
-Mã giao dịch dùng sequence SQLite atomic theo prefix/ngày, tồn tại qua restart, tối đa 9.999 mã/prefix/ngày; hết dải trả `INVALID_STATE`, không sinh mã sai định dạng. Mô hình một tiến trình SQLite là phạm vi đã chốt.
+Mã giao dịch dùng sequence atomic theo prefix/ngày trên cả SQLite và PostgreSQL, tồn tại qua restart, tối đa 9.999 mã/prefix/ngày; hết dải trả `INVALID_STATE`, không sinh mã sai định dạng. IInventoryLock vẫn có phạm vi một tiến trình ứng dụng; chưa hỗ trợ chạy nhiều instance đồng thời.
 
 API M2 theo contract §4–§5:
 
@@ -156,3 +156,44 @@ dotnet test Pharmacy.sln --filter "FullyQualifiedName~OrderingTests"
 | TC-34 | `TC34_GuestOrOtherOwner_CannotPlaceReadCancelOrUsePrescription` |
 | TC-36 | `TC36_StaffCannotShipCompleteOrFulfillBeforePaymentAndInvoice`, `TC36_UserCannotManageStaffOrdersOrDashboard` |
 | TC-37 | `TC37_StaffDeliveryLifecycle_RequiresInvoice_NeverDeductsAgain`, `TC37_StaffRejectCancel_RequiresReason_ReleasesPendingPayment` |
+
+M3.5 hỗ trợ PostgreSQL/Supabase qua Npgsql 10.0.2, song song SQLite. Cấu hình Supabase:
+
+1. Trong project, mở **Project Settings → Database → Connection string → Session pooler**; giao diện hiện tại cũng có nút **Connect → Session pooler**. Sao chép đúng host và username của project, cổng Session pooler là 5432. Xem [hướng dẫn kết nối chính thức](https://supabase.com/docs/guides/database/connecting-to-postgres).
+2. Sao chép `backend/Pharmacy.Api/.env.example` thành `.env`, đặt giá trị trên máy của mình:
+
+```dotenv
+Database__Provider=Postgres
+ConnectionStrings__Default=Host=<pooler-host>;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<database-password>;SSL Mode=Require
+```
+
+3. Từ gốc repository chạy `npm run dev:api`. API nạp `.env` trong content root; biến môi trường hệ điều hành và command line được ưu tiên hơn `.env`. `dotnet run --project backend/Pharmacy.Api --launch-profile http` cũng dùng cùng cấu hình.
+
+Đây là chuỗi Npgsql dạng key/value, không phải URI hoặc API key Supabase. Dùng mật khẩu database; không percent-encode như URI. Nếu mật khẩu có dấu chấm phẩy, đặt giá trị Password trong dấu ngoặc kép theo cú pháp Npgsql. Không ghi connection string thật vào Git, log hoặc frontend. File `.env` đã được ignore; template để trống connection string.
+
+Ứng dụng tự migrate rồi seed khi DB domain trống. PostgreSQL dùng schema riêng `pharmacy` cho toàn bộ bảng và migration history; không thêm schema này vào danh sách exposed schemas của Data API. FE tiếp tục qua Web API với cookie và phân quyền server. Seed chỉ chứa ngân hàng/QR demo; không dùng dữ liệu nhận tiền thật. Ảnh thuốc/đơn thuốc/QR vẫn ở `backend/storage`, không dùng Supabase Storage. Muốn quay về SQLite: `Database__Provider=Sqlite`, bỏ connection string PostgreSQL hoặc đặt `Data Source=../data/pharmacy.db`. Chuyển provider không tự sao chép dữ liệu giữa hai DB.
+
+Migration SQLite hiện có giữ nguyên file và ID ở `Data/Migrations`, gắn với `PharmacyDbContext`; migration PostgreSQL ở `Data/Migrations/Postgres`, gắn với `PostgresPharmacyDbContext`. Hai context có snapshot riêng trong cùng assembly. Factory design-time nằm trong Core, dùng connection mẫu để sinh model/script, không đọc bí mật hoặc khởi động API. Để thêm migration PostgreSQL và sinh SQL offline:
+
+```powershell
+dotnet ef migrations add TenMigration --context PostgresPharmacyDbContext --project backend/Pharmacy.Core --startup-project backend/Pharmacy.Core --output-dir Data/Migrations/Postgres
+dotnet ef migrations script --idempotent --context PostgresPharmacyDbContext --project backend/Pharmacy.Core --startup-project backend/Pharmacy.Core --output backend/Pharmacy.Core/Data/Migrations/Postgres/InitialPostgres.sql
+```
+
+Script PostgreSQL đã sinh bằng EF CLI và kiểm tra tự động, gồm schema, CHECK, unique/partial index, DateOnly `date`, DateTimeOffset `timestamp with time zone`. Tất cả thời điểm PostgreSQL chuyển sang UTC; ngày nghiệp vụ vẫn tính theo múi giờ Việt Nam. Lỗi unique dùng helper chung SQLite 2067/1555 và PostgreSQL 23505; Version concurrency token giữ nguyên. Các truy vấn tồn/giỏ/dashboard nhiều bước dùng snapshot RepeatableRead trên PostgreSQL. Sequence dùng INSERT ON CONFLICT RETURNING atomic và tham gia transaction hiện tại.
+
+Test mặc định hoàn toàn dùng SQLite temp, không cần mạng và không dùng connection string của ứng dụng. Test mới:
+
+- `DatabaseProviderTests`: helper lỗi trùng khóa, hai bộ migration độc lập, SQL PostgreSQL, ngày/UTC/concurrency token.
+- `DatabaseConfigurationTests`: nạp `.env`, giữ dấu `=`/`;` trong connection string, DI đúng provider.
+- `PostgresSmokeTests.Postgres_MigrateSeedUtcUniqueConcurrencyAndAtomicSequence_Smoke`: tự skip nếu thiếu `PHARMACY_TEST_POSTGRES`; khi có sẽ migrate/seed, kiểm tra UTC, unique, stale write, sequence đồng thời và rollback.
+
+Dùng **database PostgreSQL dành riêng cho test**. Smoke test giữ migration/seed và sequence trong DB, xóa các bản ghi thử riêng của nó; không xóa database/schema và không dùng DB vận hành. Chuỗi test lấy trực tiếp từ biến môi trường, không lưu vào file nguồn:
+
+```powershell
+# Đặt PHARMACY_TEST_POSTGRES bằng cơ chế quản lý bí mật của máy/CI trước khi chạy.
+dotnet test Pharmacy.sln --filter "Category=Postgres"
+dotnet test Pharmacy.sln
+```
+
+Môi trường hiện tại chưa có PostgreSQL thật: kiểm chứng offline 132 pass, 1 skip (smoke PostgreSQL), build 0 warning/0 error. SQL script đã sinh; chưa kiểm chứng kết nối SSL/Session pooler, apply migration, seed và thao tác thực tế trên Supabase. Máy phát triển gặp lỗi TLS NuGet; lần kiểm chứng dùng `RestoreSources` trỏ cache gói cục bộ đã tải từ NuGet chính thức, không thay đổi cấu hình nguồn của repository.

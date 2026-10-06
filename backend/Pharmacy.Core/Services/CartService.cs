@@ -13,7 +13,7 @@ public sealed class CartService(
     public async Task<CartView> Get(string userId, CancellationToken ct = default)
     {
         await using var transaction = db.Database.CurrentTransaction is null
-            ? await db.Database.BeginTransactionAsync(ct) : null;
+            ? await db.Database.BeginReadSnapshotAsync(ct) : null;
         var cart = await db.CartItems.AsNoTracking().Where(x => x.UserId == userId).ToListAsync(ct);
         var stock = await inventory.Snapshot(ct);
         var items = cart.OrderBy(x => x.DrugId, StringComparer.Ordinal).Select(item =>

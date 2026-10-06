@@ -31,6 +31,9 @@ internal sealed class ApiFactory(string databasePath, DateOnly? today = null) : 
             services.RemoveAll<StorageOptions>();
             services.AddSingleton(new StorageOptions(databasePath + "-storage"));
             services.RemoveAll<DbContextOptions<PharmacyDbContext>>();
+            services.RemoveAll<PharmacyDbContext>();
+            services.RemoveAll<PostgresPharmacyDbContext>();
+            services.RemoveAll<DbContextOptions<PostgresPharmacyDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<PharmacyDbContext>>();
             services.AddDbContext<PharmacyDbContext>(o => o.UseSqlite($"Data Source={databasePath};Pooling=False"));
             services.RemoveAll<IBusinessClock>();

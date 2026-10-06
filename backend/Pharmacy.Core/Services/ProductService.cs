@@ -1,4 +1,3 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy.Core.Common;
 using Pharmacy.Core.Data;
@@ -79,7 +78,7 @@ public sealed class ProductService(
         {
             await db.SaveChangesAsync(ct);
         }
-        catch (DbUpdateException e) when (e.InnerException is SqliteException { SqliteExtendedErrorCode: 1555 })
+        catch (DbUpdateException e) when (DatabaseErrors.IsUniqueViolation(e))
         {
             db.Entry(drug).State = EntityState.Detached;
             throw Duplicate();

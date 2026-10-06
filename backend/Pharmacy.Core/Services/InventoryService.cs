@@ -1,4 +1,3 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy.Core.Common;
 using Pharmacy.Core.Data;
@@ -73,7 +72,7 @@ public sealed class InventoryService(
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
         }
-        catch (DbUpdateException e) when (e.InnerException is SqliteException { SqliteExtendedErrorCode: 2067 })
+        catch (DbUpdateException e) when (DatabaseErrors.IsUniqueViolation(e))
         {
             db.Entry(batch).State = EntityState.Detached;
             throw DuplicateBatch();
