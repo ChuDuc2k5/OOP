@@ -36,7 +36,7 @@ npm.cmd run dev
 | Web (Next.js) | http://localhost:3000 |
 | .NET API (web tự gọi, không cần mở) | http://localhost:5000/api |
 
-Chạy riêng: `npm.cmd run dev:web`, `npm.cmd run dev:api`. Test backend: `npm.cmd run test` (= `dotnet test Pharmacy.sln`).
+Chạy riêng: `npm.cmd run dev:web`, `npm.cmd run dev:api` (API chạy bản build Release để tránh Windows Smart App Control chặn DLL Debug; nếu chạy tay dùng `dotnet run --project backend/Pharmacy.Api --launch-profile http -c Release`). Test backend: `npm.cmd run test` (= `dotnet test Pharmacy.sln`).
 
 ## Cấu hình
 Sao chép mẫu `.env` sau khi clone (file `.env` bị Git bỏ qua):
