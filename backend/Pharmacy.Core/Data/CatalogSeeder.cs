@@ -5,19 +5,19 @@ using Pharmacy.Core.Domain;
 
 namespace Pharmacy.Core.Data;
 
-public sealed record DemoCatalogSeedResult(int DrugsAdded, int BatchesAdded, int ImagesAttached, int ImageFilesAdded);
+public sealed record CatalogSeedResult(int DrugsAdded, int BatchesAdded, int ImagesAttached, int ImageFilesAdded);
 
-public sealed class DemoCatalogSeeder(
+public sealed class CatalogSeeder(
     PharmacyDbContext db,
     IBusinessClock clock,
     StorageOptions storage)
 {
-    public async Task<DemoCatalogSeedResult> SeedAsync(CancellationToken ct = default)
+    public async Task<CatalogSeedResult> SeedAsync(CancellationToken ct = default)
     {
         await using var source = Resource("Seed.catalog.json");
         var catalog = await JsonSerializer.DeserializeAsync<Catalog>(source,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }, ct)
-            ?? throw new InvalidOperationException("Demo catalog is empty.");
+            ?? throw new InvalidOperationException("Catalog is empty.");
         await using var transaction = db.Database.CurrentTransaction is null
             ? await db.Database.BeginTransactionAsync(ct) : null;
         var ids = catalog.Drugs.Select(x => x.Id).Concat(catalog.LegacyImages.Keys).ToList();
@@ -44,7 +44,7 @@ public sealed class DemoCatalogSeeder(
                 var quantity = 20 + (index * 17 + batchIndex * 29) % 181;
                 var batch = new DrugBatch($"BC{index:D6}{batchIndex}", entry.Id,
                     $"L{clock.Today:yy}{batchIndex + 1:D3}", clock.Today.AddDays(days), quantity);
-                // A few demo batches have already been used: keep received quantity, show low remaining stock.
+                // A few batches have already been used: keep received quantity, show low remaining stock.
                 if (index % 11 == 0)
                 {
                     batch.Deduct(quantity - Math.Max(1, entry.Threshold / count), clock.Today);
@@ -113,8 +113,8 @@ public sealed class DemoCatalogSeeder(
     }
 
     private static Stream Resource(string name)
-        => typeof(DemoCatalogSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data." + name)
-            ?? throw new InvalidOperationException("Missing embedded demo catalog resource: " + name);
+        => typeof(CatalogSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data." + name)
+            ?? throw new InvalidOperationException("Missing embedded catalog resource: " + name);
 
     private sealed record Catalog(Dictionary<string, JsonElement> LegacyImages, List<CatalogDrug> Drugs);
     private sealed record CatalogDrug(string Id, string Name, string Unit, decimal Price,

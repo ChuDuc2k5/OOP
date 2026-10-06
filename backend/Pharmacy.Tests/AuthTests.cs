@@ -53,7 +53,7 @@ public sealed class AuthTests : IDisposable
         await client.Csrf();
         await (await client.PostAsJsonAsync("/api/auth/register", new
         {
-            username = "  UsEr ",
+            username = "  ChuDuC ",
             password = "Password1",
             confirmPassword = "Password1"
         })).Error(409, "DUPLICATE", "username");
@@ -175,7 +175,7 @@ public sealed class AuthTests : IDisposable
     }
 
     [Theory]
-    [InlineData("user", "User@12345", "User", "/")]
+    [InlineData("chuduc", "User@12345", "User", "/")]
     [InlineData("staff", "Staff@12345", "Staff", "/staff")]
     [InlineData("admin", "Admin@12345", "Admin", "/admin")]
     public async Task TC04_Login_ReturnsRoleHomePath_AndSecureCookieAttributes(
@@ -206,19 +206,19 @@ public sealed class AuthTests : IDisposable
     public async Task TC05_InvalidLogin_UsesSameMessage_LeavesClientUnauthenticated()
     {
         using var client = factory.Client();
-        var wrong = await client.Login("user", "wrongPassword");
+        var wrong = await client.Login("chuduc", "wrongPassword");
         await wrong.Error(401, "INVALID_CREDENTIALS");
         var missing = await client.Login("unknown", "wrongPassword");
         await missing.Error(401, "INVALID_CREDENTIALS");
         Assert.Equal((await wrong.Json()).GetProperty("title").GetString(), (await missing.Json()).GetProperty("title").GetString());
         await (await client.GetAsync("/api/auth/me")).Error(401, "UNAUTHENTICATED");
-        Assert.Equal(HttpStatusCode.OK, (await client.Login("user", "User@12345")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.Login("chuduc", "User@12345")).StatusCode);
     }
     [Fact]
     public async Task TC06_Logout_BlocksProtectedApi_ReLoginPreservesBusinessData()
     {
         using var client = factory.Client();
-        Assert.Equal(HttpStatusCode.OK, (await client.Login("user", "User@12345")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.Login("chuduc", "User@12345")).StatusCode);
         await factory.WithDb(PersistenceFixture.AddBusinessData);
         var before = await factory.WithDb(PersistenceFixture.Snapshot);
         await client.Csrf();
@@ -227,7 +227,7 @@ public sealed class AuthTests : IDisposable
         Assert.Contains(response.Headers.GetValues("Set-Cookie"), c => c.StartsWith("pharmacy.auth=;") && c.Contains("expires="));
         await (await client.GetAsync("/api/auth/me")).Error(401, "UNAUTHENTICATED");
         await (await client.GetAsync("/api/admin/accounts")).Error(401, "UNAUTHENTICATED");
-        Assert.Equal(HttpStatusCode.OK, (await client.Login("user", "User@12345")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.Login("chuduc", "User@12345")).StatusCode);
         Assert.Equal(before, await factory.WithDb(PersistenceFixture.Snapshot));
     }
     [Fact]
@@ -270,7 +270,7 @@ public sealed class AuthTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, (await staff.Login("new.staff", "StaffPass1")).StatusCode);
     }
     [Theory]
-    [InlineData("user", "User@12345")]
+    [InlineData("chuduc", "User@12345")]
     [InlineData("staff", "Staff@12345")]
     public async Task TC08_NonAdmin_CannotListOrCreateAccounts(string username, string password)
     {
@@ -306,7 +306,7 @@ public sealed class AuthTests : IDisposable
         using var client = factory.Client();
         var input = new
         {
-            username = "user",
+            username = "chuduc",
             password = "User@12345"
         };
         await (await client.PostAsJsonAsync("/api/auth/login", input)).Error(400, "ANTIFORGERY_INVALID");
@@ -314,7 +314,7 @@ public sealed class AuthTests : IDisposable
         client.DefaultRequestHeaders.Remove("X-XSRF-TOKEN");
         client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", "invalid");
         await (await client.PostAsJsonAsync("/api/auth/login", input)).Error(400, "ANTIFORGERY_INVALID");
-        Assert.Equal(HttpStatusCode.OK, (await client.Login("user", "User@12345")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.Login("chuduc", "User@12345")).StatusCode);
         client.DefaultRequestHeaders.Remove("X-XSRF-TOKEN");
         client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", guestToken);
         await (await client.PostAsync("/api/auth/logout", null)).Error(400, "ANTIFORGERY_INVALID");
@@ -347,7 +347,7 @@ public sealed class AuthTests : IDisposable
     public async Task Antiforgery_LoginAndLogoutAutomaticallyIssueUsableTokens()
     {
         using var client = factory.Client();
-        var login = await client.Login("user", "User@12345");
+        var login = await client.Login("chuduc", "User@12345");
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var token = login.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("XSRF-TOKEN=")).Split(';')[0]["XSRF-TOKEN=".Length..];
         client.DefaultRequestHeaders.Remove("X-XSRF-TOKEN");
@@ -359,7 +359,7 @@ public sealed class AuthTests : IDisposable
         client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", token);
         Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/auth/login", new
         {
-            username = "user",
+            username = "chuduc",
             password = "User@12345"
         })).StatusCode);
     }
