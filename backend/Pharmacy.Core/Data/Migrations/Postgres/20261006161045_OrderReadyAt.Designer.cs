@@ -2,49 +2,58 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Pharmacy.Core.Data;
 
 #nullable disable
 
-namespace Pharmacy.Core.Data.Migrations
+namespace Pharmacy.Core.Data.Migrations.Postgres
 {
-    [DbContext(typeof(PharmacyDbContext))]
-    partial class PharmacyDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(PostgresPharmacyDbContext))]
+    [Migration("20261006161045_OrderReadyAt")]
+    partial class OrderReadyAt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
+            modelBuilder
+                .HasDefaultSchema("pharmacy")
+                .HasAnnotation("ProductVersion", "10.0.11")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Pharmacy.Core.Data.DailySequence", b =>
                 {
                     b.Property<string>("Key")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Value")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Key");
 
-                    b.ToTable("DailySequence");
+                    b.ToTable("DailySequence", "pharmacy");
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.BatchAllocation", b =>
                 {
                     b.Property<string>("AllocationId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("BatchId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("SaleItemId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("AllocationId");
 
@@ -52,188 +61,188 @@ namespace Pharmacy.Core.Data.Migrations
 
                     b.HasIndex("SaleItemId");
 
-                    b.ToTable("BatchAllocations", t =>
+                    b.ToTable("BatchAllocations", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_BatchAllocation_AllocationQuantity", "Quantity > 0");
+                            t.HasCheckConstraint("CK_BatchAllocation_AllocationQuantity", "\"Quantity\" > 0");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.CartItem", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("DrugId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("UserId", "DrugId");
 
                     b.HasIndex("DrugId");
 
-                    b.ToTable("CartItems", t =>
+                    b.ToTable("CartItems", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_CartItem_CartQuantity", "Quantity > 0");
+                            t.HasCheckConstraint("CK_CartItem_CartQuantity", "\"Quantity\" > 0");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.Drug", b =>
                 {
                     b.Property<string>("DrugId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ImagePath")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsControlled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsForSale")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("LowStockThreshold")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<bool>("RequiresPrescription")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("SaleUnit")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("numeric");
 
                     b.HasKey("DrugId");
 
-                    b.ToTable("Drugs", t =>
+                    b.ToTable("Drugs", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_Drug_DrugRules", "length(trim(Name)) > 0 AND length(trim(SaleUnit)) > 0 AND CAST(UnitPrice AS REAL) > 0 AND CAST(UnitPrice AS REAL) = CAST(UnitPrice AS INTEGER) AND LowStockThreshold >= 0 AND (IsControlled = 0 OR RequiresPrescription = 1)");
+                            t.HasCheckConstraint("CK_Drug_DrugRules", "length(trim(\"Name\")) > 0 AND length(trim(\"SaleUnit\")) > 0 AND \"UnitPrice\" > 0 AND \"UnitPrice\" = trunc(\"UnitPrice\") AND \"LowStockThreshold\" >= 0 AND (\"IsControlled\" = FALSE OR \"RequiresPrescription\" = TRUE)");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.DrugBatch", b =>
                 {
                     b.Property<string>("BatchId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("BatchNumber")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("DrugId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateOnly>("ExpiryDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<int>("InitialQuantity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("BatchId");
 
                     b.HasIndex("DrugId", "BatchNumber")
                         .IsUnique();
 
-                    b.ToTable("DrugBatches", t =>
+                    b.ToTable("DrugBatches", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_DrugBatch_BatchQuantity", "InitialQuantity > 0 AND Quantity >= 0 AND Quantity <= InitialQuantity AND length(trim(BatchNumber)) > 0");
+                            t.HasCheckConstraint("CK_DrugBatch_BatchQuantity", "\"InitialQuantity\" > 0 AND \"Quantity\" >= 0 AND \"Quantity\" <= \"InitialQuantity\" AND length(trim(\"BatchNumber\")) > 0");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.Invoice", b =>
                 {
                     b.Property<string>("InvoiceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("IssuedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SaleId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("InvoiceId");
 
                     b.HasIndex("SaleId")
                         .IsUnique();
 
-                    b.ToTable("Invoices");
+                    b.ToTable("Invoices", "pharmacy");
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.Order", b =>
                 {
                     b.Property<string>("OrderId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Address")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("HandledByUserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Note")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PatientId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PrescriptionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("ReadyAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ReceiveMethod")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ReceiverName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("SaleKind")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("OrderId");
 
@@ -243,41 +252,41 @@ namespace Pharmacy.Core.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders", t =>
+                    b.ToTable("Orders", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_Order_OrderRules", "SaleKind IN ('OTC','Prescription') AND ReceiveMethod IN ('Pickup','Delivery') AND Status IN ('WaitingReview','AwaitingPayment','Preparing','Delivering','Completed','Cancelled','Rejected') AND length(trim(ReceiverName)) > 0 AND length(trim(Phone)) > 0 AND (ReceiveMethod <> 'Delivery' OR (Address IS NOT NULL AND length(trim(Address)) > 0)) AND (SaleKind <> 'Prescription' OR (PrescriptionId IS NOT NULL AND PatientId IS NOT NULL)) AND CAST(TotalAmount AS REAL) >= 0 AND CAST(TotalAmount AS REAL) = CAST(TotalAmount AS INTEGER)");
+                            t.HasCheckConstraint("CK_Order_OrderRules", "\"SaleKind\" IN ('OTC','Prescription') AND \"ReceiveMethod\" IN ('Pickup','Delivery') AND \"Status\" IN ('WaitingReview','AwaitingPayment','Preparing','Delivering','Completed','Cancelled','Rejected') AND length(trim(\"ReceiverName\")) > 0 AND length(trim(\"Phone\")) > 0 AND (\"ReceiveMethod\" <> 'Delivery' OR (\"Address\" IS NOT NULL AND length(trim(\"Address\")) > 0)) AND (\"SaleKind\" <> 'Prescription' OR (\"PrescriptionId\" IS NOT NULL AND \"PatientId\" IS NOT NULL)) AND \"TotalAmount\" >= 0 AND \"TotalAmount\" = trunc(\"TotalAmount\")");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.OrderItem", b =>
                 {
                     b.Property<string>("OrderItemId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("DrugId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("DrugName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<decimal>("LineTotal")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("OrderId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Unit")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("numeric");
 
                     b.HasKey("OrderItemId");
 
@@ -286,68 +295,68 @@ namespace Pharmacy.Core.Data.Migrations
                     b.HasIndex("OrderId", "DrugId")
                         .IsUnique();
 
-                    b.ToTable("OrderItems", t =>
+                    b.ToTable("OrderItems", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_OrderItem_Money", "Quantity > 0 AND CAST(UnitPrice AS REAL) > 0 AND CAST(UnitPrice AS REAL) = CAST(UnitPrice AS INTEGER) AND CAST(LineTotal AS REAL) = Quantity * CAST(UnitPrice AS REAL)");
+                            t.HasCheckConstraint("CK_OrderItem_Money", "\"Quantity\" > 0 AND \"UnitPrice\" > 0 AND \"UnitPrice\" = trunc(\"UnitPrice\") AND \"LineTotal\" = \"Quantity\" * \"UnitPrice\"");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.Payment", b =>
                 {
                     b.Property<string>("PaymentId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("AccountName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("AccountNumber")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("ApprovedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ApprovedByUserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("BankName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("BankReference")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("ExpectedAmount")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("OrderId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("QrImagePath")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<decimal?>("ReceivedAmount")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("numeric");
 
                     b.Property<DateTimeOffset?>("ReceivedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ReviewNote")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("PaymentId");
 
@@ -360,11 +369,11 @@ namespace Pharmacy.Core.Data.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Payments", t =>
+                    b.ToTable("Payments", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_Payment_PaymentRules", "CAST(ExpectedAmount AS REAL) > 0 AND CAST(ExpectedAmount AS REAL) = CAST(ExpectedAmount AS INTEGER) AND (ReceivedAmount IS NULL OR (CAST(ReceivedAmount AS REAL) >= 0 AND CAST(ReceivedAmount AS REAL) = CAST(ReceivedAmount AS INTEGER))) AND (Status <> 'Confirmed' OR (ApprovedByUserId IS NOT NULL AND ApprovedAt IS NOT NULL AND CAST(ReceivedAmount AS REAL) >= CAST(ExpectedAmount AS REAL)))");
+                            t.HasCheckConstraint("CK_Payment_PaymentRules", "\"ExpectedAmount\" > 0 AND \"ExpectedAmount\" = trunc(\"ExpectedAmount\") AND (\"ReceivedAmount\" IS NULL OR (\"ReceivedAmount\" >= 0 AND \"ReceivedAmount\" = trunc(\"ReceivedAmount\"))) AND (\"Status\" <> 'Confirmed' OR (\"ApprovedByUserId\" IS NOT NULL AND \"ApprovedAt\" IS NOT NULL AND \"ReceivedAmount\" >= \"ExpectedAmount\"))");
 
-                            t.HasCheckConstraint("CK_Payment_PaymentStatus", "Status IN ('PendingReview','Confirmed','Closed') AND length(trim(BankName)) > 0 AND length(trim(AccountNumber)) > 0 AND length(trim(AccountName)) > 0 AND length(trim(QrImagePath)) > 0");
+                            t.HasCheckConstraint("CK_Payment_PaymentStatus", "\"Status\" IN ('PendingReview','Confirmed','Closed') AND length(trim(\"BankName\")) > 0 AND length(trim(\"AccountNumber\")) > 0 AND length(trim(\"AccountName\")) > 0 AND length(trim(\"QrImagePath\")) > 0");
                         });
                 });
 
@@ -372,78 +381,80 @@ namespace Pharmacy.Core.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AccountName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("AccountNumber")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("BankName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("QrImagePath")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("PaymentSettings", t =>
+                    b.ToTable("PaymentSettings", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_PaymentSetting_Singleton", "Id = 1");
+                            t.HasCheckConstraint("CK_PaymentSetting_Singleton", "\"Id\" = 1");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.Prescription", b =>
                 {
                     b.Property<string>("PrescriptionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedByUserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ImagePath")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateOnly?>("IssueDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<string>("OwnerUserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PatientId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PatientName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PrescriberName")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ReviewNote")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("ReviewedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ReviewedByUserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateOnly?>("ValidUntil")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.HasKey("PrescriptionId");
 
@@ -453,34 +464,34 @@ namespace Pharmacy.Core.Data.Migrations
 
                     b.HasIndex("ReviewedByUserId");
 
-                    b.ToTable("Prescriptions", t =>
+                    b.ToTable("Prescriptions", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_Prescription_PrescriptionRules", "Status IN ('PendingReview','Approved','Rejected','Cancelled') AND length(trim(PatientId)) > 0 AND length(trim(PatientName)) > 0 AND (IssueDate IS NULL OR ValidUntil IS NULL OR IssueDate <= ValidUntil) AND (Status <> 'Approved' OR (IssueDate IS NOT NULL AND ValidUntil IS NOT NULL AND PrescriberName IS NOT NULL AND length(trim(PrescriberName)) > 0))");
+                            t.HasCheckConstraint("CK_Prescription_PrescriptionRules", "\"Status\" IN ('PendingReview','Approved','Rejected','Cancelled') AND length(trim(\"PatientId\")) > 0 AND length(trim(\"PatientName\")) > 0 AND (\"IssueDate\" IS NULL OR \"ValidUntil\" IS NULL OR \"IssueDate\" <= \"ValidUntil\") AND (\"Status\" <> 'Approved' OR (\"IssueDate\" IS NOT NULL AND \"ValidUntil\" IS NOT NULL AND \"PrescriberName\" IS NOT NULL AND length(trim(\"PrescriberName\")) > 0))");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.PrescriptionItem", b =>
                 {
                     b.Property<string>("ItemId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("DispensedQuantity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("DrugId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("PrescribedQuantity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("PrescriptionId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("ItemId");
 
@@ -489,60 +500,60 @@ namespace Pharmacy.Core.Data.Migrations
                     b.HasIndex("PrescriptionId", "DrugId")
                         .IsUnique();
 
-                    b.ToTable("PrescriptionItems", t =>
+                    b.ToTable("PrescriptionItems", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_PrescriptionItem_PrescriptionQuantity", "PrescribedQuantity > 0 AND DispensedQuantity >= 0 AND DispensedQuantity <= PrescribedQuantity");
+                            t.HasCheckConstraint("CK_PrescriptionItem_PrescriptionQuantity", "\"PrescribedQuantity\" > 0 AND \"DispensedQuantity\" >= 0 AND \"DispensedQuantity\" <= \"PrescribedQuantity\"");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.Sale", b =>
                 {
                     b.Property<string>("SaleId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("BuyerUserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Channel")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedByUserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Kind")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("OrderId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PatientId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PaymentMethod")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PrescriptionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("numeric");
 
                     b.Property<int>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("SaleId");
 
@@ -556,9 +567,9 @@ namespace Pharmacy.Core.Data.Migrations
 
                     b.HasIndex("PrescriptionId");
 
-                    b.ToTable("Sales", t =>
+                    b.ToTable("Sales", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_Sale_SaleRules", "Kind IN ('OTC','Prescription') AND Channel IN ('Counter','Online') AND Status IN ('Draft','Completed','Cancelled') AND CAST(TotalAmount AS REAL) >= 0 AND CAST(TotalAmount AS REAL) = CAST(TotalAmount AS INTEGER) AND (Kind <> 'Prescription' OR (PrescriptionId IS NOT NULL AND PatientId IS NOT NULL)) AND (Status <> 'Completed' OR (CompletedAt IS NOT NULL AND PaymentMethod IS NOT NULL AND ((Channel='Counter' AND PaymentMethod='Cash') OR (Channel='Online' AND PaymentMethod='ManualQR'))))");
+                            t.HasCheckConstraint("CK_Sale_SaleRules", "\"Kind\" IN ('OTC','Prescription') AND \"Channel\" IN ('Counter','Online') AND \"Status\" IN ('Draft','Completed','Cancelled') AND \"TotalAmount\" >= 0 AND \"TotalAmount\" = trunc(\"TotalAmount\") AND (\"Kind\" <> 'Prescription' OR (\"PrescriptionId\" IS NOT NULL AND \"PatientId\" IS NOT NULL)) AND (\"Status\" <> 'Completed' OR (\"CompletedAt\" IS NOT NULL AND \"PaymentMethod\" IS NOT NULL AND ((\"Channel\"='Counter' AND \"PaymentMethod\"='Cash') OR (\"Channel\"='Online' AND \"PaymentMethod\"='ManualQR'))))");
                         });
 
                     b.HasDiscriminator<string>("Kind");
@@ -569,35 +580,35 @@ namespace Pharmacy.Core.Data.Migrations
             modelBuilder.Entity("Pharmacy.Core.Domain.SaleItem", b =>
                 {
                     b.Property<string>("SaleItemId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("DrugId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("DrugName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsSealed")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<decimal>("LineTotal")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("numeric");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("SaleId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Unit")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("numeric");
 
                     b.HasKey("SaleItemId");
 
@@ -606,34 +617,34 @@ namespace Pharmacy.Core.Data.Migrations
                     b.HasIndex("SaleId", "DrugId")
                         .IsUnique();
 
-                    b.ToTable("SaleItems", t =>
+                    b.ToTable("SaleItems", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_SaleItem_Money", "Quantity > 0 AND CAST(UnitPrice AS REAL) > 0 AND CAST(UnitPrice AS REAL) = CAST(UnitPrice AS INTEGER) AND CAST(LineTotal AS REAL) = Quantity * CAST(UnitPrice AS REAL)");
+                            t.HasCheckConstraint("CK_SaleItem_Money", "\"Quantity\" > 0 AND \"UnitPrice\" > 0 AND \"UnitPrice\" = trunc(\"UnitPrice\") AND \"LineTotal\" = \"Quantity\" * \"UnitPrice\"");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.StockReservation", b =>
                 {
                     b.Property<string>("ReservationId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("DrugId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("OrderId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PrescriptionItemId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("ReservationId");
 
@@ -645,41 +656,41 @@ namespace Pharmacy.Core.Data.Migrations
                         .IsUnique()
                         .HasFilter("\"Status\" = 'Active'");
 
-                    b.ToTable("StockReservations", t =>
+                    b.ToTable("StockReservations", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_StockReservation_ReservationRules", "Quantity > 0 AND Status IN ('Active','Consumed','Released')");
+                            t.HasCheckConstraint("CK_StockReservation_ReservationRules", "\"Quantity\" > 0 AND \"Status\" IN ('Active','Consumed','Released')");
                         });
                 });
 
             modelBuilder.Entity("Pharmacy.Core.Domain.UserAccount", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("NormalizedUsername")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId");
 
                     b.HasIndex("NormalizedUsername")
                         .IsUnique();
 
-                    b.ToTable("UserAccounts", t =>
+                    b.ToTable("UserAccounts", "pharmacy", t =>
                         {
-                            t.HasCheckConstraint("CK_UserAccount_AccountRules", "length(Username) BETWEEN 3 AND 30 AND Username NOT GLOB '*[^A-Za-z0-9._-]*' AND length(PasswordHash) > 0 AND NormalizedUsername = upper(trim(Username)) AND Role IN ('User','Staff','Admin')");
+                            t.HasCheckConstraint("CK_UserAccount_AccountRules", "length(\"Username\") BETWEEN 3 AND 30 AND \"Username\" ~ '^[A-Za-z0-9._-]+$' AND length(\"PasswordHash\") > 0 AND \"NormalizedUsername\" = upper(trim(\"Username\")) AND \"Role\" IN ('User','Staff','Admin')");
                         });
                 });
 
@@ -689,7 +700,7 @@ namespace Pharmacy.Core.Data.Migrations
 
                     b.ToTable(t =>
                         {
-                            t.HasCheckConstraint("CK_Sale_SaleRules", "Kind IN ('OTC','Prescription') AND Channel IN ('Counter','Online') AND Status IN ('Draft','Completed','Cancelled') AND CAST(TotalAmount AS REAL) >= 0 AND CAST(TotalAmount AS REAL) = CAST(TotalAmount AS INTEGER) AND (Kind <> 'Prescription' OR (PrescriptionId IS NOT NULL AND PatientId IS NOT NULL)) AND (Status <> 'Completed' OR (CompletedAt IS NOT NULL AND PaymentMethod IS NOT NULL AND ((Channel='Counter' AND PaymentMethod='Cash') OR (Channel='Online' AND PaymentMethod='ManualQR'))))");
+                            t.HasCheckConstraint("CK_Sale_SaleRules", "\"Kind\" IN ('OTC','Prescription') AND \"Channel\" IN ('Counter','Online') AND \"Status\" IN ('Draft','Completed','Cancelled') AND \"TotalAmount\" >= 0 AND \"TotalAmount\" = trunc(\"TotalAmount\") AND (\"Kind\" <> 'Prescription' OR (\"PrescriptionId\" IS NOT NULL AND \"PatientId\" IS NOT NULL)) AND (\"Status\" <> 'Completed' OR (\"CompletedAt\" IS NOT NULL AND \"PaymentMethod\" IS NOT NULL AND ((\"Channel\"='Counter' AND \"PaymentMethod\"='Cash') OR (\"Channel\"='Online' AND \"PaymentMethod\"='ManualQR'))))");
                         });
 
                     b.HasDiscriminator().HasValue("OTC");
@@ -701,7 +712,7 @@ namespace Pharmacy.Core.Data.Migrations
 
                     b.ToTable(t =>
                         {
-                            t.HasCheckConstraint("CK_Sale_SaleRules", "Kind IN ('OTC','Prescription') AND Channel IN ('Counter','Online') AND Status IN ('Draft','Completed','Cancelled') AND CAST(TotalAmount AS REAL) >= 0 AND CAST(TotalAmount AS REAL) = CAST(TotalAmount AS INTEGER) AND (Kind <> 'Prescription' OR (PrescriptionId IS NOT NULL AND PatientId IS NOT NULL)) AND (Status <> 'Completed' OR (CompletedAt IS NOT NULL AND PaymentMethod IS NOT NULL AND ((Channel='Counter' AND PaymentMethod='Cash') OR (Channel='Online' AND PaymentMethod='ManualQR'))))");
+                            t.HasCheckConstraint("CK_Sale_SaleRules", "\"Kind\" IN ('OTC','Prescription') AND \"Channel\" IN ('Counter','Online') AND \"Status\" IN ('Draft','Completed','Cancelled') AND \"TotalAmount\" >= 0 AND \"TotalAmount\" = trunc(\"TotalAmount\") AND (\"Kind\" <> 'Prescription' OR (\"PrescriptionId\" IS NOT NULL AND \"PatientId\" IS NOT NULL)) AND (\"Status\" <> 'Completed' OR (\"CompletedAt\" IS NOT NULL AND \"PaymentMethod\" IS NOT NULL AND ((\"Channel\"='Counter' AND \"PaymentMethod\"='Cash') OR (\"Channel\"='Online' AND \"PaymentMethod\"='ManualQR'))))");
                         });
 
                     b.HasDiscriminator().HasValue("Prescription");

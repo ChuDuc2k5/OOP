@@ -211,6 +211,9 @@ namespace Pharmacy.Core.Data.Migrations.Postgres
                     b.Property<string>("PrescriptionId")
                         .HasColumnType("text");
 
+                    b.Property<DateTimeOffset?>("ReadyAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("ReceiveMethod")
                         .IsRequired()
                         .HasColumnType("text");

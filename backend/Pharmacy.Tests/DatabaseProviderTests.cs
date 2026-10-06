@@ -22,21 +22,26 @@ public sealed class DatabaseProviderTests
         {
             await using var db = new PharmacyDbContext(new DbContextOptionsBuilder<PharmacyDbContext>()
                 .UseSqlite("Data Source=" + path + ";Pooling=False").Options);
-            var previous = db.Database.GetMigrations().Last(x => !x.EndsWith("OptionalPaymentReference"));
+            var previous = db.Database.GetMigrations().TakeWhile(x => !x.EndsWith("OptionalPaymentReference")).Last();
             await db.GetService<IMigrator>().MigrateAsync(previous);
+            await using var legacy = new LegacyOrderContext(new DbContextOptionsBuilder<LegacyOrderContext>()
+                .UseSqlite("Data Source=" + path + ";Pooling=False").Options);
             var clock = new TestClock();
-            await new DbSeeder(db, clock, new PasswordHasher<UserAccount>(), new IdGenerator(db, clock), new(path + "-storage")).SeedAsync();
-            await PersistenceFixture.AddBusinessData(db);
-            var before = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(await PersistenceFixture.Snapshot(db))!;
-            var paymentsBefore = JsonSerializer.Serialize(await db.Payments.AsNoTracking().OrderBy(x => x.PaymentId).ToListAsync());
+            await new DbSeeder(legacy, clock, new PasswordHasher<UserAccount>(), new IdGenerator(legacy, clock), new(path + "-storage")).SeedAsync();
+            await PersistenceFixture.AddBusinessData(legacy);
+            var before = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(await PersistenceFixture.Snapshot(legacy))!;
+            var paymentsBefore = JsonSerializer.Serialize(await legacy.Payments.AsNoTracking().OrderBy(x => x.PaymentId).ToListAsync());
+            var ordersBefore = JsonSerializer.Serialize(await legacy.Orders.AsNoTracking().Include(x => x.Items).OrderBy(x => x.OrderId).ToListAsync());
             await db.Database.MigrateAsync();
             var after = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(await PersistenceFixture.Snapshot(db))!;
-            foreach (var table in before.Keys.Where(x => x != "Payments"))
+            foreach (var table in before.Keys.Where(x => x is not ("Payments" or "Orders")))
             {
                 Assert.Equal(before[table], after[table]);
             }
             // SQLite rebuilds Payments and can reorder physical columns; compare mapped values.
             Assert.Equal(paymentsBefore, JsonSerializer.Serialize(await db.Payments.AsNoTracking().OrderBy(x => x.PaymentId).ToListAsync()));
+            Assert.Equal(ordersBefore, JsonSerializer.Serialize(await db.Orders.AsNoTracking().Include(x => x.Items).OrderBy(x => x.OrderId).ToListAsync()));
+            Assert.All(await db.Orders.AsNoTracking().ToListAsync(), order => Assert.Null(order.ReadyAt));
             var order = new Order("UPORDER", "U0000003", clock.Now, SaleKind.OTC,
                 "Chu Đức", "0900000000", ReceiveMethod.Pickup);
             order.AddItem(new("UPITEM", order.OrderId, "PARA500", "Paracetamol 500mg", "Viên", 1, 1000));
@@ -51,6 +56,15 @@ public sealed class DatabaseProviderTests
         finally
         {
             ApiFactory.Cleanup(path);
+        }
+    }
+
+    private sealed class LegacyOrderContext(DbContextOptions<LegacyOrderContext> options) : PharmacyDbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Order>().Ignore(x => x.ReadyAt);
         }
     }
 
@@ -76,8 +90,8 @@ public sealed class DatabaseProviderTests
     {
         using var sqlite = new SqliteMigrationFactory().CreateDbContext([]);
         using var postgres = new PostgresMigrationFactory().CreateDbContext([]);
-        Assert.Equal(3, sqlite.Database.GetMigrations().Count());
-        Assert.Equal(2, postgres.Database.GetMigrations().Count());
+        Assert.Equal(4, sqlite.Database.GetMigrations().Count());
+        Assert.Equal(3, postgres.Database.GetMigrations().Count());
         Assert.All(postgres.Database.GetMigrations(), migration => Assert.DoesNotContain(migration, sqlite.Database.GetMigrations()));
         Assert.False(sqlite.Database.HasPendingModelChanges());
         Assert.False(postgres.Database.HasPendingModelChanges());

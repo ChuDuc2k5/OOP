@@ -26,6 +26,9 @@ public sealed class StaffOrdersController(OrderService orders, CheckoutService c
     [HttpPost("{orderId}/ship")]
     public Task<OrderView> Ship(string orderId, CancellationToken ct) => orders.StaffAction(orderId, UserId, "ship", ct);
 
+    [HttpPost("{orderId}/ready")]
+    public Task<OrderView> Ready(string orderId, CancellationToken ct) => orders.StaffAction(orderId, UserId, "ready", ct);
+
     [HttpPost("{orderId}/complete")]
     public Task<OrderView> Complete(string orderId, CancellationToken ct) => orders.StaffAction(orderId, UserId, "complete", ct);
 
