@@ -49,17 +49,18 @@ public sealed class CartService(
                 throw InputValidation.NotFound();
             }
             var item = await db.CartItems.SingleOrDefaultAsync(x => x.UserId == userId && x.DrugId == drugId, ct);
+            var sum = (long)(item?.Quantity ?? 0) + input.Quantity!.Value;
+            if (sum > int.MaxValue)
+            {
+                throw new BusinessException("VALIDATION_FAILED", "Số lượng vượt giới hạn.", "quantity");
+            }
+            await ValidateStock(drugId, (int)sum, ct);
             if (item is null)
             {
                 db.CartItems.Add(new(userId, drugId, input.Quantity!.Value));
             }
             else
             {
-                var sum = (long)item.Quantity + input.Quantity!.Value;
-                if (sum > int.MaxValue)
-                {
-                    throw new BusinessException("VALIDATION_FAILED", "Số lượng vượt giới hạn.", "quantity");
-                }
                 item.ChangeQuantity((int)sum);
             }
             await db.SaveChangesAsync(ct);
@@ -71,6 +72,10 @@ public sealed class CartService(
         {
             ValidateQuantity(quantity);
             var item = await Find(userId, drugId, ct);
+            if (quantity!.Value > item.Quantity)
+            {
+                await ValidateStock(drugId, quantity.Value, ct);
+            }
             item.ChangeQuantity(quantity!.Value);
             await db.SaveChangesAsync(ct);
             return await Get(userId, ct);
@@ -87,6 +92,19 @@ public sealed class CartService(
     private async Task<CartItem> Find(string userId, string drugId, CancellationToken ct)
         => await db.CartItems.SingleOrDefaultAsync(x => x.UserId == userId && x.DrugId == drugId, ct)
             ?? throw InputValidation.NotFound();
+
+    private async Task ValidateStock(string drugId, int quantity, CancellationToken ct)
+    {
+        var stock = (await inventory.Snapshot(ct)).Single(x => x.Drug.DrugId == drugId);
+        var available = stock.Inventory.AvailableQuantity;
+        if (quantity > available)
+        {
+            var title = available == 0
+                ? "Thuốc tạm hết hàng."
+                : $"Không đủ hàng, chỉ còn {available} {stock.Drug.SaleUnit}.";
+            throw new BusinessException("INSUFFICIENT_STOCK", title);
+        }
+    }
 
     private static void ValidateQuantity(int? quantity)
     {
