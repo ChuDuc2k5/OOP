@@ -68,6 +68,14 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 - Kiểm chứng M2: `dotnet build Pharmacy.sln` 0 warning/0 error; `dotnet test Pharmacy.sln` 84 pass/0 fail/0 skip. Smoke HTTP tất cả endpoint M2: sản phẩm Guest/người đăng nhập, Admin tạo/sửa/tắt bán/ảnh, nhập lô và lỗi trùng/hạn dùng, kho, báo cáo, phân quyền Guest/User/Staff. API đã tắt, DB/storage/key smoke trong temp đã xóa. Không git add/commit/push/merge/đổi nhánh.
 
 ## Câu hỏi cho PO
+- M3 (`be/m3-prescription-cart-order`, 2026-10-06) đã hoàn thành trong worktree, chưa git add/commit: PrescriptionService, CartService, OrderService, DashboardService và controller mỏng theo contract §6, §7.1–7.3, §9. Ảnh đơn thuốc private theo chủ/Staff/Admin; tiếp nhận, gộp dòng, approve/reject/cancel, BR-06/BR-07 và chuyển Order WaitingReview liên kết theo D4.
+- Giỏ chỉ role User, cộng dồn và issue theo tồn khả dụng, không giữ kho. Đặt hàng kiểm tra expectedTotal/PRICE_CHANGED, OTC cần đơn, chủ/hiệu lực/hạn mức đơn thuốc; giá dòng được chốt trên server và xóa giỏ trong transaction. Hủy/từ chối đơn dùng InventoryService.Execute để Release hàng/hạn mức và đóng Payment PendingReview atomically; staff claim/ship/complete theo trạng thái, không xuất kho lặp. Fulfill là stub 409 INVALID_STATE theo phạm vi M3.
+- Migration PrescriptionCreatedAt tạo bằng dotnet ef, giữ dữ liệu DB M1; thời điểm tạo cũ chưa được lưu dùng UnixEpoch, bản ghi mới/seed dùng IBusinessClock.Now. Có test nâng cấp DB M1 và không seed đè.
+- Kiểm chứng M3: build 0 warning/0 error, toàn bộ 120 test pass/0 fail/0 skip (36 trường hợp M3); TC-13 phần giá chốt, TC-21, TC-24..TC-34, TC-36/37 phần trạng thái. Có test lỗi đóng Payment rollback cả Order/reservation/Payment, hai scope giữ hạn mức cuối, đặt cùng giỏ đồng thời, ảnh sai loại/quá lớn và quyền dữ liệu. README có bảng TC ↔ tên test đầy đủ.
+- Smoke HTTP tất cả route M3 pass; ship/complete/fulfill chặn khi chưa thanh toán/xuất, luồng thành công ship/complete kiểm chứng bằng fixture domain trong integration test. API đã tắt và DB/storage/key smoke tạm đã xóa. Không git add/commit/push/merge/đổi nhánh.
+
+## Câu hỏi cho PO
+- M3: DB M1 không có thời điểm tạo đơn thuốc. Migration giữ bản ghi cũ và dùng CreatedAt = UnixEpoch làm giá trị chưa biết; bản ghi mới lưu thời điểm thật. Không đổi API contract; README đã nêu giới hạn dữ liệu cũ.
 - M2 không phát sinh câu hỏi mới; giữ URL/DTO/mã lỗi theo API contract §4–§5, không thêm endpoint xóa thuốc hoặc endpoint reserve/release/checkout.
 - **Đã trả lời:** PO chốt DB ở `backend/data`, dùng `Data Source=../data/pharmacy.db`; giữ nguyên cấu hình hiện tại.
 - **Đã trả lời:** PO chấp nhận cookie secret `pharmacy.antiforgery` HttpOnly, đi cùng request token `XSRF-TOKEN` JS-readable/header theo contract.

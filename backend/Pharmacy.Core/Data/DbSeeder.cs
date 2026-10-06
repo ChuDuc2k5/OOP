@@ -68,7 +68,7 @@ public sealed class DbSeeder(
         }
         for (var i = 0; i < 3; i++)
         {
-            var prescription = new Prescription(await ids.NextAsync("DT", ct), "UDEMO0003", "UDEMO0003", "BN001", "Khách demo");
+            var prescription = new Prescription(await ids.NextAsync("DT", ct), "UDEMO0003", "UDEMO0003", "BN001", "Khách demo", createdAt: clock.Now);
             if (i < 2)
             {
                 prescription.SetDetails("Bác sĩ demo", clock.Today.AddDays(-10), clock.Today.AddDays(i == 0 ? 20 : -1), [new PrescriptionItem($"PITEM{i}", prescription.PrescriptionId, "DEMO07", 30)]);
