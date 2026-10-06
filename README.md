@@ -34,8 +34,7 @@ npm.cmd run dev
 | Dịch vụ | Địa chỉ |
 |---|---|
 | Web (Next.js) | http://localhost:3000 |
-| .NET API | http://localhost:5000/api |
-| OpenAPI (Development) | http://localhost:5000/openapi/v1.json |
+| .NET API (web tự gọi, không cần mở) | http://localhost:5000/api |
 
 Chạy riêng: `npm.cmd run dev:web`, `npm.cmd run dev:api`. Test backend: `npm.cmd run test` (= `dotnet test Pharmacy.sln`).
 
@@ -61,3 +60,7 @@ Copy-Item backend/Pharmacy.Api/.env.example backend/Pharmacy.Api/.env
 
 Tài khoản nhận tiền và ảnh QR **không** được tạo sẵn: đăng nhập `admin` → **Cài đặt QR** để cấu hình trước khi khách thanh toán.
 Nạp thêm danh mục thuốc vào database đã có dữ liệu: `dotnet run --project backend/Pharmacy.Api --launch-profile http -- --seed-catalog`.
+
+## Dành cho lập trình viên
+- Danh sách API đầy đủ: [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
+- Khi chạy ở chế độ Development, backend tự sinh mô tả API dạng OpenAPI tại `http://localhost:5000/openapi/v1.json` (file JSON, dùng cho công cụ như Postman; người dùng không cần mở).
