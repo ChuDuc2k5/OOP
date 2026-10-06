@@ -150,8 +150,8 @@ dotnet test Pharmacy.sln --filter "FullyQualifiedName~OrderingTests"
 |---|---|
 | TC-13 | `TC13_OrderSnapshotsPrice_ChangedCartRequiresConfirmation` |
 | TC-21 | `TC21_CancelPrescriptionOrder_ReleasesStockQuotaAndClosesPaymentAtomically`, `TC21_CancellationFailure_RollsBackOrderReservationAndPayment` |
-| TC-24 | `TC24_OnlineAndCounterPrescriptions_PersistOwnerCreatorTimeAndNoStockChange`, `TC24_CounterDuplicateAndInvalidDetails_ReturnFieldErrorsWithoutWriting`, `TC24_MigrationFromM1_PreservesExistingPrescriptionAndDoesNotReseed` |
-| TC-25 | `TC25_PrescriptionImages_RejectInvalidFilesAndHideOtherOwners` |
+| TC-24 | `TC24_OnlineAndCounterPrescriptions_PersistOwnerCreatorTimeAndNoStockChange`, `TC24_CounterDuplicateAndInvalidDetails_ReturnFieldErrorsWithoutWriting`, `TC24_MigrationFromM1_PreservesExistingPrescriptionAndDoesNotReseed`, `TC24_D12_CounterPrescriptionWithoutOrders_ReturnsEmptyLinkedOrders` |
+| TC-25 | `TC25_PrescriptionImages_RejectInvalidFilesAndHideOtherOwners`, `TC25_D12_LinkedOrders_StaffSeesSnapshotsAllStatusesInCreatedOrder_UserSeesEmpty` |
 | TC-26 | `TC26_DetailsMergeDuplicates_ApproveTransitionsEligibleLinkedOrders`, `TC26_InvalidReviewAndDetails_DoNotPartiallyWrite`, `TC26_RejectOrCancelPrescription_RejectsWaitingOrdersWithReason` |
 | TC-27 | `TC27_ValidateQuota_RejectsInvalidPrescriptionCases` |
 | TC-28 | `TC28_UserCannotReview_ConcurrentReservationsRespectLastQuota`, `TC28_UserCannotCallStaffMutations_CompletedQuotaCannotBeCancelled` |

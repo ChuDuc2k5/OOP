@@ -36,7 +36,7 @@ public sealed class PrescriptionService(
                 patientId!, patientName!, path, clock.Now);
             db.Prescriptions.Add(prescription);
             await db.SaveChangesAsync(ct);
-            return await ToView(prescription, ct);
+            return await ToView(prescription, false, ct);
         }, ct);
 
     public Task<PrescriptionView> Counter(string staffId, CounterPrescriptionInput input, CancellationToken ct = default)
@@ -57,7 +57,7 @@ public sealed class PrescriptionService(
                 lines.Select(x => new PrescriptionItem(ids.Item(), id, x.DrugId, x.Quantity)));
             db.Prescriptions.Add(prescription);
             await db.SaveChangesAsync(ct);
-            return await ToView(prescription, ct);
+            return await ToView(prescription, true, ct);
         }, ct);
 
     public Task<PrescriptionView> Details(string id, PrescriptionDetailsInput input, CancellationToken ct = default)
@@ -72,7 +72,7 @@ public sealed class PrescriptionService(
             prescription.SetDetails(input.PrescriberName!, input.IssueDate!.Value, input.ValidUntil!.Value,
                 lines.Select(x => new PrescriptionItem(ids.Item(), id, x.DrugId, x.Quantity)));
             await db.SaveChangesAsync(ct);
-            return await ToView(prescription, ct);
+            return await ToView(prescription, true, ct);
         }, ct);
 
     public Task<PrescriptionView> Review(string id, string reviewer, string action, string? reason = null, CancellationToken ct = default)
@@ -113,7 +113,7 @@ public sealed class PrescriptionService(
                 await orders.RejectWaiting(id, reason.Trim(), reviewer, ct);
             }
             await db.SaveChangesAsync(ct);
-            return await ToView(prescription, ct);
+            return await ToView(prescription, true, ct);
         }, ct);
 
     public Task ValidateQuota(Prescription prescription, string patientId, IReadOnlyList<StockLine> lines,
@@ -121,7 +121,7 @@ public sealed class PrescriptionService(
         => quota.ValidateQuota(prescription, patientId, lines, exceptOrderId, ct);
 
     public async Task<PrescriptionView> Get(string id, string? ownerId, CancellationToken ct = default)
-        => await ToView(await Find(id, ownerId, ct), ct);
+        => await ToView(await Find(id, ownerId, ct), ownerId is null, ct);
 
     public async Task<StoredDrugImage> Image(string id, string? ownerId, CancellationToken ct = default)
     {
@@ -175,7 +175,7 @@ public sealed class PrescriptionService(
         var result = new List<PrescriptionView>();
         foreach (var prescription in prescriptions.OrderByDescending(x => x.CreatedAt))
         {
-            result.Add(await ToView(prescription, ct));
+            result.Add(await ToView(prescription, false, ct));
         }
         return result;
     }
@@ -184,7 +184,7 @@ public sealed class PrescriptionService(
         => await db.Prescriptions.Include(x => x.Items).SingleOrDefaultAsync(x => x.PrescriptionId == id
             && (ownerId == null || x.OwnerUserId == ownerId), ct) ?? throw InputValidation.NotFound();
 
-    private async Task<PrescriptionView> ToView(Prescription prescription, CancellationToken ct)
+    private async Task<PrescriptionView> ToView(Prescription prescription, bool includeLinkedOrders, CancellationToken ct)
     {
         var users = await db.UserAccounts.AsNoTracking().ToDictionaryAsync(x => x.UserId, x => x.Username, ct);
         var drugs = await db.Drugs.AsNoTracking().ToDictionaryAsync(x => x.DrugId, ct);
@@ -198,13 +198,24 @@ public sealed class PrescriptionService(
             x.ItemId, x.DrugId, drugs[x.DrugId].Name, drugs[x.DrugId].SaleUnit,
             x.PrescribedQuantity, reserved.GetValueOrDefault(x.ItemId), x.DispensedQuantity,
             x.Remaining(reserved.GetValueOrDefault(x.ItemId)))).ToList();
+        var linkedOrders = new List<LinkedPrescriptionOrderView>();
+        if (includeLinkedOrders)
+        {
+            var linked = await db.Orders.AsNoTracking().Include(x => x.Items)
+                .Where(x => x.PrescriptionId == prescription.PrescriptionId).ToListAsync(ct);
+            linkedOrders = linked.OrderBy(x => x.CreatedAt).ThenBy(x => x.OrderId, StringComparer.Ordinal)
+                .Select(x => new LinkedPrescriptionOrderView(x.OrderId, x.Status,
+                    x.Items.OrderBy(item => item.DrugId, StringComparer.Ordinal)
+                        .Select(item => new LinkedPrescriptionOrderItemView(
+                            item.DrugId, item.DrugName, item.Unit, item.Quantity)).ToList())).ToList();
+        }
         return new(prescription.PrescriptionId, prescription.Status, prescription.OwnerUserId,
             prescription.OwnerUserId is null ? null : users[prescription.OwnerUserId], users[prescription.CreatedByUserId],
             prescription.PatientId, prescription.PatientName, prescription.PrescriberName,
             prescription.IssueDate, prescription.ValidUntil, prescription.ImagePath is not null,
             prescription.ImagePath is null ? null : "/api/prescriptions/" + Uri.EscapeDataString(prescription.PrescriptionId) + "/image",
             prescription.ReviewedByUserId is null ? null : users[prescription.ReviewedByUserId],
-            prescription.ReviewedAt, prescription.ReviewNote, prescription.CreatedAt, items);
+            prescription.ReviewedAt, prescription.ReviewNote, prescription.CreatedAt, items, linkedOrders);
     }
 
     private async Task<IReadOnlyList<StockLine>> ValidateDetails(PrescriptionDetailsInput input, CancellationToken ct)
