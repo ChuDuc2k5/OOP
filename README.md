@@ -50,4 +50,14 @@ Copy-Item backend/Pharmacy.Api/.env.example backend/Pharmacy.Api/.env
 - `BACKEND_URL` (frontend): địa chỉ API .NET cho Next.js rewrites, mặc định `http://localhost:5000`.
 - `backend/Pharmacy.Api/.env`: biến môi trường .NET dạng `Section__Key` (được `npm run dev:api` nạp qua `scripts/run-api.mjs`; `dotnet run` trực tiếp không tự nạp).
 
-Tài khoản demo (dữ liệu mẫu): xem `docs/ARCHITECTURE.md §8`.
+## Tài khoản ban đầu
+
+| Vai trò | Tên đăng nhập | Mật khẩu |
+|---|---|---|
+| Quản lý (Admin) | `admin` | `Admin@12345` |
+| Nhân viên (Staff) | `staff` | `Staff@12345` |
+| Khách hàng – Chu Đức | `chuduc` | `User@12345` |
+| Khách hàng | `nguyenvana` | `User@12345` |
+
+Tài khoản nhận tiền và ảnh QR **không** được tạo sẵn: đăng nhập `admin` → **Cài đặt QR** để cấu hình trước khi khách thanh toán.
+Nạp thêm danh mục thuốc vào database đã có dữ liệu: `dotnet run --project backend/Pharmacy.Api --launch-profile http -- --seed-catalog`.
