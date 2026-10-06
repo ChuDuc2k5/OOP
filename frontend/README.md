@@ -166,6 +166,7 @@ Hai project chạy tuần tự ở 1366×900 và 390×844:
 - User: hóa đơn có allocations lô xuất; bị chuyển về trang chủ khi vào `/staff`.
 - Đăng ký: cookie XSRF-TOKEN cũ → 400 ANTIFORGERY_INVALID → lấy token mới và gửi lại → 201 → GET me → phiên User và `next` an toàn. Checkout: loại OTC tự động, tải ảnh đơn thuốc tại chỗ, giỏ hỗn hợp OTC/kê đơn chờ kiểm tra. Lỗi PAYMENT_NOT_CONFIGURED giữ đơn và hiển thị thông báo tiếng Việt, không lộ mã lỗi.
 - Staff: duyệt tiền với số tiền/giờ điền sẵn; lưu/chấp nhận đơn thuốc một nút; bán OTC tại quầy một màn hình, checkout lỗi giữ nháp rồi thử lại không tạo nháp mới. Admin: thêm thuốc kèm ảnh và lô đầu tiên.
+- D12: khách tải ảnh tại checkout và đặt thuốc kê đơn; Staff đi từ dashboard lọc PendingReview hoặc liên kết “Kiểm tra đơn thuốc” trong danh sách đơn. Trang duyệt dùng linkedOrders để gộp dòng từ nhiều đơn WaitingReview, mặc định ngày kê/hiệu lực +30 ngày, focus người kê, khóa chấp nhận khi thiếu. Kiểm tra ảnh phóng to, thu gọn/mở tìm thuốc, bố cục hai/một cột, toast sau duyệt và khách chuyển sang chờ thanh toán/mở QR. Ảnh TC26-F011-online-prefilled/online-approved và TC33-F014-prescription-approved ở cả hai viewport.
 - Admin: lỗi theo trường giữ dữ liệu; lưu tài khoản, chọn ảnh PNG, xem trước và tải QR.
 - Rà các route khách/Staff/Admin: loading, rỗng, lỗi mạng, chiều rộng trang, bảng cuộn trong khung và sidebar mobile; không hiển thị dấu hiệu chế độ phát triển hoặc gợi ý tài khoản. Lỗi mạng được tạo bằng cách ngắt request; trạng thái QR chưa cấu hình được kiểm tra thêm bằng phản hồi lỗi có kiểm soát.
 

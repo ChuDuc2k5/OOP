@@ -24,7 +24,6 @@ import {
   DollarSign,
   AlertTriangle,
   RefreshCw,
-  CheckCircle2,
   ExternalLink,
   ShieldCheck,
 } from 'lucide-react';
@@ -160,9 +159,11 @@ export default function OrderPaymentPage({
             <section aria-label="Trạng thái thanh toán" role="status" className={`rounded-xl border p-4 ${payment.status === 'Confirmed' ? 'border-emerald-300 bg-emerald-50 text-emerald-950' : payment.status === 'Closed' ? 'border-slate-300 bg-slate-100 text-slate-900' : 'border-amber-300 bg-amber-50 text-amber-950'}`}>
               <h2 className="font-bold">Thanh toán: {PAYMENT_STATUS_LABELS[payment.status]}</h2>
               <p className="mt-1 text-sm">{payment.status === 'PendingReview' ? 'Nhà thuốc đang chờ đối chiếu tiền chuyển khoản. Bạn không cần thao tác thêm.' : payment.status === 'Confirmed' ? 'Đã xác nhận thanh toán. Theo dõi tiến độ tại chi tiết đơn.' : 'Yêu cầu thanh toán đã đóng. Vui lòng xem chi tiết đơn hoặc liên hệ nhà thuốc.'}</p>
-              {payment.reviewNote && <p className="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-950">Ghi chú đối chiếu: {payment.reviewNote}</p>}
-              <p className="mt-2 text-xs">Trạng thái tự làm mới mỗi 15 giây.</p>
-              {payment.status !== 'PendingReview' && <Link className="mt-2 inline-block font-bold underline" href={`/orders/${orderId}`}>Về chi tiết đơn</Link>}
+                {payment.reviewNote && <p className="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-950">Ghi chú đối chiếu: {payment.reviewNote}</p>}
+                {payment.status === 'Confirmed' && <p className="mt-2 text-sm">Số tiền đã nhận: <strong>{formatVND(payment.receivedAmount ?? payment.expectedAmount)}</strong>.</p>}
+                <p className="mt-2 text-xs">Trạng thái tự làm mới mỗi 15 giây.</p>
+                {payment.status !== 'PendingReview' && <Link className="mt-2 inline-block font-bold underline" href={`/orders/${orderId}`}>Về chi tiết đơn</Link>}
+                {payment.status === 'Confirmed' && order?.invoiceId && <Link className="ml-4 mt-2 inline-block font-bold underline" href={`/invoices/${order.invoiceId}`}>Xem hóa đơn điện tử</Link>}
             </section>
             {/* Header Title Card */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -197,34 +198,7 @@ export default function OrderPaymentPage({
             </div>
 
             {/* If Already Paid / Confirmed */}
-            {payment.status === 'Confirmed' && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center space-y-3">
-                <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-                <h3 className="text-base font-bold text-emerald-900">
-                  Đơn hàng đã được thanh toán thành công!
-                </h3>
-                <p className="text-xs text-emerald-700 max-w-md mx-auto">
-                  Nhà thuốc đã xác nhận nhận đủ số tiền{' '}
-                  <strong>{formatVND(payment.receivedAmount ?? payment.expectedAmount)}</strong>. Dược sĩ đang tiến hành chuẩn bị và xuất thuốc cho bạn.
-                </p>
-                <div className="pt-2 flex justify-center gap-3">
-                  <Link
-                    href={`/orders/${orderId}`}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs"
-                  >
-                    Xem tiến độ đơn hàng
-                  </Link>
-                  {order?.invoiceId && (
-                    <Link
-                      href={`/invoices/${order.invoiceId}`}
-                      className="px-5 py-2.5 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-semibold hover:bg-emerald-50"
-                    >
-                      Xem hóa đơn điện tử
-                    </Link>
-                  )}
-                </div>
-              </div>
-            )}
+
 
             {/* SRS 6.2 Warning Box - MANDATORY VERBATIM TEXT */}
             <div className="bg-amber-50 border border-amber-300 rounded-2xl p-5 text-amber-950 shadow-xs flex items-start space-x-3.5">

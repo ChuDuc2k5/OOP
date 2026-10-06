@@ -279,6 +279,7 @@ export function RecordList<T>({
   createHref,
   children,
   refreshKey = 0,
+  initialStatus = "",
 }: {
   title: string;
   load: (query: ListQuery) => Promise<Paged<T>>;
@@ -291,10 +292,11 @@ export function RecordList<T>({
   createHref?: string;
   children?: ReactNode;
   refreshKey?: number;
+  initialStatus?: string;
 }) {
   const [draftSearch, setDraftSearch] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(initialStatus);
   const [page, setPage] = useState(1);
   const resource = useResource(
     useCallback(() => {
