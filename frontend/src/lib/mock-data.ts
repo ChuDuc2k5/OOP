@@ -458,6 +458,7 @@ export function clearMockCart(): void {
 
 const DEFAULT_PRESCRIPTIONS: PrescriptionView[] = [
   {
+    linkedOrders: [],
     prescriptionId: 'DT2610060001',
     status: 'Approved',
     ownerUserId: 'U00000003',
@@ -499,6 +500,7 @@ const DEFAULT_PRESCRIPTIONS: PrescriptionView[] = [
     ],
   },
   {
+    linkedOrders: [],
     prescriptionId: 'DT2610060002',
     status: 'PendingReview',
     ownerUserId: 'U00000003',
@@ -513,6 +515,7 @@ const DEFAULT_PRESCRIPTIONS: PrescriptionView[] = [
     items: [],
   },
   {
+    linkedOrders: [],
     prescriptionId: 'DT2609010001',
     status: 'Cancelled',
     ownerUserId: 'U00000003',

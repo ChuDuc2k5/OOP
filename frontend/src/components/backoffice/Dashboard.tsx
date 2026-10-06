@@ -19,7 +19,7 @@ export default function Dashboard() {
     useCallback(() => dashboardApi.getSummary(), []),
   );
   const cards = [
-    ["pendingPrescriptions", "Đơn thuốc chờ kiểm tra", "/prescriptions"],
+    ["pendingPrescriptions", "Đơn thuốc chờ kiểm tra", "/prescriptions?status=PendingReview"],
     ["awaitingPaymentOrders", "Đơn chờ thanh toán", "/orders"],
     ["pendingPayments", "Thanh toán chờ duyệt", "/payments"],
     ["preparingOrders", "Đơn đang chuẩn bị", "/orders"],

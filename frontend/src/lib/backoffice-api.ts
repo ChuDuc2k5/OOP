@@ -51,8 +51,8 @@ const post = <T>(path: string, body?: unknown, silent = false) =>
     silent,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-const put = <T>(path: string, body: unknown) =>
-  apiFetch<T>(path, { method: "PUT", body: JSON.stringify(body) });
+const put = <T>(path: string, body: unknown, silent = false) =>
+  apiFetch<T>(path, { method: "PUT", body: JSON.stringify(body), silent });
 function upload<T>(path: string, file: File) {
   const body = new FormData();
   body.append("file", file);
@@ -66,16 +66,18 @@ export const staffPrescriptionsApi = {
     apiFetch<PrescriptionView>(`/api/prescriptions/${id(key)}`),
   create: (input: PrescriptionCounterInput) =>
     post<PrescriptionView>("/api/prescriptions/counter", input),
-  update: (key: string, input: PrescriptionDetailsInput) =>
-    put<PrescriptionView>(`/api/prescriptions/${id(key)}/details`, input),
+  update: (key: string, input: PrescriptionDetailsInput, silent = false) =>
+    put<PrescriptionView>(`/api/prescriptions/${id(key)}/details`, input, silent),
   action: (
     key: string,
     action: "approve" | "reject" | "cancel",
     reason?: string,
+    silent = false,
   ) =>
     post<PrescriptionView>(
       `/api/prescriptions/${id(key)}/${action}`,
       reason === undefined ? undefined : { reason },
+      silent,
     ),
 };
 export const staffOrdersApi = {

@@ -387,6 +387,72 @@ test('TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt 
   await expect(page.locator('main')).toContainText('Đơn đang chờ dược sĩ kiểm tra đơn thuốc. Bạn sẽ thanh toán sau khi đơn thuốc được duyệt.');
   expect((await api(page.request, `/orders/${waitingOrder.orderId}`)).payment).toBeFalsy();
   await shot(page, 'TC33-F013-waiting-prescription', info);
+  expect((await api(page.request, `/prescriptions/${prescription.prescriptionId}`)).linkedOrders).toEqual([]);
+  await api(page.request, '/cart/items', 'POST', { drugId: 'PARA500', quantity: 2 });
+  await api(page.request, '/cart/items', 'POST', { drugId: 'AMOX500', quantity: 2 });
+  const secondCart = await api(page.request, '/cart');
+  const secondOrder = await api(page.request, '/orders', 'POST', { saleKind: 'Prescription', prescriptionId: prescription.prescriptionId, receiverName: 'Khách chờ duyệt', phone: '0901234567', receiveMethod: 'Pickup', expectedTotal: secondCart.subtotal });
+  expect(secondOrder.status).toBe('WaitingReview');
+  const staffContext = await page.context().browser()!.newContext({ baseURL: new URL(page.url()).origin, viewport: page.viewportSize()!, locale: 'vi-VN' });
+  try {
+    const staff = await staffContext.newPage();
+    await login(staff, 'staff');
+    const pendingCard = staff.getByRole('link').filter({ hasText: 'Đơn thuốc chờ kiểm tra' });
+    await expect(pendingCard).toHaveAttribute('href', '/staff/prescriptions?status=PendingReview');
+    await pendingCard.click(); await ready(staff);
+    await expect(staff.getByRole('combobox')).toHaveValue('PendingReview');
+    await visit(staff, '/staff/orders'); await ready(staff);
+    const reviewLink = staff.getByRole('row').filter({ has: staff.getByRole('link', { name: waitingOrder.orderId, exact: true }) }).getByRole('link', { name: 'Kiểm tra đơn thuốc', exact: true });
+    await expect(reviewLink).toHaveAttribute('href', `/staff/prescriptions/${prescription.prescriptionId}`);
+    await reviewLink.click(); await ready(staff);
+    const linked = await api(staff.request, `/prescriptions/${prescription.prescriptionId}`);
+    expect(linked.items).toHaveLength(0); expect(linked.linkedOrders).toHaveLength(2);
+    await expect(staff.locator('main')).toContainText(`Điền sẵn từ đơn hàng ${waitingOrder.orderId}, ${secondOrder.orderId}`);
+    await expect(staff.getByRole('heading', { name: 'Đơn hàng liên quan', exact: true })).toBeVisible();
+    const preview = staff.getByRole('heading', { name: 'Dòng thuốc cần đối chiếu', exact: true }).locator('..');
+    await expect(preview.getByRole('listitem').filter({ hasText: 'AMOX500' })).toContainText('3 Viên');
+    await expect(preview.getByRole('listitem').filter({ hasText: 'PARA500' })).toContainText('3 Viên');
+    for (const quantity of await preview.locator('strong').all()) {
+      const box = await quantity.boundingBox();
+      expect(box!.x + box!.width).toBeLessThanOrEqual(staff.viewportSize()!.width);
+    }
+    await expect(staff.getByLabel('Tìm thuốc theo mã/tên')).toHaveCount(0);
+    await expect(staff.getByRole('button', { name: 'Thêm/sửa dòng thuốc', exact: true })).toHaveAttribute('aria-expanded', 'false');
+    const prescriber = staff.getByLabel('Người kê đơn (bắt buộc)', { exact: true });
+    await expect(prescriber).toBeFocused(); await expect(prescriber).toHaveAttribute('required', '');
+    await expect(staff.getByRole('button', { name: 'Lưu & chấp nhận', exact: true })).toBeDisabled();
+    await expect(staff.locator('main')).toContainText('Chưa thể lưu & chấp nhận: Người kê đơn');
+    const dates = await staff.evaluate(() => {
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date());
+      const end = new Date(`${today}T00:00:00Z`); end.setUTCDate(end.getUTCDate() + 30);
+      return { today, end: end.toISOString().slice(0, 10) };
+    });
+    await expect(staff.getByLabel('Ngày kê đơn', { exact: true })).toHaveValue(dates.today);
+    await expect(staff.getByLabel('Hiệu lực đến', { exact: true })).toHaveValue(dates.end);
+    const columns = await staff.getByTestId('prescription-review-layout').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+    expect(columns).toBe(info.project.name === '1366' ? 2 : 1);
+    await shot(staff, 'TC26-F011-online-prefilled', info);
+    await staff.getByRole('button', { name: 'Phóng to ảnh đơn thuốc', exact: true }).click();
+    await expect(staff.getByRole('dialog')).toBeVisible();
+    await staff.getByRole('button', { name: 'Đóng ảnh phóng to', exact: true }).click();
+    await expect(staff.getByRole('dialog')).not.toBeVisible();
+    await staff.getByRole('button', { name: 'Thêm/sửa dòng thuốc', exact: true }).click();
+    await expect(staff.getByLabel('Tìm thuốc theo mã/tên')).toBeVisible();
+    await expect(staff.getByLabel('Số lượng dòng 1', { exact: true })).toHaveValue('3');
+    await staff.getByRole('button', { name: 'Thêm/sửa dòng thuốc', exact: true }).click();
+    await prescriber.fill('Bác sĩ đối chiếu ảnh');
+    await staff.getByRole('button', { name: 'Lưu & chấp nhận', exact: true }).click();
+    await expect(staff.getByTestId('toast')).toContainText(`Đã chấp nhận đơn thuốc. Đơn hàng ${waitingOrder.orderId}, ${secondOrder.orderId} đã chuyển sang Chờ thanh toán.`);
+    expect((await api(staff.request, `/staff/orders/${secondOrder.orderId}`)).status).toBe('AwaitingPayment');
+    await shot(staff, 'TC26-F011-online-approved', info);
+  } finally { await staffContext.close(); }
+  await page.reload(); await ready(page);
+  await expect(page.locator('[aria-current="step"]')).toContainText('Chờ thanh toán');
+  await expect(page.locator('main')).not.toContainText('Đơn hàng đang chờ nhân viên kiểm tra đơn thuốc');
+  await shot(page, 'TC33-F014-prescription-approved', info);
+  await page.getByRole('link', { name: 'Mở thanh toán QR', exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/orders/${waitingOrder.orderId}/payment$`)); await ready(page);
+  expect((await api(page.request, `/orders/${waitingOrder.orderId}`)).payment.status).toBe('PendingReview');
 });
 
 test('TC38-F016/F019: bán OTC tại quầy bằng form', async ({ page }, info) => {
@@ -415,6 +481,7 @@ test('TC26-F011: lưu chi tiết và chấp nhận một nút', async ({ page },
   await login(page, 'staff');
   const prescription = await api(page.request, '/prescriptions/counter', 'POST', { prescriptionId: `ONE-${info.project.name}`, patientId: 'PATIENT-ONE', patientName: 'Người bệnh một bước', prescriberName: 'Bác sĩ kiểm thử', issueDate: '2026-10-06', validUntil: '2026-11-06', items: [{ drugId: 'PARA500', quantity: 1 }] });
   await visit(page, `/staff/prescriptions/${prescription.prescriptionId}`); await ready(page);
+  await expect(page.getByRole('button', { name: 'Thêm/sửa dòng thuốc', exact: true })).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByRole('button', { name: 'Chấp nhận đơn thuốc', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Lưu & chấp nhận', exact: true }).click();
   await expect(page.locator('main')).toContainText('Đã chấp nhận');

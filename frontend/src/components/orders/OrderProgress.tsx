@@ -23,10 +23,10 @@ export function OrderProgress({ order }: { order: OrderView }) {
   if (terminal) next = order.status === 'Cancelled' ? 'Đơn hàng đã hủy. Đơn này không còn được xử lý.' : 'Nhà thuốc đã từ chối đơn hàng.';
   else if (order.status === 'WaitingReview') next = 'Đơn đang chờ dược sĩ kiểm tra đơn thuốc. Bạn sẽ thanh toán sau khi đơn thuốc được duyệt.';
   else if (order.status === 'Completed') next = 'Đơn hàng đã hoàn tất. Bạn có thể xem hóa đơn bên dưới.';
-  else if (order.status === 'Delivering') next = 'Đơn hàng đang được giao đến bạn. Vui lòng giữ liên lạc để nhận hàng.';
+  else if (order.status === 'Delivering') next = 'Vui lòng giữ liên lạc để nhận hàng.';
   else if (order.payment?.status === 'Confirmed' || order.status === 'Preparing') next = order.receiveMethod === 'Pickup'
-    ? 'Đã xác nhận thanh toán. Nhà thuốc đang chuẩn bị hàng để bạn nhận tại quầy.'
-    : 'Đã xác nhận thanh toán. Nhà thuốc đang chuẩn bị hàng.';
+    ? 'Mang mã đơn bên trên đến quầy để nhận thuốc.'
+    : 'Vui lòng chờ nhà thuốc chuẩn bị hàng và theo dõi tiến độ tại đây.';
   else if (order.payment?.status === 'PendingReview') next = 'Đang chờ nhà thuốc xác nhận thanh toán. Bạn không cần thao tác thêm.';
   else if (order.payment?.status === 'Closed') next = 'Yêu cầu thanh toán đã đóng. Vui lòng liên hệ nhà thuốc để được hỗ trợ.';
   return <div className="space-y-4">
@@ -45,6 +45,7 @@ export function OrderProgress({ order }: { order: OrderView }) {
       <h2 id="order-next-step" className="font-bold">{terminal ? (order.status === 'Cancelled' ? 'Đơn đã hủy' : 'Đơn bị từ chối') : 'Bước tiếp theo'}</h2>
       <p className="text-sm">{next}</p>
       {terminal && <p className="text-sm font-semibold">Lý do: {order.note || 'Vui lòng liên hệ nhà thuốc để biết thêm chi tiết.'}</p>}
+      {!terminal && order.note && <p className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">Ghi chú từ nhà thuốc: {order.note}</p>}
       {!terminal && order.payment?.reviewNote && <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-950">Ghi chú đối chiếu: {order.payment.reviewNote}</p>}
       {order.invoiceId && <Link className="inline-block text-sm font-bold underline" href={`/invoices/${order.invoiceId}`}>Xem hóa đơn</Link>}
     </section>
