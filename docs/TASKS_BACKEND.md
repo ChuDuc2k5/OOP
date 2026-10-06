@@ -1,20 +1,20 @@
 # Backlog Backend — ChatGPT Codex (.NET 10 / C#)
 
 Đọc trước: `docs/SRS_v2.0.md` (bắt buộc mục 2.4, 3, 4, 7, 8, 11), `docs/ARCHITECTURE.md`, `docs/API_CONTRACT.md`, `docs/WORKFLOW.md`, class diagram `docs/diagrams/CL-01.png`.
-Chỉ sửa trong `backend/`.
+Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 
 ---
 
 ## M1 — `be/m1-foundation` (Nền tảng + F001–F003)
 
-1. Tạo solution theo `ARCHITECTURE.md §3`: `Pharmacy.Core`, `Pharmacy.Api`, `Pharmacy.Tests` (net10.0, nullable enable).
+1. Khung đã có: `Pharmacy.sln` (gốc) + `backend/Pharmacy.Api` (cổng 5000, `/api/health`, OpenAPI). Thêm `backend/Pharmacy.Core` (classlib) và `backend/Pharmacy.Tests` (xUnit) vào `Pharmacy.sln`, tham chiếu đúng chiều. Giữ `/api/health`, `scripts/run-api.mjs`.
 2. **Toàn bộ** entity theo SRS 7.4 + class diagram (kể cả entity dùng ở milestone sau) với đóng gói (private set, phương thức nghiệp vụ). `Sale` abstract + `OTCSale`/`PrescriptionSale` (TPH, discriminator `Kind`).
 3. `PharmacyDbContext`, cấu hình khóa ngoại, unique/partial index (`ARCHITECTURE.md §6`), concurrency token `Version`. Migration đầu tiên. Auto `Database.Migrate()` lúc khởi động.
 4. `IBusinessClock`, `IdGenerator`, `IFileStorage` (lưu `backend/storage/...`, tên file mới, kiểm tra magic bytes PNG/JPEG, ≤ 5 MB), `BusinessException` + middleware ProblemDetails theo contract §1.4 (không lộ stack trace; log lỗi).
 5. Auth: cookie, PasswordHasher, antiforgery (`XSRF-TOKEN`/`X-XSRF-TOKEN`), 401/403 trả JSON (không redirect). Policy theo role.
 6. `DbSeeder` theo `ARCHITECTURE.md §8` — chỉ seed khi trống (TC-55).
 7. Endpoint F001–F003 + `GET /api/auth/csrf`, `/me`.
-8. Swagger ở Development. `backend/README.md`.
+8. OpenAPI (`/openapi/v1.json`) ở Development (đã có). `backend/README.md`.
 9. Test: TC-01..TC-08, TC-55 (khởi động lại không seed đè) — integration bằng `WebApplicationFactory` + SQLite file tạm/in-memory connection.
 
 ## M2 — `be/m2-catalog-inventory` (F004–F009)

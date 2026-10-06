@@ -3,7 +3,7 @@
 | Vai trò | Ai | Phạm vi được sửa |
 |---|---|---|
 | PO / PM / Reviewer | Claude Code | `docs/`, `README.md`, merge vào `main` |
-| Backend dev (.NET C#) | ChatGPT Codex | chỉ `backend/` (+ đề xuất sửa `docs/API_CONTRACT.md` qua PO) |
+| Backend dev (.NET C#) | ChatGPT Codex | chỉ `backend/`, `Pharmacy.sln` (+ đề xuất sửa `docs/API_CONTRACT.md` qua PO) |
 | Frontend dev (React/Next.js) | Antigravity | chỉ `frontend/` |
 
 ## 1. Nhánh
@@ -27,11 +27,11 @@ test(be): TC-18 FEFO allocation across batches
 ## 3. Định nghĩa "Xong" (DoD) — PO chỉ review khi đủ
 
 **Backend**
-- [ ] `dotnet build backend/Pharmacy.sln` không lỗi, không warning mới nghiêm trọng
-- [ ] `dotnet test backend/Pharmacy.sln` xanh; có test cho các TC của milestone (tên test chứa mã TC, vd `TC18_Fefo_SplitsAcrossBatches`)
+- [ ] `dotnet build Pharmacy.sln` không lỗi, không warning mới nghiêm trọng
+- [ ] `dotnet test Pharmacy.sln` xanh; có test cho các TC của milestone (tên test chứa mã TC, vd `TC18_Fefo_SplitsAcrossBatches`)
 - [ ] Endpoint đúng `docs/API_CONTRACT.md` (URL, DTO, mã lỗi)
 - [ ] Quyền kiểm tra ở server; không nghiệp vụ trong Controller
-- [ ] Chạy được: `dotnet run --project backend/src/Pharmacy.Api` → DB tự migrate + seed khi trống
+- [ ] Chạy được: `npm run dev:api` (hoặc `dotnet run --project backend/Pharmacy.Api`) → DB tự migrate + seed khi trống
 - [ ] Cập nhật `backend/README.md` (chạy/test) và mục "Đã làm" trong `docs/TASKS_BACKEND.md`
 
 **Frontend**

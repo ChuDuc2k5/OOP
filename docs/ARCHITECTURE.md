@@ -8,7 +8,7 @@
 ```
 Browser (Edge/Chrome)
    │  http://localhost:3000   (Next.js – frontend/)
-   │      └─ rewrites /api/*  ──►  http://localhost:5080/api/*  (ASP.NET Core Web API – backend/)
+   │      └─ rewrites /api/*  ──►  http://localhost:5000/api/*  (ASP.NET Core Web API – backend/)
    │                                    └─ EF Core ──► SQLite file backend/data/pharmacy.db
    │                                    └─ File storage ──► backend/storage/{drugs,prescriptions,qr}
 ```
@@ -31,9 +31,10 @@ Browser (Edge/Chrome)
 
 ```
 /
+├─ Pharmacy.sln                   # solution ở thư mục gốc (đã có từ khung khởi tạo)
+├─ package.json, scripts/         # npm run dev = API + web (concurrently)
 ├─ backend/
-│  ├─ Pharmacy.sln
-│  ├─ src/Pharmacy.Core/          # Domain + Services + Data (OOP nằm ở đây)
+│  ├─ Pharmacy.Core/              # Domain + Services + Data (OOP nằm ở đây)
 │  │   ├─ Domain/                 # UserAccount, Drug, DrugBatch, Prescription, PrescriptionItem, CartItem,
 │  │   │                          # Order, OrderItem, Payment, PaymentSetting, StockReservation,
 │  │   │                          # Sale (abstract), OTCSale, PrescriptionSale, SaleItem, BatchAllocation, Invoice, enums
@@ -42,9 +43,9 @@ Browser (Edge/Chrome)
 │  │   │                          # ManualPaymentService, CheckoutService, InvoiceService
 │  │   ├─ Common/                 # BusinessException(code,...), IBusinessClock, IdGenerator, IFileStorage
 │  │   └─ Data/                   # PharmacyDbContext, configurations, migrations, DbSeeder
-│  ├─ src/Pharmacy.Api/           # Program.cs, Controllers (mỏng), DTOs, ProblemDetails mapping, auth setup
-│  └─ tests/Pharmacy.Tests/       # xUnit: unit (domain/service) + integration (WebApplicationFactory + SQLite)
-├─ frontend/                      # Next.js app
+│  ├─ Pharmacy.Api/               # Program.cs, Controllers (mỏng), DTOs, ProblemDetails mapping, auth setup
+│  └─ Pharmacy.Tests/             # xUnit: unit (domain/service) + integration (WebApplicationFactory + SQLite)
+├─ frontend/                      # Next.js app (khung ban đầu là Vite → chuyển sang Next.js ở fe/m1)
 ├─ docs/                          # SRS, kiến trúc, API, task, review
 └─ README.md
 ```
@@ -93,10 +94,11 @@ Do server sinh, dạng chuỗi dễ đọc, unique:
 
 | Biến | Giá trị mặc định |
 |---|---|
-| Backend URL | `http://localhost:5080` (`launchSettings.json`) |
+| Backend URL | `http://localhost:5000` (`launchSettings.json`, profile `http`) |
 | Frontend URL | `http://localhost:3000` |
-| `frontend/.env.local` | `BACKEND_URL=http://localhost:5080` |
-| `ConnectionStrings:Default` | `Data Source=data/pharmacy.db` |
+| `frontend/.env.local` | `BACKEND_URL=http://localhost:5000` |
+| `ConnectionStrings:Default` | `Data Source=data/pharmacy.db` (tương đối với `backend/Pharmacy.Api`) |
+| Health | `GET /api/health` (giữ endpoint có sẵn) |
 
 ## 10. Nhật ký quyết định
 
@@ -105,4 +107,5 @@ Do server sinh, dạng chuỗi dễ đọc, unique:
 | D1 | 2026-10-06 | SQLite là DB mặc định; Supabase/Postgres là tùy chọn qua provider | SRS 2.2 ghi Supabase nhưng NFR-04/06, 6.3, 7 đều ghi SQLite; test & chạy local cần SQLite |
 | D2 | 2026-10-06 | BE là Web API, FE Next.js gọi qua rewrites cùng origin | SRS 2.2 (FE React/Next, BE API); kế hoạch tuần 1 ghi "MVC" là lỗi cũ |
 | D3 | 2026-10-06 | Xác nhận giá mới khi đặt hàng bằng `expectedTotal` + lỗi 409 `PRICE_CHANGED` | FR-013 yêu cầu hiển thị giá mới và khách xác nhận |
+| D5 | 2026-10-06 | Merge khung `chuduc`: giữ .NET + script npm; **bỏ NestJS gateway**; frontend chuyển Vite → Next.js | SRS 2.2 và yêu cầu nhóm là Next.js; Next rewrites đã làm vai trò gateway, cookie auth không cần CORS; gateway không có trong SRS và không ai phụ trách |
 | D4 | 2026-10-06 | Đơn theo đơn thuốc ở `WaitingReview` tự chuyển `AwaitingPayment` khi đơn thuốc được Approve và đủ hạn mức | FR-013/FR-015/UC-03 |

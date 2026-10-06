@@ -36,8 +36,10 @@ ScaffoldingReadMe.txt
 # NuGet Symbol Packages
 *.snupkg
 
-# dotenv environment variables file
+# Local environment files (all directories); commit templates only
 .env
+.env.*
+!.env.example
 
 # Others
 ~$*
@@ -90,3 +92,7 @@ Thumbs.db
 .vs/
 .idea/
 .vscode/
+dist/
+.vite/
+coverage/
+
