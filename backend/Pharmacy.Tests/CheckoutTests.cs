@@ -359,6 +359,58 @@ public sealed class CheckoutTests : IDisposable
         });
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task TC45_D13_QuickReview_DefaultsAmountsAndTime_TwoPaymentsWithoutReferencesConfirm(string? reference)
+    {
+        using var user = await Login();
+        using var staff = await Login("staff");
+        for (var index = 0; index < 2; index++)
+        {
+            var payment = await Open(user, await Order(user));
+            var id = payment.GetProperty("paymentId").GetString()!;
+            var result = await Ok(await staff.PostAsJsonAsync("/api/staff/payments/" + id + "/review",
+                index == 0 ? (object)new { } : new { bankReference = reference, receivedAmount = (decimal?)null, receivedAt = (DateTimeOffset?)null }));
+            Assert.True(result.GetProperty("approved").GetBoolean());
+            Assert.Equal("Preparing", result.GetProperty("orderStatus").GetString());
+            await factory.WithDb(async db =>
+            {
+                var saved = await db.Payments.SingleAsync(x => x.PaymentId == id);
+                Assert.Equal(PaymentStatus.Confirmed, saved.Status);
+                Assert.Null(saved.BankReference);
+                Assert.Equal(saved.ExpectedAmount, saved.ReceivedAmount);
+                Assert.Equal(new TestClock().Now, saved.ReceivedAt);
+                Assert.Equal(new TestClock().Now, saved.ApprovedAt);
+            });
+        }
+        Assert.Equal(2, await factory.WithDb(db => db.Payments.CountAsync(x => x.Status == PaymentStatus.Confirmed)));
+    }
+
+    [Fact]
+    public async Task TC46_D13_UnderpaymentWithoutReference_RemainsPending_QuickReviewCanConfirmLater()
+    {
+        using var user = await Login();
+        using var staff = await Login("staff");
+        var payment = await Open(user, await Order(user));
+        var id = payment.GetProperty("paymentId").GetString();
+        var result = await Ok(await staff.PostAsJsonAsync("/api/staff/payments/" + id + "/review",
+            new { receivedAmount = 1500 }));
+        Assert.False(result.GetProperty("approved").GetBoolean());
+        Assert.Equal("PendingReview", result.GetProperty("payment").GetProperty("status").GetString());
+        Assert.Contains("Chuyển thiếu 500", result.GetProperty("payment").GetProperty("reviewNote").GetString());
+        await factory.WithDb(async db =>
+        {
+            var saved = await db.Payments.SingleAsync();
+            Assert.Null(saved.BankReference);
+            Assert.Equal(new TestClock().Now, saved.ReceivedAt);
+        });
+        var confirmed = await Ok(await staff.PostAsJsonAsync("/api/staff/payments/" + id + "/review", new { }));
+        Assert.True(confirmed.GetProperty("approved").GetBoolean());
+        Assert.Equal(2000, confirmed.GetProperty("payment").GetProperty("receivedAmount").GetDecimal());
+    }
+
     [Fact]
     public async Task TC46_Underpayment_Returns200PendingAndShortfallNote()
     {
@@ -744,7 +796,7 @@ public sealed class CheckoutTests : IDisposable
             bankReference = " ",
             receivedAmount = -1.5m
         });
-        await response.Error(400, "VALIDATION_FAILED", "bankReference");
+        await response.Error(400, "VALIDATION_FAILED", "receivedAmount");
         Assert.Equal(before, await factory.WithDb(PersistenceFixture.Snapshot));
     }
 

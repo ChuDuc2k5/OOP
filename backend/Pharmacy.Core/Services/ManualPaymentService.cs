@@ -103,22 +103,25 @@ public sealed class ManualPaymentService(
             await db.Entry(order).ReloadAsync(ct);
             Guard.State(payment.Status == PaymentStatus.PendingReview && order.Status == OrderStatus.AwaitingPayment);
             ValidateReview(input);
-            var reference = input.BankReference!.Trim();
-            var approved = input.ReceivedAmount >= payment.ExpectedAmount;
+            var reference = string.IsNullOrWhiteSpace(input.BankReference) ? null : input.BankReference.Trim();
+            var amount = input.ReceivedAmount ?? payment.ExpectedAmount;
+            var now = clock.Now;
+            var receivedAt = input.ReceivedAt ?? now;
+            var approved = amount >= payment.ExpectedAmount;
             if (approved)
             {
-                if (await db.Payments.AnyAsync(x => x.Status == PaymentStatus.Confirmed && x.BankReference == reference, ct))
+                if (reference is not null && await db.Payments.AnyAsync(x => x.Status == PaymentStatus.Confirmed && x.BankReference == reference, ct))
                 {
                     throw DuplicateReference();
                 }
-                payment.Confirm(reference, input.ReceivedAmount!.Value, input.ReceivedAt!.Value, reviewerId, clock.Now, input.Note);
+                payment.Confirm(reference, amount, receivedAt, reviewerId, now, input.Note);
                 order.MarkPreparing();
                 order.Claim(reviewerId);
             }
             else
             {
-                payment.RecordUnderpayment(input.ReceivedAmount!.Value, reference, input.ReceivedAt!.Value,
-                    $"Chuyển thiếu {payment.ExpectedAmount - input.ReceivedAmount.Value:0} VND." +
+                payment.RecordUnderpayment(amount, reference, receivedAt,
+                    $"Chuyển thiếu {payment.ExpectedAmount - amount:0} VND." +
                     (string.IsNullOrWhiteSpace(input.Note) ? "" : " " + input.Note.Trim()));
                 order.Claim(reviewerId);
             }
@@ -240,17 +243,9 @@ public sealed class ManualPaymentService(
     private static void ValidateReview(PaymentReviewInput input)
     {
         var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(input.BankReference))
-        {
-            errors["bankReference"] = ["Mã giao dịch là bắt buộc."];
-        }
-        if (input.ReceivedAmount is null or < 0 || decimal.Truncate(input.ReceivedAmount.Value) != input.ReceivedAmount)
+        if (input.ReceivedAmount is not null && (input.ReceivedAmount < 0 || decimal.Truncate(input.ReceivedAmount.Value) != input.ReceivedAmount))
         {
             errors["receivedAmount"] = ["Số tiền nhận phải là VND nguyên không âm."];
-        }
-        if (input.ReceivedAt is null)
-        {
-            errors["receivedAt"] = ["Thời điểm nhận là bắt buộc."];
         }
         InputValidation.ThrowIfAny(errors);
     }
