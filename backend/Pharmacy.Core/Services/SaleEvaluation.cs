@@ -30,11 +30,6 @@ public sealed class SaleEvaluation(
             .ToDictionaryAsync(x => x.Id, x => x.Quantity, ct);
         var context = new SaleContext(clock.Today, drugs, prescription, reserved);
         var validation = sale.Validate(context);
-        if (sale.Channel == SaleChannel.Online && sale.Kind == SaleKind.Prescription
-            && prescription?.OwnerUserId != sale.BuyerUserId)
-        {
-            validation = new(validation.Issues.Concat(["Đơn thuốc không thuộc người mua."]).ToList(), "PRESCRIPTION_INVALID");
-        }
         var ownReserved = sale.OrderId is null ? new Dictionary<string, int>()
             : await db.StockReservations.AsNoTracking().Where(x => x.OrderId == sale.OrderId && x.Status == ReservationStatus.Active)
                 .ToDictionaryAsync(x => x.DrugId, x => x.Quantity, ct);
