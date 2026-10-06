@@ -10,20 +10,21 @@ internal static class PersistenceFixture
 {
     public static async Task AddBusinessData(PharmacyDbContext db)
     {
+        await PaymentFixture.Configure(db);
         var now = new TestClock().Now;
-        db.CartItems.Add(new("UDEMO0003", "PARA500", 3));
+        db.CartItems.Add(new("U0000003", "PARA500", 3));
         var batch = await db.DrugBatches.SingleAsync(x => x.DrugId == "PARA500" && x.BatchNumber == "LOT03");
         batch.Deduct(2, new TestClock().Today);
-        var order = new Order("DH2610060001", "UDEMO0003", now, SaleKind.OTC, "Khách demo", "0900000000", ReceiveMethod.Pickup);
+        var order = new Order("DH2610060001", "U0000003", now, SaleKind.OTC, "Chu Đức", "0900000000", ReceiveMethod.Pickup);
         order.AddItem(new("OI1", order.OrderId, "PARA500", "Paracetamol 500mg", "viên", 2, 1000));
-        order.Claim("UDEMO0002");
+        order.Claim("U0000002");
         order.MarkPreparing();
         db.Orders.Add(order);
         var settings = await db.PaymentSettings.SingleAsync();
         var payment = new Payment("TT2610060001", order.OrderId, 2000, settings.CreateSnapshot(), now);
-        payment.Confirm("DEMO-BANK-001", 2000, now, "UDEMO0002", now);
+        payment.Confirm("TEST-BANK-001", 2000, now, "U0000002", now);
         db.Payments.Add(payment);
-        var sale = new OTCSale("BH2610060001", "UDEMO0002", now, SaleChannel.Online, "UDEMO0003", order.OrderId);
+        var sale = new OTCSale("BH2610060001", "U0000002", now, SaleChannel.Online, "U0000003", order.OrderId);
         var line = new SaleItem("SI1", sale.SaleId, "PARA500", "Paracetamol 500mg", "viên", 2, 1000);
         line.AddAllocation(new("BA1", line.SaleItemId, batch.BatchId, 2));
         sale.ReplaceItems([line]);
@@ -31,19 +32,19 @@ internal static class PersistenceFixture
         db.Sales.Add(sale);
         db.Invoices.Add(new("HD2610060001", sale, now));
         order.MarkDelivered(true);
-        var active = new Order("DH2610060002", "UDEMO0003", now, SaleKind.Prescription, "Khách demo", "0900000000", ReceiveMethod.Delivery, "Địa chỉ demo", "DT2610060001", "BN001");
-        active.AddItem(new("OI2", active.OrderId, "DEMO07", "Amoxicillin", "viên", 3, 7000));
+        var active = new Order("DH2610060002", "U0000003", now, SaleKind.Prescription, "Chu Đức", "0900000000", ReceiveMethod.Delivery, "Địa chỉ nhận thuốc", "DT2610060001", "BN001");
+        active.AddItem(new("OI2", active.OrderId, "AMOX500", "Amoxicillin", "viên", 3, 7000));
         db.Orders.Add(active);
-        db.StockReservations.Add(new("R1", active.OrderId, "DEMO07", 3, "PITEM0"));
+        db.StockReservations.Add(new("R1", active.OrderId, "AMOX500", 3, "PITEM0"));
         db.Payments.Add(new("TT2610060002", active.OrderId, 21000, settings.CreateSnapshot(), now));
         var prescriptionLine = await db.PrescriptionItems.SingleAsync(x => x.ItemId == "PITEM0");
         prescriptionLine.RecordDispense(1);
-        var draft = new PrescriptionSale("BH2610060002", "UDEMO0002", now, "DT2610060001", "BN001");
-        draft.ReplaceItems([new("SI2", draft.SaleId, "DEMO07", "Amoxicillin", "viên", 1, 7000)]);
+        var draft = new PrescriptionSale("BH2610060002", "U0000002", now, "DT2610060001", "BN001");
+        draft.ReplaceItems([new("SI2", draft.SaleId, "AMOX500", "Amoxicillin", "viên", 1, 7000)]);
         db.Sales.Add(draft);
         var drug = await db.Drugs.SingleAsync(x => x.DrugId == "PARA500");
         drug.Update("Tên đã sửa", "viên", 1500, 7, false, false, true);
-        settings.Update("Ngân hàng đã sửa", "1111111111", "DEMO UPDATED");
+        settings.Update("Ngân hàng đã sửa", "1111111111", "TEST UPDATED");
         await db.SaveChangesAsync();
     }
     public static async Task<string> Snapshot(PharmacyDbContext db)
@@ -89,6 +90,7 @@ public sealed class PersistenceTests
             using (var first = new ApiFactory(path))
             {
                 using var client = first.Client();
+                await first.ConfigurePayments();
                 await first.WithDb(PersistenceFixture.AddBusinessData);
                 await client.Csrf();
                 var response = await client.PostAsJsonAsync("/api/auth/register", new
@@ -99,16 +101,16 @@ public sealed class PersistenceTests
                 });
                 Assert.Equal(201, (int)response.StatusCode);
                 before = await first.WithDb(PersistenceFixture.Snapshot);
-                var qrPath = Path.Combine(path + "-storage", "qr", "demo-qr.png");
+                var qrPath = Path.Combine(path + "-storage", "qr", "test-qr.png");
                 Assert.True(File.Exists(qrPath));
-                await File.AppendAllTextAsync(qrPath, "CUSTOM DEMO MARKER");
+                await File.AppendAllTextAsync(qrPath, "CUSTOM IMAGE MARKER");
                 qrBefore = await File.ReadAllBytesAsync(qrPath);
             }
             using (var restarted = new ApiFactory(path, new DateOnly(2027, 1, 1)))
             {
                 using var client = restarted.Client();
                 Assert.Equal(before, await restarted.WithDb(PersistenceFixture.Snapshot));
-                Assert.Equal(qrBefore, await File.ReadAllBytesAsync(Path.Combine(path + "-storage", "qr", "demo-qr.png")));
+                Assert.Equal(qrBefore, await File.ReadAllBytesAsync(Path.Combine(path + "-storage", "qr", "test-qr.png")));
                 Assert.Equal(200, (int)(await client.Login("persisted", "Password1")).StatusCode);
                 await restarted.WithDb(async db =>
                 {
@@ -170,9 +172,11 @@ public sealed class PersistenceTests
                 Assert.Contains(drugs, x => !x.IsForSale);
                 Assert.Contains(drugs, x => x.IsForSale && !x.RequiresPrescription && x.GetAvailableQuantity(d) == 0);
                 Assert.All(drugs, x => Assert.False(string.IsNullOrWhiteSpace(x.Description)));
-                Assert.All(drugs.Where(x => x.DrugId == "PARA500" || x.DrugId.StartsWith("DEMO")),
+                var legacyIds = new[] { "PARA500", "VITC500", "NACL09", "ORESOL", "CETI10", "ZINC10", "AMOX500", "CEFI200", "METF500", "AMLO5", "DIAZ5", "HYDRO1" };
+                Assert.All(drugs.Where(x => legacyIds.Contains(x.DrugId)),
                     x => Assert.Contains(x.SaleUnit, new[] { "Hộp", "Vỉ", "Chai", "Tuýp", "Gói", "Viên" }));
-                Assert.Equal("Nước muối sinh lý", drugs.Single(x => x.DrugId == "DEMO03").Name);
+                Assert.Equal("Nước muối sinh lý 0,9%", drugs.Single(x => x.DrugId == "NACL09").Name);
+                Assert.Equal("Sản phẩm đã ngừng kinh doanh.", drugs.Single(x => x.DrugId == "HYDRO1").Description);
                 Assert.Contains(drugs, x => x.GetAvailableQuantity(d) == x.LowStockThreshold);
                 foreach (var offset in new[] { -5, 0, 1, 20, 30, 31 })
                 {
@@ -183,7 +187,14 @@ public sealed class PersistenceTests
                 Assert.Contains(prescriptions, x => x.Validate("BN001", d));
                 Assert.Contains(prescriptions, x => x.ValidUntil < d);
                 Assert.Contains(prescriptions, x => x.Status == PrescriptionStatus.PendingReview);
-                Assert.Equal("Ngân hàng Demo", (await db.PaymentSettings.SingleAsync()).BankName);
+                Assert.Empty(await db.PaymentSettings.ToListAsync());
+                Assert.All(prescriptions, x =>
+                {
+                    Assert.Equal("U0000003", x.OwnerUserId);
+                    Assert.Equal("Chu Đức", x.PatientName);
+                });
+                Assert.All(prescriptions.Where(x => x.Status == PrescriptionStatus.Approved),
+                    x => Assert.Equal("BS. Nguyễn Văn Minh", x.PrescriberName));
             });
         }
         finally

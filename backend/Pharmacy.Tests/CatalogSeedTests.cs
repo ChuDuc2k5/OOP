@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy.Core.Common;
@@ -6,8 +7,45 @@ using Pharmacy.Core.Data;
 
 namespace Pharmacy.Tests;
 
-public sealed class DemoCatalogTests
+public sealed class CatalogSeedTests
 {
+    [Fact]
+    public async Task TC42_FreshSeed_HasNoPaymentSettings_OpeningQrRequiresAdminConfiguration()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "pharmacy-unconfigured-payment-" + Guid.NewGuid() + ".db");
+        try
+        {
+            using var factory = new ApiFactory(path);
+            using var client = factory.Client();
+            Assert.Equal(0, await factory.WithDb(db => db.PaymentSettings.CountAsync()));
+            Assert.False(Directory.Exists(Path.Combine(path + "-storage", "qr")));
+            Assert.Equal(200, (int)(await client.Login("chuduc", "User@12345")).StatusCode);
+            await client.Csrf();
+            Assert.Equal(200, (int)(await client.PostAsJsonAsync("/api/cart/items", new
+            {
+                drugId = "PARA500",
+                quantity = 1
+            })).StatusCode);
+            var order = await client.PostAsJsonAsync("/api/orders", new
+            {
+                saleKind = "OTC",
+                receiverName = "Chu Đức",
+                phone = "0900000000",
+                receiveMethod = "Pickup",
+                expectedTotal = 1000
+            });
+            Assert.Equal(201, (int)order.StatusCode);
+            var id = (await order.Json()).GetProperty("orderId").GetString();
+            var before = await factory.WithDb(PersistenceFixture.Snapshot);
+            await (await client.PostAsync("/api/orders/" + id + "/payment", null)).Error(409, "PAYMENT_NOT_CONFIGURED");
+            Assert.Equal(before, await factory.WithDb(PersistenceFixture.Snapshot));
+        }
+        finally
+        {
+            ApiFactory.Cleanup(path);
+        }
+    }
+
     private static JsonElement Catalog()
     {
         using var stream = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Seed.catalog.json")!;
@@ -52,10 +90,12 @@ public sealed class DemoCatalogTests
                     }
                 }
                 var legacyUnits = new[] { "Viên", "Hộp", "Chai", "Gói", "Vỉ", "Hộp", "Viên", "Vỉ", "Hộp", "Viên", "Viên", "Tuýp" };
+                var legacyIds = new[] { "PARA500", "VITC500", "NACL09", "ORESOL", "CETI10", "ZINC10", "AMOX500", "CEFI200", "METF500", "AMLO5", "DIAZ5", "HYDRO1" };
                 for (var index = 0; index < 12; index++)
                 {
-                    var id = index == 0 ? "PARA500" : $"DEMO{index + 1:D2}";
+                    var id = legacyIds[index];
                     var drug = drugs.Single(x => x.DrugId == id);
+                    Assert.Equal(catalog.GetProperty("legacyImages").GetProperty(id).GetProperty("name").GetString(), drug.Name);
                     Assert.Equal(legacyUnits[index], drug.SaleUnit);
                     Assert.Equal(1000 * (index + 1), drug.UnitPrice);
                     Assert.Equal(index == 9 ? 8 : 10, drug.LowStockThreshold);
@@ -128,8 +168,8 @@ public sealed class DemoCatalogTests
             var image = await File.ReadAllBytesAsync(customFile);
             var before = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(await factory.WithDb(PersistenceFixture.Snapshot))!;
             var existingBatchRows = before["DrugBatches"].ToList();
-            var result = await factory.WithDb(db => new DemoCatalogSeeder(db, new TestClock(), new(path + "-storage")).SeedAsync());
-            Assert.Equal(new DemoCatalogSeedResult(43, 100, 44, 0), result);
+            var result = await factory.WithDb(db => new CatalogSeeder(db, new TestClock(), new(path + "-storage")).SeedAsync());
+            Assert.Equal(new CatalogSeedResult(43, 100, 44, 0), result);
             var after = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(await factory.WithDb(PersistenceFixture.Snapshot))!;
             foreach (var table in before.Keys.Where(x => x is not ("Drugs" or "DrugBatches")))
             {
@@ -151,9 +191,9 @@ public sealed class DemoCatalogTests
             });
             Assert.Equal(image, await File.ReadAllBytesAsync(customFile));
             var snapshot = await factory.WithDb(PersistenceFixture.Snapshot);
-            var repeated = await factory.WithDb(db => new DemoCatalogSeeder(db,
+            var repeated = await factory.WithDb(db => new CatalogSeeder(db,
                 new TestClock { Today = new(2027, 1, 1) }, new(path + "-storage")).SeedAsync());
-            Assert.Equal(new DemoCatalogSeedResult(0, 0, 0, 0), repeated);
+            Assert.Equal(new CatalogSeedResult(0, 0, 0, 0), repeated);
             Assert.Equal(snapshot, await factory.WithDb(PersistenceFixture.Snapshot));
             Assert.Equal(image, await File.ReadAllBytesAsync(customFile));
         }
@@ -189,7 +229,7 @@ public sealed class DemoCatalogTests
                     WorkingDirectory = Path.GetTempPath()
                 };
                 start.ArgumentList.Add(typeof(Program).Assembly.Location);
-                start.ArgumentList.Add("--seed-demo-catalog");
+                start.ArgumentList.Add("--seed-catalog");
                 start.ArgumentList.Add("--contentRoot");
                 start.ArgumentList.Add(Path.GetTempPath());
                 start.Environment["Database__Provider"] = "Sqlite";
