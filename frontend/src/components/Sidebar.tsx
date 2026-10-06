@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { ROLE_LABELS } from '@/lib/format';
+import React, { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { ROLE_LABELS } from "@/lib/format";
 import {
   LayoutDashboard,
   FileText,
@@ -21,10 +21,10 @@ import {
   Home,
   Menu,
   X,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface SidebarProps {
-  role: 'Staff' | 'Admin';
+  role: "Staff" | "Admin";
 }
 
 export default function Sidebar({ role }: SidebarProps) {
@@ -35,35 +35,40 @@ export default function Sidebar({ role }: SidebarProps) {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/login');
+    router.push("/login");
   };
 
   const staffNavItems = [
-    { label: 'Tổng quan công việc', href: '/staff', icon: LayoutDashboard },
-    { label: 'Đơn thuốc', href: '/staff/prescriptions', icon: FileText },
-    { label: 'Đơn hàng trực tuyến', href: '/staff/orders', icon: ShoppingBag },
-    { label: 'Duyệt thanh toán', href: '/staff/payments', icon: CreditCard },
-    { label: 'Bán tại quầy', href: '/staff/sales', icon: Store },
-    { label: 'Tra cứu tồn kho', href: '/staff/inventory', icon: Boxes },
-    { label: 'Báo cáo cảnh báo kho', href: '/staff/reports', icon: AlertTriangle },
-    { label: 'Hóa đơn bán lẻ', href: '/staff/invoices', icon: Receipt },
+    { label: "Tổng quan công việc", href: "/staff", icon: LayoutDashboard },
+    { label: "Đơn thuốc", href: "/staff/prescriptions", icon: FileText },
+    { label: "Đơn hàng trực tuyến", href: "/staff/orders", icon: ShoppingBag },
+    { label: "Duyệt thanh toán", href: "/staff/payments", icon: CreditCard },
+    { label: "Bán tại quầy", href: "/staff/sales", icon: Store },
+    { label: "Tra cứu tồn kho", href: "/staff/inventory", icon: Boxes },
+    {
+      label: "Báo cáo cảnh báo kho",
+      href: "/staff/reports",
+      icon: AlertTriangle,
+    },
+    { label: "Hóa đơn bán lẻ", href: "/staff/invoices", icon: Receipt },
   ];
 
   const adminNavItems = [
-    { label: 'Bảng điều khiển', href: '/admin', icon: LayoutDashboard },
-    { label: 'Quản lý tài khoản', href: '/admin/accounts', icon: Users },
-    { label: 'Danh mục & Nhập lô', href: '/admin/drugs', icon: Pill },
-    { label: 'Tra cứu kho', href: '/staff/inventory', icon: Boxes },
-    { label: 'Báo cáo cảnh báo', href: '/staff/reports', icon: AlertTriangle },
-    { label: 'Xử lý đơn thuốc', href: '/staff/prescriptions', icon: FileText },
-    { label: 'Quản lý đơn hàng', href: '/staff/orders', icon: ShoppingBag },
-    { label: 'Duyệt thanh toán', href: '/staff/payments', icon: CreditCard },
-    { label: 'Bán tại quầy', href: '/staff/sales', icon: Store },
-    { label: 'Hóa đơn bán hàng', href: '/staff/invoices', icon: Receipt },
-    { label: 'Cấu hình thanh toán QR', href: '/admin/settings/payment', icon: QrCode },
+    ...staffNavItems.map((item) => ({
+      ...item,
+      href: item.href.replace("/staff", "/admin"),
+    })),
+    { label: "Quản lý tài khoản", href: "/admin/accounts", icon: Users },
+    { label: "Danh mục & Nhập lô", href: "/admin/drugs", icon: Pill },
+
+    {
+      label: "Cấu hình thanh toán QR",
+      href: "/admin/settings/payment",
+      icon: QrCode,
+    },
   ];
 
-  const navItems = role === 'Admin' ? adminNavItems : staffNavItems;
+  const navItems = role === "Admin" ? adminNavItems : staffNavItems;
 
   return (
     <>
@@ -71,14 +76,20 @@ export default function Sidebar({ role }: SidebarProps) {
       <div className="lg:hidden flex items-center justify-between bg-slate-900 text-white px-4 py-3 sticky top-0 z-30 shadow-md">
         <div className="flex items-center space-x-2 font-bold text-emerald-400">
           <Pill className="w-5 h-5 text-emerald-400" />
-          <span>{role === 'Admin' ? 'Admin Dashboard' : 'Staff Dashboard'}</span>
+          <span>
+            {role === "Admin" ? "Admin Dashboard" : "Staff Dashboard"}
+          </span>
         </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
           aria-label="Toggle Navigation"
         >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {mobileOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Menu className="w-6 h-6" />
+          )}
         </button>
       </div>
 
@@ -93,19 +104,24 @@ export default function Sidebar({ role }: SidebarProps) {
       {/* Sidebar container */}
       <aside
         className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
         } lg:static lg:h-screen lg:z-10`}
       >
         {/* Brand Header */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-950/50">
-          <Link href={role === 'Admin' ? '/admin' : '/staff'} className="flex items-center space-x-2.5">
+          <Link
+            href={role === "Admin" ? "/admin" : "/staff"}
+            className="flex items-center space-x-2.5"
+          >
             <span className="p-2 bg-emerald-600 text-white rounded-lg shadow">
               <Pill className="w-5 h-5" />
             </span>
             <div className="flex flex-col">
-              <span className="font-bold text-white text-base leading-tight">Pharmacy System</span>
+              <span className="font-bold text-white text-base leading-tight">
+                Pharmacy System
+              </span>
               <span className="text-xs text-emerald-400 font-medium">
-                {role === 'Admin' ? 'Quản trị viên' : 'Nhân viên nhà thuốc'}
+                {role === "Admin" ? "Quản trị viên" : "Nhân viên nhà thuốc"}
               </span>
             </div>
           </Link>
@@ -122,14 +138,14 @@ export default function Sidebar({ role }: SidebarProps) {
           <div className="flex items-center justify-between bg-slate-800/80 p-3 rounded-xl border border-slate-700/50">
             <div className="flex items-center space-x-3 overflow-hidden">
               <div className="w-9 h-9 rounded-full bg-emerald-700 text-white font-bold flex items-center justify-center shrink-0">
-                {user?.username?.charAt(0).toUpperCase() || 'U'}
+                {user?.username?.charAt(0).toUpperCase() || "U"}
               </div>
               <div className="overflow-hidden">
                 <p className="text-sm font-semibold text-white truncate">
-                  {user?.username || 'Chưa đăng nhập'}
+                  {user?.username || "Chưa đăng nhập"}
                 </p>
                 <p className="text-xs text-emerald-400 font-medium truncate">
-                  {user ? ROLE_LABELS[user.role] : 'Guest'}
+                  {user ? ROLE_LABELS[user.role] : "Guest"}
                 </p>
               </div>
             </div>
@@ -155,11 +171,13 @@ export default function Sidebar({ role }: SidebarProps) {
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition ${
                   isActive
-                    ? 'bg-emerald-600 text-white shadow-sm font-semibold'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? "bg-emerald-600 text-white shadow-sm font-semibold"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
                 }`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                <Icon
+                  className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`}
+                />
                 <span className="truncate">{item.label}</span>
               </Link>
             );

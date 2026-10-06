@@ -106,3 +106,29 @@ frontend/
    - User: Xem giá bán, truy cập giỏ hàng, đơn hàng. Nếu cố truy cập `/staff` hoặc `/admin` sẽ bị chuyển hướng về `/`.
    - Staff: Truy cập dashboard nhân viên `/staff`. Nếu cố truy cập `/admin` sẽ bị chuyển về `/staff`.
    - Admin: Toàn quyền truy cập cả `/admin` và `/staff`.
+
+## 7. Nghiệp vụ Staff/Admin (M3)
+
+| Trang | Chức năng |
+|---|---|
+| `/staff`, `/admin` | Dashboard từ backend, thẻ dẫn tới chức năng |
+| `/staff/prescriptions`, `/new`, `/[id]` | Tìm/lọc, tiếp nhận đơn giấy, ảnh riêng tư, chi tiết và duyệt/hủy hiệu lực |
+| `/staff/orders`, `/[id]` | Nhận xử lý, xuất kho/lập hóa đơn, giao/hoàn tất, từ chối/hủy |
+| `/staff/payments` | Đối chiếu thực nhận; chuyển thiếu giữ chờ duyệt; ghi chú chưa duyệt |
+| `/staff/sales`, `/new`, `/[id]` | Nháp OTC/Theo đơn, sửa dòng, issues, xác nhận tiền mặt rồi checkout |
+| `/staff/inventory`, `/[drugId]` | Tồn thực tế/còn hạn/giữ/khả dụng và các lô |
+| `/staff/reports` | Tồn thấp, sắp hết hạn theo số ngày |
+| `/staff/invoices`, `/[id]` | Hóa đơn và lô xuất; dùng chung component với khách |
+| `/admin/accounts` | Tìm/lọc tài khoản, tạo Staff |
+| `/admin/drugs`, `/new`, `/[drugId]` | Danh mục thuốc, ảnh, bật/tắt bán, nhập lô |
+| `/admin/settings/payment` | Ngân hàng/tài khoản, ảnh QR cố định và xem trước |
+
+Các trang nghiệp vụ Staff có route tương ứng dưới `/admin`, dùng lại component trong `src/components/backoffice`. Hóa đơn dùng component trong `src/components/invoices`. Tầng API `lib/backoffice-api.ts` gọi `apiFetch` hiện có để giữ cookie, CSRF và lỗi ProblemDetails. Không có fallback dữ liệu giả.
+
+Kiểm thử curl qua frontend proxy khi cả backend và frontend đang chạy:
+
+```bash
+node frontend/scripts/smoke-backoffice.mjs
+```
+
+Chạy lệnh từ gốc repository với SQLite riêng dành cho kiểm thử và dữ liệu seed. Script tạo giao dịch, tài khoản/thuốc/lô thử và thay cấu hình QR trong database đó; mặc định gọi `http://localhost:3000/api`. Dùng `SMOKE_BASE_URL` nếu frontend chạy ở địa chỉ khác. Cookie/file gửi tạm được xóa sau kiểm thử, kết quả mã giao dịch được lưu trong thư mục tạm hệ điều hành. Không thực hiện chuyển tiền ngân hàng.

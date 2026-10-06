@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Cột 1: Thông tin hệ thống */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2 text-white font-bold text-lg">
@@ -57,18 +57,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Cột 4: Tài khoản thử nghiệm */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider">
-              Tài khoản mẫu (Demo)
-            </h4>
-            <div className="bg-slate-800 p-3 rounded-lg text-xs space-y-1 text-slate-300 font-mono">
-              <div><strong className="text-emerald-400">Admin:</strong> admin / Admin@12345</div>
-              <div><strong className="text-emerald-400">Staff:</strong> staff / Staff@12345</div>
-              <div><strong className="text-emerald-400">User:</strong> user / User@12345</div>
-              <div><strong className="text-emerald-400">User 2:</strong> user2 / User@12345</div>
-            </div>
-          </div>
         </div>
 
         <div className="pt-6 border-t border-slate-800 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
