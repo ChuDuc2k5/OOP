@@ -1,4 +1,5 @@
 "use client";
+import { ActionButton } from '@/components/ActionButton';
 import { useState } from "react";
 import { inventoryApi } from "@/lib/backoffice-api";
 import type { PrescriptionItemInput } from "@/lib/types";
@@ -48,14 +49,14 @@ export default function DrugLines({
           onChange={(e) => setSearch(e.target.value)}
           disabled={disabled}
         />
-        <button
+        <ActionButton busy={action.busy}
           type="button"
           className={buttonClass}
           onClick={searchDrugs}
           disabled={disabled || action.busy}
         >
           Tra cứu thuốc
-        </button>
+        </ActionButton>
       </div>
       <Feedback {...action} />
       {products && (

@@ -1,4 +1,5 @@
 "use client";
+import { ActionButton } from '@/components/ActionButton';
 import { useState } from "react";
 import { staffPaymentsApi, type ListQuery } from "@/lib/backoffice-api";
 import type { PaymentRow, PaymentReviewResult } from "@/lib/types";
@@ -46,14 +47,14 @@ function ReviewForm({
           Đối chiếu {payment.orderId} · Yêu cầu{" "}
           {formatVND(payment.expectedAmount)}
         </h2>
-        <button
+        <ActionButton busy={action.busy}
           type="button"
           className={buttonClass}
           onClick={close}
           disabled={action.busy}
         >
           Đóng
-        </button>
+        </ActionButton>
       </div>
       <p>
         Khách hàng: {payment.customerUsername} · Mã thanh toán:{" "}
@@ -146,9 +147,9 @@ function ReviewForm({
                 disabled={action.busy}
               />
             </div>
-            <button className={buttonClass} disabled={action.busy}>
+            <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
               Đối chiếu &amp; duyệt thanh toán
-            </button>
+            </ActionButton>
           </form>
           <form
             className="space-y-3 border-t pt-4"
@@ -173,12 +174,12 @@ function ReviewForm({
               required
               disabled={action.busy}
             />
-            <button
+            <ActionButton busy={action.busy}
               className={buttonClass}
               disabled={action.busy || !note.trim()}
             >
               Ghi chú chưa duyệt
-            </button>
+            </ActionButton>
           </form>
         </>
       )}

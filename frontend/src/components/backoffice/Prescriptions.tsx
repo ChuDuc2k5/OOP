@@ -1,4 +1,5 @@
 "use client";
+import { ActionButton } from '@/components/ActionButton';
 import Image from "next/image";
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -167,12 +168,12 @@ function PrescriptionForm({
         errors={action.fields}
         disabled={action.busy}
       />
-      <button
+      <ActionButton busy={action.busy}
         className={buttonClass}
         disabled={action.busy || !form.items.length}
       >
         {creating ? "Tiếp nhận đơn tại quầy" : "Lưu chi tiết"}
-      </button>
+      </ActionButton>
     </form>
   );
 }
@@ -318,7 +319,7 @@ export function PrescriptionDetail({
                 prescriptionId={id}
                 onSaved={resource.setData}
               />
-              <button
+              <ActionButton busy={action.busy}
                 className={buttonClass}
                 disabled={
                   action.busy ||
@@ -333,7 +334,7 @@ export function PrescriptionDetail({
                 }}
               >
                 Chấp nhận đơn thuốc
-              </button>
+              </ActionButton>
             </>
           )}
           <ReasonActions

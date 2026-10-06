@@ -1,10 +1,12 @@
 "use client";
+import { ActionButton } from '@/components/ActionButton';
 import Image from "next/image";
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { adminApi, inventoryApi, type ListQuery } from "@/lib/backoffice-api";
 import { ApiException } from "@/lib/api";
+import { notifyError } from '@/lib/feedback';
 import type {
   CreateBatchInput,
   CreateStaffInput,
@@ -113,9 +115,9 @@ export function Accounts() {
               disabled={action.busy}
             />
           </div>
-          <button className={buttonClass} disabled={action.busy}>
+          <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
             Tạo Staff
-          </button>
+          </ActionButton>
         </form>
       </Card>
     </RecordList>
@@ -320,9 +322,9 @@ function DrugForm({
             {action.fields.requiresPrescription.join(" ")}
           </p>
         )}
-        <button className={buttonClass} disabled={action.busy}>
+        <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
           {drug ? "Lưu thuốc" : "Thêm thuốc"}
-        </button>
+        </ActionButton>
       </Card>
     </form>
   );
@@ -423,6 +425,7 @@ function ImageUpload({
                 validateImage(selected);
                 setFile(selected);
               } catch (err) {
+                notifyError(err);
                 if (err instanceof ApiException) action.setFields(err.errors || {});
                 action.setError(
                   errorTitle(err),
@@ -432,9 +435,9 @@ function ImageUpload({
           }}
         />
         <p className="text-sm text-slate-600">{file ? file.name : "Chưa chọn ảnh"}</p>
-        <button className={buttonClass} disabled={action.busy || !file}>
+        <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy || !file}>
           Tải ảnh lên
-        </button>
+        </ActionButton>
       </form>
     </Card>
   );
@@ -511,9 +514,9 @@ function BatchForm({
             disabled={action.busy}
           />
         </div>
-        <button className={buttonClass} disabled={action.busy}>
+        <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
           Nhập lô
-        </button>
+        </ActionButton>
       </form>
     </Card>
   );
@@ -546,7 +549,7 @@ export function DrugDetail({
           <DrugForm drug={d} saved={r.setData} />
           <Card>
             <p>Trạng thái: {d.isForSale ? "Đang bán" : "Tắt bán"}</p>
-            <button
+            <ActionButton busy={action.busy}
               className={buttonClass}
               disabled={action.busy}
               onClick={() =>
@@ -557,7 +560,7 @@ export function DrugDetail({
               }
             >
               {d.isForSale ? "Tắt bán" : "Bật bán"}
-            </button>
+            </ActionButton>
           </Card>
           <ImageUpload
             title="Ảnh thuốc"
@@ -649,9 +652,9 @@ export function PaymentSettings() {
                   />
                 ))}
               </div>
-              <button className={buttonClass} disabled={action.busy}>
+              <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
                 Lưu tài khoản
-              </button>
+              </ActionButton>
             </form>
           </Card>
           <ImageUpload

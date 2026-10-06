@@ -1,10 +1,13 @@
 'use client';
+import { ActionButton } from '@/components/ActionButton';
 
 import React, { useEffect, useState, use } from 'react';
 import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
+import { OrderProgress } from '@/components/orders/OrderProgress';
+import { ActionLink } from '@/components/ActionLink';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
 import { ApiException, ordersApi } from '@/lib/api';
@@ -77,6 +80,7 @@ export default function OrderDetailPage({
   }, [authorized, user, fetchOrderDetail]);
 
   const handleCancelOrder = async () => {
+    if (cancelling) return;
     setCancelling(true);
     setCancelError(null);
     try {
@@ -134,6 +138,7 @@ export default function OrderDetailPage({
           </div>
         ) : (
           <div className="space-y-6">
+            <OrderProgress order={order} />
             {/* Top Status Banner Card */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
@@ -173,13 +178,13 @@ export default function OrderDetailPage({
                 )}
 
                 {order.canPay && (
-                  <Link
+                  <ActionLink
                     href={`/orders/${order.orderId}/payment`}
                     className="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition"
                   >
                     <CreditCard className="w-4 h-4" />
                     <span>Mở thanh toán QR</span>
-                  </Link>
+                  </ActionLink>
                 )}
 
                 {order.canCancel && (
@@ -396,22 +401,22 @@ export default function OrderDetailPage({
               )}
 
               <div className="flex gap-2 pt-2">
-                <button
+                <ActionButton busy={cancelling}
                   type="button"
                   onClick={() => setShowCancelModal(false)}
                   disabled={cancelling}
                   className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold"
                 >
                   Không, giữ lại
-                </button>
-                <button
+                </ActionButton>
+                <ActionButton busy={cancelling}
                   type="button"
                   onClick={handleCancelOrder}
                   disabled={cancelling}
                   className="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs"
                 >
                   {cancelling ? 'Đang hủy...' : 'Đồng ý hủy đơn'}
-                </button>
+                </ActionButton>
               </div>
             </div>
           </div>

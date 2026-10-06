@@ -12,6 +12,7 @@ const args = process.argv.length > 2 ? process.argv.slice(2) : ['test'];
 const env = {
   ...process.env,
   BACKEND_URL: 'http://localhost:5017', NEXT_PUBLIC_USE_MOCK: 'false',
+  NEXT_DIST_DIR: '.next-e2e',
   PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH || join(tmpdir(), 'pharmacy-playwright'),
 };
 let server;
@@ -42,7 +43,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
 }
 try {
   if (args[0] === 'test') {
-    for (const port of [3000, 5017]) {
+    for (const port of [3017, 5017]) {
       if (await occupied(port)) throw new Error(`Cổng ${port} đang được dùng. Hãy dừng server ở cổng này trước e2e.`);
     }
     let code = await run('dotnet', ['build', 'backend/Pharmacy.Api', '--disable-build-servers'], repo);
@@ -56,7 +57,7 @@ try {
       const deadline = Date.now() + 120_000;
       let ready = false;
       while (Date.now() < deadline && server.exitCode === null) {
-        try { ready = (await fetch('http://localhost:3000/api/health', { signal: AbortSignal.timeout(2000) })).ok; } catch { /* Chờ seed và server sẵn sàng. */ }
+        try { ready = (await fetch('http://localhost:3017/api/health', { signal: AbortSignal.timeout(2000) })).ok; } catch { /* Chờ seed và server sẵn sàng. */ }
         if (ready) break;
         await new Promise(resolve => setTimeout(resolve, 250));
       }
