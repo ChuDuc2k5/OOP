@@ -1,0 +1,22 @@
+{
+  "name": "pharmacy-management",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "gateway"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,gateway,web \"npm:dev:api\" \"npm:dev:gateway\" \"npm:dev:web\"",
+    "dev:api": "node --env-file-if-exists=backend/Pharmacy.Api/.env scripts/run-api.mjs",
+    "dev:gateway": "npm run start:dev --workspace gateway",
+    "dev:web": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend && npm run build --workspace gateway && dotnet build Pharmacy.sln --no-restore",
+    "lint": "npm run lint --workspace frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

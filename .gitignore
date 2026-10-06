@@ -36,8 +36,10 @@ ScaffoldingReadMe.txt
 # NuGet Symbol Packages
 *.snupkg
 
-# dotenv environment variables file
+# Local environment files (all directories); commit templates only
 .env
+.env.*
+!.env.example
 
 # Others
 ~$*
@@ -55,3 +57,12 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# JavaScript / TypeScript
+node_modules/
+dist/
+.vite/
+coverage/
+*.tsbuildinfo
+.vs/
+.idea/
