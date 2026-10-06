@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation";
 import { ApiException } from "@/lib/api";
 import type { ListQuery } from "@/lib/backoffice-api";
 import type { Paged } from "@/lib/types";
+import { LoadingState, ErrorState, EmptyState } from '@/components/Status';
 
 export const buttonClass =
   "inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed";
@@ -82,7 +83,7 @@ export function useAction() {
       setBusy(false);
     }
   }
-  return { busy, error, success, fields, run, setError, setSuccess };
+  return { busy, error, success, fields, run, setError, setSuccess, setFields };
 }
 
 export function Page({
@@ -150,19 +151,8 @@ export function LoadState({
 }) {
   return (
     <>
-      {loading && (
-        <p role="status" className="text-slate-600">
-          Đang tải dữ liệu...
-        </p>
-      )}
-      {error && (
-        <Card>
-          <Feedback error={error} />
-          <button className={buttonClass} onClick={retry}>
-            Thử lại
-          </button>
-        </Card>
-      )}
+      {loading && <LoadingState />}
+      {error && <ErrorState message={error} retry={retry} />}
     </>
   );
 }
@@ -175,18 +165,24 @@ export function Field({
   label: string;
   errors?: Record<string, string[]>;
 }) {
+  const path = name?.replace(/\[(\d+)\]/g, ".$1");
+  const leaf = name?.split(/[.\[\]]/).filter(Boolean).at(-1);
+  const messages = name && errors
+    ? errors[name] || (path && errors[path]) || (leaf && errors[leaf])
+    : undefined;
   return (
-    <label className="block space-y-1 text-sm font-medium text-slate-700">
+    <label className="block min-w-0 space-y-1 text-sm font-medium text-slate-700">
       <span>{label}</span>
       <input
         {...props}
         name={name}
-        className={inputClass}
-        aria-invalid={!!(name && errors?.[name])}
+        className={props.type === "file" ? "sr-only" : inputClass}
+        aria-invalid={!!messages}
       />
-      {name && errors?.[name] && (
+      {props.type === "file" && <span className={`${inputClass} block cursor-pointer focus-within:ring-2`}>Chọn ảnh</span>}
+      {messages && (
         <span className="block text-sm text-rose-700">
-          {errors[name].join(" ")}
+          {messages.join(" ")}
         </span>
       )}
     </label>
@@ -197,16 +193,22 @@ export function Select({
   value,
   onChange,
   options,
+  name,
+  errors,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: Record<string, string>;
+  name?: string;
+  errors?: Record<string, string[]>;
 }) {
   return (
     <label className="block space-y-1 text-sm font-medium text-slate-700">
       <span>{label}</span>
       <select
+        name={name}
+        aria-invalid={!!(name && errors?.[name])}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={inputClass}
@@ -217,6 +219,7 @@ export function Select({
           </option>
         ))}
       </select>
+      {name && errors?.[name] && <span className="block text-sm text-rose-700">{errors[name].join(" ")}</span>}
     </label>
   );
 }
@@ -228,7 +231,7 @@ export function Table({
   children: ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200">
+    <div role="region" aria-label="Bảng dữ liệu" tabIndex={0} className="min-w-0 max-w-full overflow-x-auto rounded-lg border border-slate-200">
       <table className="w-full text-left text-sm [&_td]:border-t [&_td]:border-slate-200 [&_td]:p-3 [&_th]:whitespace-nowrap [&_th]:p-3">
         <thead className="bg-slate-50 text-slate-600">
           <tr>
@@ -360,7 +363,7 @@ export function RecordList<T>({
                 ))}
               </Table>
             ) : (
-              <p className="text-slate-600">Không có dữ liệu phù hợp.</p>
+              <EmptyState />
             )}
             <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
               <span>
@@ -444,5 +447,6 @@ export function validateImage(file: File) {
       status: 400,
       code: "FILE_INVALID",
       title: "Chỉ nhận ảnh PNG/JPG/JPEG tối đa 5 MB.",
+      errors: { file: ["Chỉ nhận ảnh PNG/JPG/JPEG tối đa 5 MB."] },
     });
 }

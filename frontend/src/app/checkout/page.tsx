@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { LoadingState } from '@/components/Status';
+import { ErrorState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
@@ -38,6 +40,7 @@ export default function CheckoutPage() {
 
   // Usable prescriptions for Rx orders
   const [usablePrescriptions, setUsablePrescriptions] = useState<PrescriptionView[]>([]);
+  const [prescriptionError, setPrescriptionError] = useState<string | null>(null);
 
   // Form State
   const [receiverName, setReceiverName] = useState('');
@@ -57,6 +60,7 @@ export default function CheckoutPage() {
   const initData = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setPrescriptionError(null);
     try {
       const cartData = await cartApi.getCart();
       if (cartData.items.length === 0) {
@@ -81,10 +85,10 @@ export default function CheckoutPage() {
           setPrescriptionId(presList[0].prescriptionId);
         }
       } catch (presErr) {
-        console.warn('Không thể nạp đơn thuốc usable:', presErr);
+        setPrescriptionError(presErr instanceof ApiException ? presErr.title : 'Không thể tải danh sách đơn thuốc. Vui lòng thử lại.');
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi tải thông tin thanh toán';
+      const msg = err instanceof ApiException ? err.title : 'Lỗi tải thông tin thanh toán';
       setError(msg);
     } finally {
       setLoading(false);
@@ -191,14 +195,7 @@ export default function CheckoutPage() {
   };
 
   if (authLoading || !authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex items-center space-x-2 text-emerald-700 font-medium">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Đang xác thực...</span>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   const needsPrescription = cart?.items.some(
@@ -228,13 +225,8 @@ export default function CheckoutPage() {
           </Link>
         </div>
 
-        {loading ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-600">Đang chuẩn bị thông tin thanh toán...</p>
-          </div>
-        ) : error && !cart ? (
-          <div className="bg-rose-50 border border-rose-200 text-rose-800 p-6 rounded-2xl text-center space-y-3">
+        {loading ? <LoadingState /> : error && !cart ? (
+          <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 space-y-3">
             <AlertTriangle className="w-8 h-8 text-rose-600 mx-auto" />
             <p className="font-semibold">{error}</p>
             <Link
@@ -267,12 +259,12 @@ export default function CheckoutPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label htmlFor="receiverName" className="block text-xs font-semibold text-slate-700 mb-1">
                       Họ và tên người nhận <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
-                      value={receiverName}
+                      id="receiverName" value={receiverName}
                       onChange={(e) => setReceiverName(e.target.value)}
                       placeholder="Nguyễn Văn A"
                       className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
@@ -285,13 +277,13 @@ export default function CheckoutPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label htmlFor="phone" className="block text-xs font-semibold text-slate-700 mb-1">
                       Số điện thoại liên hệ <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <input
                         type="tel"
-                        value={phone}
+                        id="phone" value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="0901234567"
                         className={`w-full pl-8 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
@@ -370,13 +362,13 @@ export default function CheckoutPage() {
 
                 {receiveMethod === 'Delivery' ? (
                   <div className="pt-2">
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label htmlFor="address" className="block text-xs font-semibold text-slate-700 mb-1">
                       Địa chỉ nhận thuốc chi tiết <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <textarea
                         rows={2}
-                        value={address}
+                        id="address" value={address}
                         onChange={(e) => setAddress(e.target.value)}
                         placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành..."
                         className={`w-full pl-8 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
@@ -442,6 +434,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
+                {fieldErrors.saleKind && <p className="text-xs text-rose-600">{fieldErrors.saleKind.join(' ')}</p>}
                 {saleKind === 'Prescription' && (
                   <div className="space-y-3 pt-2">
                     <div className="flex items-center justify-between">
@@ -458,8 +451,8 @@ export default function CheckoutPage() {
                       </Link>
                     </div>
 
-                    {usablePrescriptions.length === 0 ? (
-                      <div className="p-4 rounded-xl border border-dashed border-amber-300 bg-amber-50 text-xs text-amber-900 space-y-2">
+                    {prescriptionError ? <ErrorState message={prescriptionError} retry={initData} /> : usablePrescriptions.length === 0 ? (
+                      <div role="status" className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-600 space-y-3">
                         <p className="font-medium">Bạn chưa có đơn thuốc nào được duyệt hoặc đang chờ kiểm tra.</p>
                         <p className="text-slate-600">
                           Vui lòng bấm vào nút bên dưới để chụp ảnh và gửi đơn thuốc của bạn trước khi hoàn tất đặt hàng.
@@ -473,7 +466,7 @@ export default function CheckoutPage() {
                         </Link>
                       </div>
                     ) : (
-                      <select
+                      <select id="prescriptionId"
                         value={prescriptionId}
                         onChange={(e) => setPrescriptionId(e.target.value)}
                         className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white ${

@@ -98,6 +98,15 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
   - Các form dùng API client có kiểu dữ liệu, credentials/CSRF và ApiException thật; lỗi title/lỗi theo trường, giữ dữ liệu nhập, trạng thái tải/rỗng/lỗi, khóa gửi lặp và bảng cuộn ngang.
   - Kiểm chứng: `npm run lint` sạch ESLint; `npm run build --workspace frontend` pass. Script `frontend/scripts/smoke-backoffice.mjs` dùng curl qua `http://localhost:3000/api`: 46 kiểm tra pass trên backend SQLite riêng, gồm duyệt thiếu/đủ → fulfill/complete, OTC → checkout, Admin cấu hình/tải QR, đơn thuốc, thuốc/ảnh/nhập lô, tài khoản, báo cáo và phân quyền. Các tiến trình tự chạy đã dừng sau kiểm thử. Chưa kiểm tra tương tác trình duyệt và kích thước 1366/390 px do không có trình duyệt được kết nối; phần này thuộc M4.
 
+- **M4 — `fe/m4-polish`**:
+  - Rà trang khách, Staff/Admin ở 1366×900 và 390×844: form không tràn trang, bảng dài cuộn trong khung riêng, sidebar mobile đóng/mở được; QR và số tiền hiển thị rõ. Ảnh toàn trang chụp từ đầu trang, tránh thanh menu sticky xuất hiện giữa ảnh.
+  - Dùng trạng thái tải/rỗng/lỗi thống nhất và lỗi `ApiException.title` an toàn; giữ dữ liệu khi gửi lỗi, hiển thị lỗi theo trường kể cả dòng thuốc lồng nhau và chọn ảnh. Định dạng VND, ngày/giờ Việt Nam nhất quán; thao tác hủy theo `canCancel`, thanh toán theo `canPay`, checkout theo `canCheckout` và trạng thái.
+  - Sửa cập nhật ảnh QR không làm mất thông báo thành công hoặc dữ liệu tài khoản đang sửa chưa lưu; nhãn chọn ảnh tiếng Việt và nội dung chuyển khoản dễ đọc.
+  - Chuyển lint sang ESLint CLI. Playwright là devDependency của npm workspace, cập nhật lockfile gốc và xóa `frontend/package-lock.json`.
+  - `npm run test:e2e --workspace frontend` tự build, chạy frontend production và DLL backend thật với SQLite/seed riêng, mock tắt, ngày nghiệp vụ 06/10/2026. Runner tự đóng server qua IPC khi xong. Hướng dẫn cài Chromium/chạy kiểm thử/báo cáo trong `frontend/README.md`.
+  - Kịch bản ở cả hai viewport: Guest không thấy giá; User đặt OTC → mở QR; Staff duyệt thiếu/đủ → xuất kho → hoàn tất; User xem hóa đơn và bị chặn `/staff`; Staff bán OTC tại quầy → checkout; Admin lưu tài khoản/tải QR; loading/rỗng/lỗi mạng và rà các route. Danh mục 41 ảnh trong `docs/screenshots/README.md`, kết quả rà route trong hai file `TC00-route-audit-*.json`.
+  - Kiểm chứng cuối: ESLint CLI sạch; production build pass; Playwright Chromium 8/8 ca pass (45,5 giây), đối chiếu đủ 49 route ở mỗi viewport. Các server thử nghiệm đã dừng, cổng 3000/5017 đã đóng. Chưa mở rộng kiểm thử sang Firefox/WebKit.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 

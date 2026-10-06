@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { adminApi, inventoryApi, type ListQuery } from "@/lib/backoffice-api";
+import { ApiException } from "@/lib/api";
 import type {
   CreateBatchInput,
   CreateStaffInput,
@@ -25,6 +26,7 @@ import {
   useAction,
   useResource,
   validateImage,
+  errorTitle,
 } from "./shared";
 import { StockSummary } from "./Inventory";
 
@@ -415,18 +417,21 @@ function ImageUpload({
             const selected = e.target.files?.[0];
             setFile(null);
             action.setError("");
+            action.setFields({});
             if (selected) {
               try {
                 validateImage(selected);
                 setFile(selected);
               } catch (err) {
+                if (err instanceof ApiException) action.setFields(err.errors || {});
                 action.setError(
-                  err instanceof Error ? err.message : "Ảnh không hợp lệ.",
+                  errorTitle(err),
                 );
               }
             }
           }}
         />
+        <p className="text-sm text-slate-600">{file ? file.name : "Chưa chọn ảnh"}</p>
         <button className={buttonClass} disabled={action.busy || !file}>
           Tải ảnh lên
         </button>
@@ -558,7 +563,7 @@ export function DrugDetail({
             title="Ảnh thuốc"
             imageUrl={d.imageUrl}
             send={(file) => adminApi.drugImage(drugId, file)}
-            saved={r.reload}
+            saved={async () => r.setData(await adminApi.drug(drugId))}
           />
           <Card>
             <h2 className="font-bold">Tồn kho hiện tại</h2>
@@ -584,14 +589,13 @@ export function PaymentSettings() {
     accountNumber: "",
     accountName: "",
   });
+  const bankName = r.data?.bankName;
+  const accountNumber = r.data?.accountNumber;
+  const accountName = r.data?.accountName;
   useEffect(() => {
-    if (r.data)
-      setForm({
-        bankName: r.data.bankName,
-        accountNumber: r.data.accountNumber,
-        accountName: r.data.accountName,
-      });
-  }, [r.data]);
+    if (bankName !== undefined && accountNumber !== undefined && accountName !== undefined)
+      setForm({ bankName, accountNumber, accountName });
+  }, [bankName, accountNumber, accountName]);
   return (
     <Page title="Cấu hình tài khoản nhận tiền & QR">
       <LoadState {...r} retry={r.reload} />
@@ -654,7 +658,7 @@ export function PaymentSettings() {
             title="Ảnh QR cố định"
             imageUrl={r.data.qrImageUrl}
             send={adminApi.qrImage}
-            saved={r.reload}
+            saved={async () => r.setData(await adminApi.paymentSettings())}
           />
         </>
       )}
