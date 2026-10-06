@@ -84,7 +84,7 @@ Do server sinh, dạng chuỗi dễ đọc, unique:
 
 ## 8. Seed dữ liệu (chỉ khi DB trống — không ghi đè)
 
-- Tài khoản demo: `admin` / `Admin@12345` (Admin), `staff` / `Staff@12345` (Staff), `user` / `User@12345` (User), `user2` / `User@12345` (User). Mật khẩu hash lúc seed.
+- Tài khoản ban đầu: `admin` / `Admin@12345` (Admin), `staff` / `Staff@12345` (Staff), `chuduc` / `User@12345` (User – Chu Đức), `nguyenvana` / `User@12345` (User). Mật khẩu hash lúc seed (D11).
 - ≥ 12 thuốc: OTC, RequiresPrescription, IsControlled, 1 thuốc `IsForSale=false`.
 - Nhiều lô/thuốc: có lô hết hạn (D−5), lô hết hạn đúng D, lô D+1, lô D+20, lô D+30, D+31; có thuốc tồn = ngưỡng, tồn = 0.
 - 1 đơn thuốc Approved còn hiệu lực cho `user`, 1 đơn hết hiệu lực, 1 đơn PendingReview.
@@ -107,6 +107,7 @@ Do server sinh, dạng chuỗi dễ đọc, unique:
 | D1 | 2026-10-06 | SQLite là DB mặc định; Supabase/Postgres là tùy chọn qua provider | SRS 2.2 ghi Supabase nhưng NFR-04/06, 6.3, 7 đều ghi SQLite; test & chạy local cần SQLite |
 | D2 | 2026-10-06 | BE là Web API, FE Next.js gọi qua rewrites cùng origin | SRS 2.2 (FE React/Next, BE API); kế hoạch tuần 1 ghi "MVC" là lỗi cũ |
 | D3 | 2026-10-06 | Xác nhận giá mới khi đặt hàng bằng `expectedTotal` + lỗi 409 `PRICE_CHANGED` | FR-013 yêu cầu hiển thị giá mới và khách xác nhận |
+| D11 | 2026-10-06 | Bỏ mọi dấu vết "demo" cho buổi thuyết trình: mã thuốc có nghĩa (DEMO02→VITC500…), tài khoản `admin`, `staff`, `chuduc` (Chu Đức), `nguyenvana`; không seed tài khoản nhận tiền (Admin cấu hình QR thật qua F017); lệnh `--seed-catalog`; ẩn ô trạng thái API/mock và gợi ý tài khoản trên giao diện | Người dùng thuyết trình đồ án, không chạy bản demo |
 | D10 | 2026-10-06 | Giảm thao tác (PO rà UX): đăng ký xong tự đăng nhập; checkout tự xác định OTC/Theo đơn theo giỏ và cho tải ảnh đơn thuốc ngay tại checkout; tự điền người nhận theo lần đặt trước; form duyệt tiền điền sẵn số tiền/giờ; duyệt đơn thuốc một nút "Lưu & chấp nhận"; bán tại quầy một màn hình (FE tự tạo nháp đúng subtype theo dòng thuốc rồi checkout) | Phản hồi người dùng "quá rườm rà". Không đổi nghiệp vụ SRS: OTCSale/PrescriptionSale vẫn chọn khi tạo nháp, đơn thuốc vẫn qua F011 |
 | D9 | 2026-10-06 | Thuốc tồn khả dụng = 0 vẫn hiển thị ở homepage/chi tiết với nhãn "Hết hàng", nút thêm giỏ bị khóa; `POST /api/cart/items` và tăng số lượng trả `409 INSUFFICIENT_STOCK` khi thuốc hết hàng | Phản hồi người dùng; FR-004/FR-012 |
 | D8 | 2026-10-06 | Staff chỉ có MỘT bước duyệt cho đơn online: "Xác nhận đã nhận tiền" = FE gọi `review` rồi (nếu approved) gọi ngay `fulfill` (xuất kho + hóa đơn). Bỏ nút "Nhận xử lý" bắt buộc (backend tự ghi HandledBy). Pickup: "Khách đã nhận thuốc" = complete; Delivery: "Bắt đầu giao" → "Đã giao xong". Đơn thuốc (F011) vẫn cần dược sĩ duyệt | Giảm thao tác cho khách/staff/admin; dữ liệu vẫn tách Payment Confirmed và Sale/Invoice (FR-018 không trừ kho trong bước duyệt; F019 gọi riêng ngay sau), lỗi xuất kho giữ thanh toán (SRS 7.2) |

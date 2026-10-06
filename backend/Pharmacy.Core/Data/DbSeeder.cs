@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using Pharmacy.Core.Common;
 using Pharmacy.Core.Domain;
 namespace Pharmacy.Core.Data;
@@ -21,33 +22,36 @@ public sealed class DbSeeder(
         }
 
         db.UserAccounts.AddRange(
-            new UserAccount("UDEMO0001", "admin", "Admin@12345", Role.Admin, hasher),
-            new UserAccount("UDEMO0002", "staff", "Staff@12345", Role.Staff, hasher),
-            new UserAccount("UDEMO0003", "user", "User@12345", Role.User, hasher),
-            new UserAccount("UDEMO0004", "user2", "User@12345", Role.User, hasher));
-        var products = new (string Name, string Unit, string Description)[]
+            new UserAccount("U0000001", "admin", "Admin@12345", Role.Admin, hasher),
+            new UserAccount("U0000002", "staff", "Staff@12345", Role.Staff, hasher),
+            new UserAccount("U0000003", "chuduc", "User@12345", Role.User, hasher),
+            new UserAccount("U0000004", "nguyenvana", "User@12345", Role.User, hasher));
+        using var catalogStream = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Seed.catalog.json")!;
+        using var catalog = await JsonDocument.ParseAsync(catalogStream, cancellationToken: ct);
+        var names = catalog.RootElement.GetProperty("legacyImages");
+        var products = new (string Id, string Unit, string Description)[]
         {
-            ("Paracetamol 500mg", "Viên", "Thuốc giảm đau, hạ sốt dạng viên."),
-            ("Vitamin C", "Hộp", "Vitamin C đóng hộp, bổ sung vitamin."),
-            ("Nước muối sinh lý", "Chai", "Dung dịch natri clorid 0,9% đóng chai."),
-            ("Oresol", "Gói", "Bột pha dung dịch bù nước và điện giải."),
-            ("Cetirizine", "Vỉ", "Thuốc kháng dị ứng dạng viên đóng vỉ."),
-            ("Kẽm", "Hộp", "Viên bổ sung kẽm đóng hộp."),
-            ("Amoxicillin", "Viên", "Kháng sinh amoxicillin, cần đơn thuốc."),
-            ("Cefixime", "Vỉ", "Kháng sinh cefixime đóng vỉ, cần đơn thuốc."),
-            ("Metformin", "Hộp", "Thuốc điều trị đái tháo đường, cần đơn thuốc."),
-            ("Amlodipine", "Viên", "Thuốc điều trị tăng huyết áp, cần đơn thuốc."),
-            ("Diazepam", "Viên", "Thuốc kiểm soát đặc biệt, chỉ cấp theo đơn hợp lệ."),
-            ("Thuốc ngừng bán", "Tuýp", "Sản phẩm dạng kem dùng cho dữ liệu demo đã tắt bán.")
+            ("PARA500", "Viên", "Thuốc giảm đau, hạ sốt dạng viên."),
+            ("VITC500", "Hộp", "Vitamin C đóng hộp, bổ sung vitamin."),
+            ("NACL09", "Chai", "Dung dịch natri clorid 0,9% đóng chai."),
+            ("ORESOL", "Gói", "Bột pha dung dịch bù nước và điện giải."),
+            ("CETI10", "Vỉ", "Thuốc kháng dị ứng dạng viên đóng vỉ."),
+            ("ZINC10", "Hộp", "Viên bổ sung kẽm đóng hộp."),
+            ("AMOX500", "Viên", "Kháng sinh amoxicillin, cần đơn thuốc."),
+            ("CEFI200", "Vỉ", "Kháng sinh cefixime đóng vỉ, cần đơn thuốc."),
+            ("METF500", "Hộp", "Thuốc điều trị đái tháo đường, cần đơn thuốc."),
+            ("AMLO5", "Viên", "Thuốc điều trị tăng huyết áp, cần đơn thuốc."),
+            ("DIAZ5", "Viên", "Thuốc kiểm soát đặc biệt, chỉ cấp theo đơn hợp lệ."),
+            ("HYDRO1", "Tuýp", "Sản phẩm đã ngừng kinh doanh.")
         };
         var days = new[] { -5, 0, 1, 20, 30, 31 };
         for (var i = 0; i < products.Length; i++)
         {
-            var id = i == 0 ? "PARA500" : $"DEMO{i + 1:D2}";
             var product = products[i];
+            var id = product.Id;
             var drug = new Drug(
                 id,
-                product.Name,
+                names.GetProperty(id).GetProperty("name").GetString()!,
                 product.Unit,
                 1000 * (i + 1),
                 i == 9 ? 8 : 10,
@@ -55,7 +59,7 @@ public sealed class DbSeeder(
                 i == 10,
                 i != 11,
                 product.Description);
-            // Vitamin C is an OTC product still for sale with zero stock for the demo.
+            // Vitamin C remains for sale with zero stock to exercise stock guards.
             if (i < 10 && i != 1)
             {
                 for (var j = 0; j < days.Length; j++)
@@ -68,28 +72,16 @@ public sealed class DbSeeder(
         }
         for (var i = 0; i < 3; i++)
         {
-            var prescription = new Prescription(await ids.NextAsync("DT", ct), "UDEMO0003", "UDEMO0003", "BN001", "Khách demo", createdAt: clock.Now);
+            var prescription = new Prescription(await ids.NextAsync("DT", ct), "U0000003", "U0000003", "BN001", "Chu Đức", createdAt: clock.Now);
             if (i < 2)
             {
-                prescription.SetDetails("Bác sĩ demo", clock.Today.AddDays(-10), clock.Today.AddDays(i == 0 ? 20 : -1), [new PrescriptionItem($"PITEM{i}", prescription.PrescriptionId, "DEMO07", 30)]);
-                prescription.Approve("UDEMO0002", clock.Now);
+                prescription.SetDetails("BS. Nguyễn Văn Minh", clock.Today.AddDays(-10), clock.Today.AddDays(i == 0 ? 20 : -1), [new PrescriptionItem($"PITEM{i}", prescription.PrescriptionId, "AMOX500", 30)]);
+                prescription.Approve("U0000002", clock.Now);
             }
             db.Prescriptions.Add(prescription);
         }
-        var setting = new PaymentSetting();
-        setting.Update("Ngân hàng Demo", "0000000000", "NHA THUOC DEMO");
-        setting.SetQrImage("qr/demo-qr.png");
-        db.PaymentSettings.Add(setting);
-        var qrPath = Path.Combine(storage.Root, "qr", "demo-qr.png");
-        if (!File.Exists(qrPath))
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(qrPath)!);
-            await using var source = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.demo-qr.png")!;
-            await using var destination = new FileStream(qrPath, FileMode.CreateNew, FileAccess.Write);
-            await source.CopyToAsync(destination, ct);
-        }
         await db.SaveChangesAsync(ct);
-        await new DemoCatalogSeeder(db, clock, storage).SeedAsync(ct);
+        await new CatalogSeeder(db, clock, storage).SeedAsync(ct);
         await transaction.CommitAsync(ct);
     }
 }
