@@ -1,1 +1,2 @@
-export { SaleNew as default } from '@/components/backoffice/Sales';
+import { redirect } from 'next/navigation';
+export default function Page() { redirect('/staff/sales/new'); }

@@ -57,18 +57,14 @@ export default function Sidebar({ role }: SidebarProps) {
   ];
 
   const adminNavItems = [
-    ...staffNavItems.map((item) => ({
-      ...item,
-      href: item.href.replace("/staff", "/admin"),
-    })),
-    { label: "Quản lý tài khoản", href: "/admin/accounts", icon: Users },
-    { label: "Danh mục & Nhập lô", href: "/admin/drugs", icon: Pill },
-
-    {
-      label: "Cấu hình thanh toán QR",
-      href: "/admin/settings/payment",
-      icon: QrCode,
-    },
+    { label: "Tổng quan", href: "/admin", icon: LayoutDashboard },
+    { label: "Tài khoản", href: "/admin/accounts", icon: Users },
+    { label: "Thuốc & nhập lô", href: "/admin/drugs", icon: Pill },
+    { label: "Tồn kho", href: "/admin/inventory", icon: Boxes },
+    { label: "Báo cáo kho", href: "/admin/reports", icon: AlertTriangle },
+    { label: "Đơn hàng", href: "/admin/orders", icon: ShoppingBag },
+    { label: "Hóa đơn", href: "/admin/invoices", icon: Receipt },
+    { label: "Cài đặt QR", href: "/admin/settings/payment", icon: QrCode },
   ];
 
   const navItems = role === "Admin" ? adminNavItems : staffNavItems;
@@ -168,6 +164,7 @@ export default function Sidebar({ role }: SidebarProps) {
 
         {/* Navigation list */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          {role === 'Admin' && <p className="px-3.5 pb-2 text-xs font-bold uppercase text-slate-400">Quản lý</p>}
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -193,6 +190,7 @@ export default function Sidebar({ role }: SidebarProps) {
 
         {/* Bottom link: Về trang khách hàng */}
         <div className="p-3 border-t border-slate-800 bg-slate-950/30">
+          {role === 'Admin' && <Link href="/staff" onClick={() => setMobileOpen(false)} className="mb-2 block rounded-lg bg-emerald-700 px-3 py-3 text-center text-sm font-semibold text-white">Làm việc như nhân viên</Link>}
           <Link
             href="/"
             onClick={() => setMobileOpen(false)}

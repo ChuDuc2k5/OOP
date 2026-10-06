@@ -153,6 +153,14 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
 
   - Kiểm chứng cuối M7: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` 26/26 ca pass (3,0 phút), backend SQLite thật trên cổng riêng 3017/5017, đủ 49 route mỗi viewport. Kiểm tra polling thật ≤15 giây, lỗi/thử lại, visibility và dừng ở trạng thái kết thúc. Đã xem hai ảnh mới TC33-F017-auto-qr ở 1366/390 px; tổng 101 ảnh. Server thử nghiệm đã dừng; không commit hoặc đổi nhánh.
 
+- **M8 — `fe/m8-quickpay-admin` (D13/D14)**:
+  - Staff dùng chung hai nút Đã nhận đủ tiền/Chưa đủ tiền ở danh sách đơn, danh sách thanh toán và chi tiết đơn. Hộp xác nhận ngắn, mã giao dịch tùy chọn; xác nhận đủ chỉ gửi bankReference nếu có, backend tự xác định số tiền/thời điểm. Chuyển thiếu nhập số thực nhận và ghi chú; giữ PendingReview và hiện rõ reviewNote. Duyệt đủ gọi fulfill, toast mã hóa đơn; lỗi xuất kho giữ nút thử lại.
+  - Cột Việc cần làm có thao tác theo trạng thái: kiểm tra đơn thuốc, xác nhận tiền, thử xuất kho, khách nhận thuốc, bắt đầu giao/đã giao xong. Ô lý do từ chối/hủy trên chi tiết đơn chỉ mở sau khi chọn thao tác; người xử lý chưa có hiện dấu gạch.
+  - Dashboard Admin riêng: số tài khoản theo vai trò, thuốc đang bán/hết hàng, cảnh báo kho, số đơn theo trạng thái và 5 đơn mới nhất; đọc backend thật, đếm thuốc qua toàn bộ trang. Sidebar chỉ nhóm Quản lý. Dashboard/cuối sidebar có Làm việc như nhân viên; mọi trang Staff khi Admin dùng có thanh quay lại quản lý, sidebar nghiệp vụ và vai trò thực tế. Các route Admin thanh toán/bán tại quầy/đơn thuốc chuyển tới Staff tương ứng; liên kết trạng thái dashboard lọc danh sách đơn. Không bổ sung doanh thu/thu chi theo D14.
+  - E2e cập nhật chuyển thiếu, xác nhận không mã từ danh sách đơn (body rỗng), xuất kho/hóa đơn và lỗi thử lại. Kiểm tra số liệu Admin đối chiếu API, menu 8 mục, chuyển giao diện nhân viên/quay lại, bộ lọc và redirect; thêm ảnh TC45-F018-one-tap/AC02-admin-dashboard ở 1366/390 px.
+
+  - Kiểm chứng cuối M8: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` 28/28 ca pass (3,1 phút) trên 1366/390 px, backend SQLite thật, mock tắt, cổng riêng 3017/5017. Đủ 49 route mỗi viewport, kể cả redirect. Đã xem bốn ảnh mới; tổng 105 ảnh, UTF-8/phạm vi sửa/diff sạch. Server thử nghiệm đã dừng; không commit hoặc đổi nhánh.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 
