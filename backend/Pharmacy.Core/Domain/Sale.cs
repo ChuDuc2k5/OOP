@@ -83,6 +83,10 @@ public abstract class Sale : VersionedEntity
     }
     public IReadOnlyCollection<SaleItem> Items => items.AsReadOnly();
     public abstract ValidationResult Validate(SaleContext ctx);
+    public virtual void ApplyCompletionEffects(IReadOnlyDictionary<string, PrescriptionItem> prescriptionItems)
+    {
+        Guard.State(Status == SaleStatus.Draft);
+    }
     protected string? CommonError(SaleContext ctx)
     {
         if (Status != SaleStatus.Draft || items.Count == 0)
@@ -211,6 +215,11 @@ public sealed class PrescriptionSale : Sale
         var issues = ValidateCommon(ctx);
         var code = CommonError(ctx);
         var prescription = ctx.Prescription;
+        if (Channel == SaleChannel.Online && (BuyerUserId is null || prescription?.OwnerUserId != BuyerUserId))
+        {
+            issues.Add("Đơn thuốc không thuộc người mua.");
+            code ??= "PRESCRIPTION_INVALID";
+        }
         if (prescription is null || prescription.PrescriptionId != PrescriptionId || !prescription.Validate(PatientId ?? "", ctx.BusinessDate))
         {
             issues.Add("Đơn thuốc không hợp lệ.");
@@ -230,6 +239,17 @@ public sealed class PrescriptionSale : Sale
         }
 
         return new(issues, code);
+    }
+
+    public override void ApplyCompletionEffects(IReadOnlyDictionary<string, PrescriptionItem> prescriptionItems)
+    {
+        base.ApplyCompletionEffects(prescriptionItems);
+        foreach (var item in Items)
+        {
+            Guard.State(prescriptionItems.TryGetValue(item.DrugId, out var prescribed)
+                && prescribed.PrescriptionId == PrescriptionId);
+            prescribed!.RecordDispense(item.Quantity);
+        }
     }
 }
 

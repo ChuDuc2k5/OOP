@@ -19,12 +19,22 @@ internal sealed class TestClock : IBusinessClock
     public DateTimeOffset Now => new(Today.ToDateTime(new TimeOnly(9, 30)), TimeSpan.FromHours(7));
 }
 
-internal sealed class ApiFactory(string databasePath, DateOnly? today = null) : WebApplicationFactory<Program>
+internal sealed class ApiFactory(
+    string databasePath,
+    DateOnly? today = null,
+    ILoggerProvider? logs = null) : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
-        builder.ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Error));
+        builder.ConfigureLogging(logging =>
+        {
+            logging.SetMinimumLevel(LogLevel.Error);
+            if (logs is not null)
+            {
+                logging.AddProvider(logs);
+            }
+        });
         builder.ConfigureServices(services =>
         {
             services.AddDataProtection().UseEphemeralDataProtectionProvider();
