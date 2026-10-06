@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, Suspense } from 'react';
+import React, { useEffect, useState, useRef, useCallback, Suspense } from 'react';
+import { ActionButton } from '@/components/ActionButton';
+import { useVisiblePolling } from '@/hooks/useVisiblePolling';
 import { LoadingState } from '@/components/Status';
 import { ActionLink } from '@/components/ActionLink';
 import Link from 'next/link';
@@ -53,34 +55,50 @@ function OrdersContent() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshError, setRefreshError] = useState('');
+  const [updating, setUpdating] = useState(false);
+  const refreshing = useRef(false);
+  const generation = useRef(0);
 
   const statusParam = (searchParams.get('status') as OrderStatus) || 'ALL';
   const [activeStatus, setActiveStatus] = useState<OrderStatus | 'ALL'>(statusParam);
   const [page, setPage] = useState(1);
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
+  const fetchOrders = useCallback(async (background = false) => {
+    if (refreshing.current) return;
+    const version = generation.current;
+    refreshing.current = true;
+    setUpdating(true);
+    if (!background) setLoading(true);
     setError(null);
+    setRefreshError('');
     try {
       const data = await ordersApi.getMyOrders({
         status: activeStatus === 'ALL' ? undefined : activeStatus,
         page,
         pageSize: 10,
       });
-      setOrdersData(data);
+      if (version === generation.current) setOrdersData(data);
     } catch (err: unknown) {
       const msg = err instanceof ApiException ? err.title : 'Không thể tải danh sách đơn hàng';
-      setError(msg);
+      if (version === generation.current) {
+        if (background) setRefreshError(msg);
+        else setError(msg);
+      }
     } finally {
-      setLoading(false);
+      if (version === generation.current) { setLoading(false); setUpdating(false); refreshing.current = false; }
     }
   }, [activeStatus, page]);
 
   useEffect(() => {
+    const version = ++generation.current;
+    refreshing.current = false;
     if (authorized && user) {
-      fetchOrders();
+      void fetchOrders();
     }
+    return () => { generation.current = version + 1; };
   }, [authorized, user, fetchOrders]);
+  const autoUpdating = useVisiblePolling(() => fetchOrders(true), authorized && ordersData.items.some(o => !['Completed', 'Cancelled', 'Rejected'].includes(o.status)), 15_000);
 
   const handleFilterChange = (status: OrderStatus | 'ALL') => {
     setActiveStatus(status);
@@ -126,6 +144,11 @@ function OrdersContent() {
         </div>
 
         {/* Filter Tabs by OrderStatus */}
+        <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-slate-500">
+          <span>{autoUpdating ? 'Tự cập nhật mỗi 15 giây' : 'Tự cập nhật đang tạm dừng'}</span>
+          <ActionButton type="button" busy={updating} disabled={updating || loading} onClick={() => void fetchOrders(true)} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-emerald-700"><RefreshCw className="h-3.5 w-3.5" />Làm mới</ActionButton>
+        </div>
+        {refreshError && <p role="alert" className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-950">{refreshError}</p>}
         <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs">
           <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar text-xs pb-1 sm:pb-0">
             <span className="text-slate-400 text-xs flex items-center mr-1">
@@ -156,7 +179,7 @@ function OrdersContent() {
             <AlertCircle className="w-8 h-8 text-rose-600 mx-auto" />
             <p className="font-semibold">{error}</p>
             <button
-              onClick={fetchOrders}
+              onClick={() => void fetchOrders()}
               className="px-4 py-2 bg-rose-600 text-white rounded-lg text-xs font-semibold hover:bg-rose-700 transition"
             >
               Thử lại
