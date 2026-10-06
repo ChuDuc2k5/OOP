@@ -2,9 +2,16 @@
 
 .NET 10 / ASP.NET Core Web API / EF Core 10 / SQLite / xUnit. M1 gồm toàn bộ mô hình dữ liệu và F001–F003; M2 hoàn thành danh mục sản phẩm, nhập lô, tồn kho và báo cáo F004–F009. M3 hoàn thành đơn thuốc, giỏ và quản lý đơn hàng F010–F015. M4 hoàn thành bán tại quầy, QR thủ công, duyệt tiền, checkout và hóa đơn F016–F020; hỗ trợ SQLite/PostgreSQL.
 
+## Bắt đầu trên máy mới
+
+Cài **.NET SDK 10.x** (không chỉ Runtime), Git và trình soạn thảo. Kiểm tra `dotnet --version` trả 10.x. Nếu dùng lệnh npm hoặc chạy cùng frontend, cài **Node.js >=22.12.0** rồi chạy `npm install` tại gốc repository; chạy backend bằng dotnet không cần Node.js. NuGet cần truy cập mạng ở lần restore đầu.
+
+SQLite được đóng gói qua EF Core, không cần cài server database. Với checkout mới, không tạo `.env` hay `appsettings.Local.json` thì API dùng SQLite mặc định. Nếu đã có cấu hình Postgres từ trước, sửa/bỏ cấu hình đó hoặc ghi đè hai biến `Database__Provider=Sqlite`, `ConnectionStrings__Default=Data Source=../data/pharmacy.db`; chỉ đổi provider không tự chuyển dữ liệu.
+
 Chạy từ gốc repository:
 
 ```powershell
+dotnet restore Pharmacy.sln
 dotnet build Pharmacy.sln
 dotnet test Pharmacy.sln
 dotnet run --project backend/Pharmacy.Api --launch-profile http
@@ -167,7 +174,7 @@ Database__Provider=Postgres
 ConnectionStrings__Default=Host=<pooler-host>;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<database-password>;SSL Mode=Require
 ```
 
-3. Từ gốc repository chạy `npm run dev:api`. API nạp `.env` trong content root; biến môi trường hệ điều hành và command line được ưu tiên hơn `.env`. `dotnet run --project backend/Pharmacy.Api --launch-profile http` cũng dùng cùng cấu hình.
+3. Từ gốc repository chạy `npm run dev:api`. API nạp `.env` trong content root, sau đó appsettings.Local.json; biến môi trường và command line được ưu tiên hơn các file. `dotnet run --project backend/Pharmacy.Api --launch-profile http` cũng dùng cùng cấu hình.
 
 Đây là chuỗi Npgsql dạng key/value, không phải URI hoặc API key Supabase. Dùng mật khẩu database; không percent-encode như URI. Nếu mật khẩu có dấu chấm phẩy, đặt giá trị Password trong dấu ngoặc kép theo cú pháp Npgsql. Không ghi connection string thật vào Git, log hoặc frontend. File `.env` đã được ignore; template để trống connection string.
 
@@ -196,7 +203,7 @@ dotnet test Pharmacy.sln --filter "Category=Postgres"
 dotnet test Pharmacy.sln
 ```
 
-Môi trường hiện tại chưa có PostgreSQL thật: kiểm chứng offline 132 pass, 1 skip (smoke PostgreSQL), build 0 warning/0 error. SQL script đã sinh; chưa kiểm chứng kết nối SSL/Session pooler, apply migration, seed và thao tác thực tế trên Supabase. Máy phát triển gặp lỗi TLS NuGet; lần kiểm chứng dùng `RestoreSources` trỏ cache gói cục bộ đã tải từ NuGet chính thức, không thay đổi cấu hình nguồn của repository.
+Kết quả lịch sử M3.5 lúc triển khai: kiểm chứng offline 132 pass, 1 skip (smoke PostgreSQL), build 0 warning/0 error. Sau đó PO đã kiểm chứng Supabase thật theo docs/reviews/be-m3b-postgres.md. SQL script đã sinh; các giới hạn kiểm chứng của phiên M5 được ghi riêng trong TEST_REPORT_BE.md. Máy phát triển gặp lỗi TLS NuGet; lần kiểm chứng dùng `RestoreSources` trỏ cache gói cục bộ đã tải từ NuGet chính thức, không thay đổi cấu hình nguồn của repository.
 
 
 M4: bán tại quầy, thanh toán thủ công và hóa đơn (F016–F020)
@@ -260,3 +267,29 @@ Kiểm chứng M4: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Phar
 Sao chép `backend/Pharmacy.Api/appsettings.Local.example.json` thành `backend/Pharmacy.Api/appsettings.Local.json` (file này bị Git bỏ qua) rồi điền chuỗi kết nối Session pooler.
 Thứ tự ưu tiên (sau ghi đè trước): `appsettings.json` → `appsettings.{Environment}.json` → `.env` → `appsettings.Local.json` → biến môi trường → tham số dòng lệnh.
 Không đặt mật khẩu vào `appsettings.json` hay `appsettings.Development.json` vì hai file này được commit.
+
+
+## Hardening M5 và kiểm thử hiệu năng
+
+Báo cáo đủ 56 TC backend, thời điểm chạy, NFR-01 và giới hạn kiểm chứng nằm trong [TEST_REPORT_BE.md](../docs/TEST_REPORT_BE.md). Bảng tên test chi tiết của từng milestone ở trên được giữ để tra cứu.
+
+OOP-01: `PrescriptionSale.Validate` tự kiểm tra chủ đơn online; `Sale.ApplyCompletionEffects` là phương thức virtual, subtype PrescriptionSale override để gọi RecordDispense. CheckoutService gọi qua Sale, không phân nhánh Kind để kiểm tra chủ hoặc cấp thuốc; factory tạo subtype vẫn chọn theo SaleKind. TC-56 chạy cùng CheckoutService với hai subtype, thêm test chủ đúng/sai/null và hiệu ứng OTC/Prescription. Không đổi model hay migration của hai provider.
+
+Seed lớn là **test riêng**, không có endpoint hoặc cờ CLI làm thay đổi DB demo. Chạy opt-in:
+
+```powershell
+$env:PHARMACY_TEST_PERFORMANCE = '1'
+$env:PHARMACY_PERFORMANCE_OUTPUT = Join-Path $env:TEMP 'pharmacy-performance-results.json'
+dotnet test Pharmacy.sln --filter Category=Performance
+# Chạy toàn bộ test, gồm hiệu năng:
+dotnet test Pharmacy.sln
+# Tắt đo ở các lần test thường:
+Remove-Item Env:PHARMACY_TEST_PERFORMANCE
+Remove-Item Env:PHARMACY_PERFORMANCE_OUTPUT
+```
+
+PerformanceTests tạo DB SQLite có tên ngẫu nhiên trong temp, migrate, seed đúng 500 thuốc/2.000 lô/1.000 đơn, giỏ 10 dòng và 300 reservation. Seed từ chối DB đã có dữ liệu hoặc provider khác. Đo 20 GET mỗi endpoint, gồm lượt đầu và đọc response body, qua ASP.NET Core TestServer; collection tắt parallel. DB/storage được xóa trong finally, JSON số đo được giữ ở đường dẫn output; không chứa mật khẩu/chuỗi kết nối. Khi không opt-in, test hiệu năng skip; test PostgreSQL cũng skip nếu thiếu PHARMACY_TEST_POSTGRES. Bài đo không thay thế đo trình duyệt, mạng hay Supabase.
+
+Log lỗi API chỉ ghi loại exception và trace ID, không ghi exception message/inner exception, request body hoặc cấu hình. Log provider EF Core bị tắt vì lỗi provider có thể chứa giá trị dữ liệu; không bật sensitive-data logging. NFR02_NFR08_LoginAndDatabaseFailure_DoNotLeakSecretsInLogsOr500Response kiểm tra mật khẩu đăng nhập sai và lỗi DB chứa chuỗi kết nối giả: log không chứa bí mật, HTTP 500 chỉ có ProblemDetails chung, không có stack trace. Khi điều tra lỗi, dùng trace ID và loại exception để đối chiếu thao tác tái hiện trên DB test.
+
+Với `dotnet run`, thứ tự cấu hình ở mục appsettings đúng như mô tả. Riêng `npm run dev:api` dùng Node --env-file-if-exists: các giá trị `.env` trở thành biến môi trường của API, nên có thể ghi đè appsettings.Local.json. Nên chọn **một** file chứa cấu hình database (`.env` hoặc appsettings.Local.json); nếu dùng appsettings.Local.json qua npm thì bỏ các khóa database trùng khỏi `.env` và môi trường shell. Không sửa file mẫu thành bí mật hoặc commit file local. Nếu dùng JSON, escape dấu ngoặc kép trong Password theo JSON và Npgsql khi cần.
