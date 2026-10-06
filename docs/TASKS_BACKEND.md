@@ -61,7 +61,14 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 - Cách chạy, cấu hình, demo account và bảng TC ↔ tên test có trong `backend/README.md`. PO đã commit code M1 trên `be/m1-foundation`; phần sửa review do PO commit. Không push/merge/đổi nhánh.
 - Sửa review M1: khôi phục tiếng Việt và lưu UTF-8; tách câu lệnh, khối điều khiển và constructor dài để dễ đọc; seed có mô tả/đơn vị thực tế cho từng thuốc và Vitamin C đang bán nhưng tồn bằng 0. Bổ sung kiểm tra các dữ liệu seed này vào test hiện có.
 
+- M2 (`be/m2-catalog-inventory`, 2026-10-06): hoàn thành F004–F009 với ProductService, InventoryService, InventoryReportService và controller mỏng theo contract §4–§5. Guest không có thuộc tính unitPrice, chỉ thấy thuốc đang bán; tìm mã/tên không phân biệt hoa thường cả tiếng Việt, inStock theo tồn khả dụng. Admin tạo/sửa/tắt bán, upload ảnh qua IFileStorage; ảnh đọc qua endpoint riêng.
+- Nhập lô kiểm tra expiryDate > D, số lượng nguyên dương, tuple thuốc/số lô duy nhất và lỗi 409 DUPLICATE. Tồn thực tế/còn hạn/giữ/khả dụng theo BR-02; lô sắp hạn rồi số lô. Báo cáo chỉ đọc, tồn thấp gồm bằng ngưỡng/bằng 0, gần hết hạn đúng biên 0 < daysRemaining ≤ days.
+- API nội bộ Reserve/Release/AllocateFEFO/Deduct dùng IInventoryLock và transaction, FEFO nằm ở Drug.PlanFEFO/DrugBatch.Deduct. Giữ hàng idempotent và bảo vệ hạn mức đơn thuốc; trừ kho bảo vệ reservation đơn khác, consume của chính đơn; Execute cho phép workflow M3–M4 lưu thay đổi trong cùng transaction và rollback toàn bộ khi lỗi. Test đồng thời với hai scope riêng kiểm tra không giữ/trừ vượt tồn, kể cả context đã tải dữ liệu cũ.
+- M2 có test TC-09..TC-12, TC-14..TC-19, TC-22, TC-23 và unit domain FEFO/biên D, D+1, D+30, D+31. README đã cập nhật endpoint, API nội bộ, cách chạy và bảng TC ↔ tên test. Không thay đổi schema/migration M1.
+- Kiểm chứng M2: `dotnet build Pharmacy.sln` 0 warning/0 error; `dotnet test Pharmacy.sln` 84 pass/0 fail/0 skip. Smoke HTTP tất cả endpoint M2: sản phẩm Guest/người đăng nhập, Admin tạo/sửa/tắt bán/ảnh, nhập lô và lỗi trùng/hạn dùng, kho, báo cáo, phân quyền Guest/User/Staff. API đã tắt, DB/storage/key smoke trong temp đã xóa. Không git add/commit/push/merge/đổi nhánh.
+
 ## Câu hỏi cho PO
+- M2 không phát sinh câu hỏi mới; giữ URL/DTO/mã lỗi theo API contract §4–§5, không thêm endpoint xóa thuốc hoặc endpoint reserve/release/checkout.
 - **Đã trả lời:** PO chốt DB ở `backend/data`, dùng `Data Source=../data/pharmacy.db`; giữ nguyên cấu hình hiện tại.
 - **Đã trả lời:** PO chấp nhận cookie secret `pharmacy.antiforgery` HttpOnly, đi cùng request token `XSRF-TOKEN` JS-readable/header theo contract.
 - **Đã trả lời:** PO chấp nhận giới hạn 9.999 mã/prefix/ngày; giữ sequence bền vững và trả `409 INVALID_STATE` khi hết dải.

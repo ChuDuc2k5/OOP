@@ -71,6 +71,10 @@ builder.Services.AddSingleton<IFileStorage>(sp => new LocalFileStorage(sp.GetReq
 builder.Services.AddScoped<IPasswordHasher<UserAccount>, PasswordHasher<UserAccount>>();
 builder.Services.AddScoped<IdGenerator>();
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<InventoryReader>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<InventoryService>();
+builder.Services.AddScoped<InventoryReportService>();
 builder.Services.AddScoped<DbSeeder>();
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())

@@ -78,6 +78,7 @@ public sealed class Drug
         Description = description;
     }
     public void SetImage(string path) => ImagePath = Guard.Required(path);
+    public void SetForSale(bool isForSale) => IsForSale = isForSale;
     public void AddBatch(DrugBatch batch)
     {
         Guard.State(batch.DrugId == DrugId);
