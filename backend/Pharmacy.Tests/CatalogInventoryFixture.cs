@@ -33,11 +33,11 @@ internal static class CatalogInventoryFixture
 
     public static Order Order(string id, params (string DrugId, int Quantity)[] lines)
     {
-        var order = new Order(id, "UDEMO0003", new TestClock().Now, SaleKind.OTC,
-            "Khách demo", "0900000000", ReceiveMethod.Pickup);
+        var order = new Order(id, "U0000003", new TestClock().Now, SaleKind.OTC,
+            "Chu Đức", "0900000000", ReceiveMethod.Pickup);
         foreach (var line in lines)
         {
-            order.AddItem(new(id + line.DrugId, id, line.DrugId, "Thuốc demo", "Viên", line.Quantity, 1000));
+            order.AddItem(new(id + line.DrugId, id, line.DrugId, "Thuốc kiểm thử", "Viên", line.Quantity, 1000));
         }
         return order;
     }

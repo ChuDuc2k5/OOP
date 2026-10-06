@@ -58,9 +58,9 @@ public sealed class CatalogTests : IDisposable
         }
         var detail = await (await client.GetAsync("/api/products/PARA500")).Json();
         Assert.False(detail.TryGetProperty("unitPrice", out _));
-        await (await client.GetAsync("/api/products/DEMO12")).Error(404, "NOT_FOUND");
+        await (await client.GetAsync("/api/products/HYDRO1")).Error(404, "NOT_FOUND");
         await (await client.GetAsync("/api/products/MISSING")).Error(404, "NOT_FOUND");
-        Assert.False((await (await client.GetAsync("/api/products/DEMO02")).Json()).GetProperty("inStock").GetBoolean());
+        Assert.False((await (await client.GetAsync("/api/products/VITC500")).Json()).GetProperty("inStock").GetBoolean());
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public sealed class CatalogTests : IDisposable
     }
 
     [Theory]
-    [InlineData("user", "User@12345")]
+    [InlineData("chuduc", "User@12345")]
     [InlineData("staff", "Staff@12345")]
     [InlineData("admin", "Admin@12345")]
     public async Task TC10_AuthenticatedProducts_IncludePrice_UnicodeSearchAndPaginationWork(string username, string password)
@@ -165,7 +165,7 @@ public sealed class CatalogTests : IDisposable
     public async Task TC11_DrugImage_UploadsAndServesPublicly_RejectsInvalidFiles()
     {
         using var admin = await Admin();
-        await using var source = typeof(Pharmacy.Core.Data.DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.demo-qr.png")!;
+        await using var source = typeof(Pharmacy.Core.Data.DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.drugs.PARA500.png")!;
         using var buffer = new MemoryStream();
         await source.CopyToAsync(buffer);
         var bytes = buffer.ToArray();
@@ -199,7 +199,7 @@ public sealed class CatalogTests : IDisposable
 
     [Theory]
     [InlineData("staff", "Staff@12345", 403)]
-    [InlineData("user", "User@12345", 403)]
+    [InlineData("chuduc", "User@12345", 403)]
     [InlineData(null, null, 401)]
     public async Task TC12_NonAdmin_CannotReadOrChangeCatalog(string? username, string? password, int status)
     {

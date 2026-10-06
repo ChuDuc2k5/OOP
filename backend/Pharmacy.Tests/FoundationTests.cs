@@ -67,14 +67,14 @@ public sealed class FoundationTests
                 await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE Drugs SET UnitPrice = '1.5' WHERE DrugId = 'PARA500'"));
                 await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE DrugBatches SET DrugId = 'MISSING' WHERE BatchId = 'B00000002'"));
                 await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE DrugBatches SET BatchNumber = 'LOT01' WHERE BatchId = 'B00000002'"));
-                await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE UserAccounts SET Username = 'USER', NormalizedUsername = 'USER' WHERE UserId = 'UDEMO0004'"));
-                await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("INSERT INTO CartItems(UserId,DrugId,Quantity) VALUES ('UDEMO0003','PARA500',1)"));
+                await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE UserAccounts SET Username = 'CHUDUC', NormalizedUsername = 'CHUDUC' WHERE UserId = 'U0000004'"));
+                await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("INSERT INTO CartItems(UserId,DrugId,Quantity) VALUES ('U0000003','PARA500',1)"));
                 await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE Payments SET OrderId = 'DH2610060001' WHERE PaymentId = 'TT2610060002'"));
                 await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("INSERT INTO Invoices(InvoiceId,SaleId,IssuedAt) SELECT 'HD-DUP',SaleId,IssuedAt FROM Invoices"));
                 await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("INSERT INTO StockReservations(ReservationId,OrderId,DrugId,PrescriptionItemId,Quantity,Status) SELECT 'R2',OrderId,DrugId,PrescriptionItemId,Quantity,'Active' FROM StockReservations"));
                 await db.Database.ExecuteSqlRawAsync("INSERT INTO StockReservations(ReservationId,OrderId,DrugId,PrescriptionItemId,Quantity,Status) SELECT 'R2',OrderId,DrugId,PrescriptionItemId,Quantity,'Released' FROM StockReservations WHERE ReservationId = 'R1'");
-                await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE Payments SET Status='Confirmed', ReceivedAmount=ExpectedAmount, BankReference='DEMO-BANK-001', ApprovedByUserId='UDEMO0002', ApprovedAt=CreatedAt WHERE PaymentId='TT2610060002'"));
-                await db.Database.ExecuteSqlRawAsync("UPDATE Payments SET BankReference='DEMO-BANK-001' WHERE PaymentId='TT2610060002'");
+                await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE Payments SET Status='Confirmed', ReceivedAmount=ExpectedAmount, BankReference='TEST-BANK-001', ApprovedByUserId='U0000002', ApprovedAt=CreatedAt WHERE PaymentId='TT2610060002'"));
+                await db.Database.ExecuteSqlRawAsync("UPDATE Payments SET BankReference='TEST-BANK-001' WHERE PaymentId='TT2610060002'");
                 var duplicateSale = await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE Sales SET OrderId='DH2610060001',Channel='Online',Status='Completed',CompletedAt=CreatedAt,PaymentMethod='ManualQR' WHERE SaleId='BH2610060002'"));
                 Assert.Equal(2067, duplicateSale.SqliteExtendedErrorCode);
             });
@@ -152,7 +152,7 @@ public sealed class FoundationTests
         try
         {
             var storage = new LocalFileStorage(root);
-            await using var png = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.demo-qr.png")!;
+            await using var png = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.drugs.PARA500.png")!;
             var path = await storage.SaveAsync("prescriptions", png, "../../original.png", "image/png");
             Assert.Matches("^prescriptions/[a-f0-9]{32}\\.png$", path);
             using var read = storage.OpenRead("prescriptions", Path.GetFileName(path));

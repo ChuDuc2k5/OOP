@@ -24,7 +24,7 @@ Remove-Item Env:PHARMACY_TEST_PERFORMANCE
 Remove-Item Env:PHARMACY_PERFORMANCE_OUTPUT
 ```
 
-TRX/JSON được lưu trong temp, không commit và không chứa dữ liệu nhận tiền thật. Test tạo DB SQLite/storage riêng, không dùng EF InMemory, không đụng DB demo. Seed/migration của DB demo vẫn theo cơ chế DB trống.
+TRX/JSON được lưu trong temp, không commit và không chứa dữ liệu nhận tiền thật. Test tạo DB SQLite/storage riêng, không dùng EF InMemory, không đụng DB vận hành. Seed/migration của DB vận hành vẫn theo cơ chế DB trống.
 
 ## Đối chiếu 56 TC
 
@@ -130,3 +130,6 @@ Thời điểm ghi phép đo: **2026-10-06T13:35:05.834444+07:00**.
 Chưa chạy M4/M5 trên PostgreSQL/Supabase thật trong phiên này vì thiếu PHARMACY_TEST_POSTGRES; M3.5 đã được PO kiểm chứng trên Supabase theo review. PostgreSQL opt-in còn skip, không được tính thành Pass. Phép đo NFR-01 chỉ SQLite/TestServer trên máy này; chưa đo trình duyệt, TCP, tải đồng thời hoặc Supabase. Khóa tồn vẫn một tiến trình theo kiến trúc. Không có chức năng M1–M4 còn stub; kiểm thử giao diện/phần cảnh báo thuộc frontend.
 
 Smoke HTTP bổ sung trên cổng tạm riêng với SQLite/storage/key temp: user OTC → QR → review đủ tiền → fulfill → complete → hóa đơn; bán OTC tại quầy → checkout → hóa đơn. Cả hai pass. API smoke đã tắt, dữ liệu temp đã xóa; không dừng ứng dụng khác đang dùng cổng 5000.
+
+
+Kiểm chứng M9 (D11), 2026-10-06 17:23 +07:00: chạy "dotnet build Pharmacy.sln" đạt 0 warning/0 error; "dotnet test Pharmacy.sln" đạt 190 Pass/0 Fail/2 Skip (PostgreSQL và performance opt-in chưa bật). Tài khoản khởi tạo hiện tại: admin, staff, chuduc, nguyenvana; mã thuốc nền và tên lấy theo catalog mới. Các TC dùng thanh toán tự cấu hình PaymentFixture; seed vận hành không tạo PaymentSetting/QR. Test mới CatalogSeedTests.TC42_FreshSeed_HasNoPaymentSettings_OpeningQrRequiresAdminConfiguration: Pass, xác nhận PAYMENT_NOT_CONFIGURED và snapshot DB không đổi. Các số đo hiệu năng/bảng TC phía trên là kết quả lịch sử M5, chưa đo lại hiệu năng trong lượt M9.
