@@ -325,7 +325,7 @@ export default function OrderPaymentPage({
                     </div>
 
                     {/* Transfer Content */}
-                    <div className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-blue-50/50 -mx-6 px-6">
+                    <div className="py-3 flex flex-col gap-2 bg-blue-50/50 -mx-6 px-6">
                       <div>
                         <span className="text-blue-900 font-bold block">Nội dung chuyển khoản (bắt buộc):</span>
                         <span className="text-[11px] text-blue-700">
@@ -364,7 +364,7 @@ export default function OrderPaymentPage({
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
                   <div className="flex items-center space-x-1.5 text-emerald-700 font-medium">
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Hệ thống đối soát tự động &amp; Dược sĩ kiểm tra</span>
+                    <span>Admin hoặc nhân viên đối chiếu thủ công</span>
                   </div>
                   <Link
                     href={`/orders/${orderId}`}

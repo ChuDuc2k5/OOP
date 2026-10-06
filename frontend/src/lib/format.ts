@@ -33,7 +33,7 @@ export function formatDate(dateString: string | null | undefined): string {
   });
 }
 
-/** ??nh d?ng ng?y gi? dd/MM/yyyy HH:mm theo gi? Vi?t Nam. */
+/** Định dạng ngày giờ dd/MM/yyyy HH:mm theo giờ Việt Nam. */
 export function formatDateTime(dateString: string | null | undefined): string {
   if (!dateString) return '-';
   const date = new Date(dateString);

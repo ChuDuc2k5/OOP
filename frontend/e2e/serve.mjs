@@ -22,8 +22,7 @@ function stop(code = 0) {
   stopping = true;
   for (const child of children) {
     if (!child.pid) continue;
-    if (process.platform === 'win32') spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
-    else child.kill('SIGTERM');
+    child.kill('SIGTERM');
   }
   const cleanup = resolve(folder);
   if (dirname(cleanup) === resolve(tmpdir()) && basename(cleanup).startsWith('pharmacy-e2e-')) {
@@ -33,11 +32,14 @@ function stop(code = 0) {
 }
 process.on('SIGINT', () => stop());
 process.on('SIGTERM', () => stop());
-launch('dotnet', ['run', '--project', join(repo, 'backend/Pharmacy.Api'), '--launch-profile', 'http', '--', '--urls', 'http://localhost:5017'], {
+process.on('message', message => { if (message === 'stop') stop(); });
+process.on('disconnect', () => stop());
+launch('dotnet', [join(repo, 'backend/Pharmacy.Api/bin/Debug/net10.0/Pharmacy.Api.dll'), '--urls', 'http://localhost:5017'], {
+  ASPNETCORE_ENVIRONMENT: 'Development',
   Database__Provider: 'Sqlite', ConnectionStrings__Default: `Data Source=${join(folder, 'pharmacy.db')}`,
   Storage__Root: join(folder, 'storage'), DataProtection__KeyPath: join(folder, 'keys'),
   BusinessDate__Override: '2026-10-06',
-}, repo);
+}, join(repo, 'backend/Pharmacy.Api'));
 launch(process.execPath, [require.resolve('next/dist/bin/next'), 'start', '-p', '3000'], {
   BACKEND_URL: 'http://localhost:5017', NEXT_PUBLIC_USE_MOCK: 'false', NEXT_TELEMETRY_DISABLED: '1',
 }, frontend);

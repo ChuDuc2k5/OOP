@@ -1,6 +1,7 @@
 import { test, expect, type Page, type TestInfo, type APIRequestContext } from '@playwright/test';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+const visitedRoutes = new Set<string>();
 
 async function visit(page: Page, url: string) {
   try { await page.goto(url); }
@@ -12,6 +13,7 @@ async function visit(page: Page, url: string) {
 async function ready(page: Page) {
   await expect(page.getByText('Đang tải dữ liệu...', { exact: true })).toHaveCount(0);
   await page.evaluate(() => document.fonts.ready);
+  visitedRoutes.add(new URL(page.url()).pathname);
 }
 async function layout(page: Page) {
   const width = page.viewportSize()!.width;
@@ -31,6 +33,7 @@ async function layout(page: Page) {
 }
 async function shot(page: Page, code: string, info: TestInfo) {
   await ready(page); await layout(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
   const folder = resolve(process.cwd(), '../docs/screenshots');
   await mkdir(folder, { recursive: true });
   const path = resolve(folder, `${code}-${info.project.name}.png`);
@@ -40,6 +43,8 @@ async function shot(page: Page, code: string, info: TestInfo) {
 async function login(page: Page, username: 'user' | 'staff' | 'admin') {
   await page.context().clearCookies();
   await visit(page, '/login');
+  await expect(page.getByRole('button', { name: 'Đăng nhập', exact: true })).toBeVisible();
+  await ready(page); await layout(page);
   await page.getByLabel('Tên đăng nhập', { exact: true }).fill(username);
   await page.getByLabel('Mật khẩu', { exact: true }).fill(username === 'admin' ? 'Admin@12345' : username === 'staff' ? 'Staff@12345' : 'User@12345');
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
@@ -58,7 +63,7 @@ async function api(request: APIRequestContext, path: string, method = 'GET', dat
   return response.status() === 204 ? null : response.json();
 }
 
-test('TC09-F004, TC32-F013, TC35-F017, TC38-F018, TC40-F019, TC44-F020: luồng khách và nhân viên', async ({ page }, info) => {
+test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: luồng khách và nhân viên', async ({ page }, info) => {
   page.on('dialog', dialog => dialog.accept());
   await visit(page, '/'); await ready(page);
   await expect(page.locator('main')).not.toContainText('₫');
@@ -90,9 +95,17 @@ test('TC09-F004, TC32-F013, TC35-F017, TC38-F018, TC40-F019, TC44-F020: luồng 
   const payment = await (await opened).json();
   expect(payment.expectedAmount).toBe(order.totalAmount);
   await expect(page.getByText('QR là ảnh cố định.', { exact: false })).toBeVisible();
-  await expect(page.locator(`img[src="${payment.qrImageUrl}"]`)).toBeVisible();
+  const qr = page.locator(`img[src="${payment.qrImageUrl}"]`);
+  await expect(qr).toBeVisible();
+  await expect.poll(() => qr.evaluate(img => (img as HTMLImageElement).naturalWidth)).toBeGreaterThan(100);
+  const amount = page.getByText(`${payment.expectedAmount.toLocaleString('vi-VN')} ₫`, { exact: true }).last();
+  await amount.scrollIntoViewIfNeeded();
+  await expect(amount).toBeInViewport();
+  const box = await amount.boundingBox();
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   await expect(page.getByRole('button', { name: /đã chuyển khoản/i })).toHaveCount(0);
-  await shot(page, 'TC35-F017-qr', info);
+  await shot(page, 'TC42-F017-qr', info);
 
   await login(page, 'staff');
   await visit(page, '/staff/payments'); await ready(page);
@@ -101,11 +114,11 @@ test('TC09-F004, TC32-F013, TC35-F017, TC38-F018, TC40-F019, TC44-F020: luồng 
   await page.getByLabel('Số tiền thực nhận (VND)').fill(String(order.totalAmount - 1));
   await page.getByRole('button', { name: 'Đối chiếu & duyệt thanh toán' }).click();
   await expect(page.getByText('Chuyển thiếu – chưa duyệt thanh toán', { exact: true })).toBeVisible();
-  await shot(page, 'TC38-F018-short-payment', info);
+  await shot(page, 'TC46-F018-short-payment', info);
   await page.getByLabel('Số tiền thực nhận (VND)').fill(String(order.totalAmount));
   await page.getByRole('button', { name: 'Đối chiếu & duyệt thanh toán' }).click();
   await expect(page.getByText('Đã xác nhận đủ tiền', { exact: true })).toBeVisible();
-  await shot(page, 'TC38-F018-approved', info);
+  await shot(page, 'TC45-F018-approved', info);
   await visit(page, `/staff/orders/${order.orderId}`); await ready(page);
   await page.getByRole('button', { name: 'Nhận xử lý', exact: true }).click();
   await expect(page.getByText('Đã cập nhật đơn hàng.', { exact: true })).toBeVisible();
@@ -113,7 +126,7 @@ test('TC09-F004, TC32-F013, TC35-F017, TC38-F018, TC40-F019, TC44-F020: luồng 
   const invoiceLink = page.getByRole('link', { name: /^Hóa đơn HD/ });
   await expect(invoiceLink).toBeVisible();
   const invoiceId = (await invoiceLink.getAttribute('href'))!.split('/').at(-1)!;
-  await shot(page, 'TC40-F019-fulfill', info);
+  await shot(page, 'TC37-F019-fulfill', info);
   await page.getByRole('button', { name: 'Hoàn tất đơn hàng' }).click();
   await expect(page.getByText('Đơn đã kết thúc, không còn thao tác xử lý.')).toBeVisible();
   await shot(page, 'TC37-F015-completed', info);
@@ -121,13 +134,13 @@ test('TC09-F004, TC32-F013, TC35-F017, TC38-F018, TC40-F019, TC44-F020: luồng 
   await login(page, 'user'); await visit(page, `/invoices/${invoiceId}`); await ready(page);
   await expect(page.getByRole('heading', { name: `#${invoiceId}`, exact: true })).toBeVisible();
   await expect(page.getByText('Lô:', { exact: false }).first()).toBeVisible();
-  await shot(page, 'TC44-F020-user-invoice', info);
+  await shot(page, 'TC53-F020-user-invoice', info);
   await visit(page, '/staff'); await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('heading', { name: /Tra cứu/ })).toBeVisible();
-  await shot(page, 'TC08-F002-user-blocked-staff', info);
+  await shot(page, 'TC17-F002-user-blocked-staff', info);
 });
 
-test('TC39-F016, TC41-F019: bán OTC tại quầy bằng form', async ({ page }, info) => {
+test('TC38-F016/F019: bán OTC tại quầy bằng form', async ({ page }, info) => {
   page.on('dialog', dialog => dialog.accept());
   await login(page, 'staff'); await visit(page, '/staff/sales/new');
   await page.getByLabel('Loại giao dịch').selectOption('OTC');
@@ -139,12 +152,12 @@ test('TC39-F016, TC41-F019: bán OTC tại quầy bằng form', async ({ page },
   await page.getByLabel('Số lượng dòng 1').fill('1');
   await page.getByRole('button', { name: 'Lưu dòng thuốc & kiểm tra' }).click();
   await expect(page.getByText('Đã lưu nháp và kiểm tra điều kiện bán.')).toBeVisible();
-  await shot(page, 'TC39-F016-counter-draft', info);
+  await shot(page, 'TC38-F016-counter-draft', info);
   await page.getByLabel(/Tôi xác nhận đã nhận đủ/).check();
   await page.getByRole('button', { name: 'Đã nhận tiền mặt – Hoàn tất' }).click();
   await expect(page.getByText('Đã hoàn tất.', { exact: false }).first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Hủy nháp' })).toHaveCount(0);
-  await shot(page, 'TC41-F019-counter-checkout', info);
+  await shot(page, 'TC38-F019-counter-checkout', info);
 });
 
 test('F017: Admin cấu hình QR và lỗi theo trường giữ dữ liệu', async ({ page }, info) => {
@@ -157,18 +170,25 @@ test('F017: Admin cấu hình QR và lỗi theo trường giữ dữ liệu', as
   await expect(form.getByLabel('Tên đăng nhập')).toHaveValue('staff');
   await expect(form.getByLabel('Mật khẩu', { exact: true })).toHaveValue('Staff@12345');
   await expect(form.locator('label').filter({ has: page.getByLabel('Tên đăng nhập') })).toContainText(/đã|tồn tại/i);
-  await shot(page, 'TC02-F003-field-error', info);
+  await shot(page, 'TC07-F003-field-error', info);
   await visit(page, '/admin/settings/payment'); await ready(page);
   await page.getByLabel('Tên ngân hàng').fill('Ngân hàng kiểm thử');
   await page.getByLabel('Số tài khoản').fill('0000000000');
   await page.getByLabel('Tên chủ tài khoản').fill('NHA THUOC KIEM THU');
   await page.getByRole('button', { name: 'Lưu tài khoản', exact: true }).click();
   await expect(page.getByText('Đã lưu tài khoản nhận tiền.')).toBeVisible();
-  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aUAAAAABJRU5ErkJggg==', 'base64');
+  const settings = await api(page.request, '/admin/payment-settings');
+  const image = await page.request.get(settings.qrImageUrl);
+  expect(image.ok()).toBeTruthy();
+  expect(image.headers()['content-type']).toContain('image/png');
+  const png = await image.body();
+  await page.getByLabel('Tên ngân hàng').fill('Tên đang sửa chưa lưu');
   await page.getByLabel('Ảnh PNG/JPG/JPEG tối đa 5 MB').setInputFiles({ name: 'fixed-qr.png', mimeType: 'image/png', buffer: png });
   await expect(page.getByAltText('Xem trước Ảnh QR cố định')).toBeVisible();
   await page.getByRole('button', { name: 'Tải ảnh lên', exact: true }).click();
   await expect(page.getByText('Đã tải ảnh lên.')).toBeVisible();
+  await expect(page.getByLabel('Tên ngân hàng')).toHaveValue('Tên đang sửa chưa lưu');
+  await page.getByLabel('Tên ngân hàng').fill('Ngân hàng kiểm thử');
   await shot(page, 'F017-admin-qr-settings', info);
 });
 
@@ -207,7 +227,7 @@ test('M4: rà tất cả route, loading/rỗng/lỗi và menu mobile', async ({ 
   if (info.project.name === '390') {
     await page.getByRole('button', { name: 'Mở menu quản lý' }).click();
     await expect(page.getByRole('button', { name: 'Đóng menu quản lý' })).toBeVisible();
-    await shot(page, 'TC08-F002-sidebar-open', info);
+    await shot(page, 'M4-sidebar-open', info);
     await page.getByRole('button', { name: 'Đóng menu quản lý' }).click();
     await expect(page.getByRole('button', { name: 'Mở menu quản lý' })).toHaveAttribute('aria-expanded', 'false');
   }
@@ -219,8 +239,20 @@ test('M4: rà tất cả route, loading/rỗng/lỗi và menu mobile', async ({ 
   }
   await visit(page, '/admin/drugs/PARA500'); await ready(page);
   await shot(page, 'F005-F006-admin-drug', info);
+  const files = await readdir(resolve(process.cwd(), 'src/app'), { recursive: true });
+  const routes = files.map(file => file.replaceAll('\\', '/'))
+    .filter(file => file === 'page.tsx' || file.endsWith('/page.tsx'))
+    .map(file => '/' + file.replace(/(^|\/)page\.tsx$/, ''));
+  const visited = [...visitedRoutes].sort();
+  for (const route of routes) {
+    const pattern = new RegExp('^' + route.replace(/\[[^\]]+\]/g, '[^/]+') + '$');
+    expect(visited.some(url => pattern.test(url)), `Chưa rà route ${route}`).toBeTruthy();
+  }
+  await writeFile(resolve(process.cwd(), `../docs/screenshots/M4-route-audit-${info.project.name}.json`),
+    JSON.stringify({ viewport: page.viewportSize(), routes: routes.sort(), visited, covered: routes.length }, null, 2) + '\n');
 });
 async function shotLoading(page: Page, info: TestInfo) {
+  await page.evaluate(() => window.scrollTo(0, 0));
   const folder = resolve(process.cwd(), '../docs/screenshots'); await mkdir(folder, { recursive: true });
   await page.screenshot({ path: resolve(folder, `F004-loading-${info.project.name}.png`), animations: 'disabled' });
 }

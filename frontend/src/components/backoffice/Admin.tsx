@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { adminApi, inventoryApi, type ListQuery } from "@/lib/backoffice-api";
+import { ApiException } from "@/lib/api";
 import type {
   CreateBatchInput,
   CreateStaffInput,
@@ -416,11 +417,13 @@ function ImageUpload({
             const selected = e.target.files?.[0];
             setFile(null);
             action.setError("");
+            action.setFields({});
             if (selected) {
               try {
                 validateImage(selected);
                 setFile(selected);
               } catch (err) {
+                if (err instanceof ApiException) action.setFields(err.errors || {});
                 action.setError(
                   errorTitle(err),
                 );
@@ -428,6 +431,7 @@ function ImageUpload({
             }
           }}
         />
+        <p className="text-sm text-slate-600">{file ? file.name : "Chưa chọn ảnh"}</p>
         <button className={buttonClass} disabled={action.busy || !file}>
           Tải ảnh lên
         </button>
@@ -654,7 +658,7 @@ export function PaymentSettings() {
             title="Ảnh QR cố định"
             imageUrl={r.data.qrImageUrl}
             send={adminApi.qrImage}
-            saved={r.reload}
+            saved={async () => r.setData(await adminApi.paymentSettings())}
           />
         </>
       )}

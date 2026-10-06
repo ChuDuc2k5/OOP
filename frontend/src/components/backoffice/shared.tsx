@@ -83,7 +83,7 @@ export function useAction() {
       setBusy(false);
     }
   }
-  return { busy, error, success, fields, run, setError, setSuccess };
+  return { busy, error, success, fields, run, setError, setSuccess, setFields };
 }
 
 export function Page({
@@ -176,9 +176,10 @@ export function Field({
       <input
         {...props}
         name={name}
-        className={inputClass}
+        className={props.type === "file" ? "sr-only" : inputClass}
         aria-invalid={!!messages}
       />
+      {props.type === "file" && <span className={`${inputClass} block cursor-pointer focus-within:ring-2`}>Chọn ảnh</span>}
       {messages && (
         <span className="block text-sm text-rose-700">
           {messages.join(" ")}
@@ -192,16 +193,22 @@ export function Select({
   value,
   onChange,
   options,
+  name,
+  errors,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: Record<string, string>;
+  name?: string;
+  errors?: Record<string, string[]>;
 }) {
   return (
     <label className="block space-y-1 text-sm font-medium text-slate-700">
       <span>{label}</span>
       <select
+        name={name}
+        aria-invalid={!!(name && errors?.[name])}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={inputClass}
@@ -212,6 +219,7 @@ export function Select({
           </option>
         ))}
       </select>
+      {name && errors?.[name] && <span className="block text-sm text-rose-700">{errors[name].join(" ")}</span>}
     </label>
   );
 }
@@ -439,5 +447,6 @@ export function validateImage(file: File) {
       status: 400,
       code: "FILE_INVALID",
       title: "Chỉ nhận ảnh PNG/JPG/JPEG tối đa 5 MB.",
+      errors: { file: ["Chỉ nhận ảnh PNG/JPG/JPEG tối đa 5 MB."] },
     });
 }

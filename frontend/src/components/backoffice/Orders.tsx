@@ -101,6 +101,7 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
     );
   const unpaid =
     !!o &&
+    o.canCancel &&
     ["WaitingReview", "AwaitingPayment"].includes(o.status) &&
     o.payment?.status !== "Confirmed";
   return (
