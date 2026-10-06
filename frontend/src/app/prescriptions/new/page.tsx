@@ -1,4 +1,5 @@
 'use client';
+import { ActionButton } from '@/components/ActionButton';
 
 import React, { useState } from 'react';
 import { LoadingState } from '@/components/Status';
@@ -86,6 +87,7 @@ export default function NewPrescriptionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setSubmitError(null);
     setFieldErrors({});
 
@@ -118,7 +120,7 @@ export default function NewPrescriptionPage() {
       formData.append('image', file as Blob);
 
       const created = await prescriptionsApi.createPrescription(formData);
-      router.push(`/prescriptions/${created.prescriptionId}`);
+      router.push(`/prescriptions/${created.prescriptionId}?sent=1`);
     } catch (err: unknown) {
       if (err instanceof ApiException) setFieldErrors(err.errors || {});
       setSubmitError(err instanceof ApiException ? err.title : 'Không thể tải lên đơn thuốc. Vui lòng thử lại.');
@@ -186,10 +188,11 @@ export default function NewPrescriptionPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="patientName" className="block text-xs font-semibold text-slate-700 mb-1">
                   Họ và tên bệnh nhân <span className="text-rose-500">*</span>
                 </label>
                 <input
+                  id="patientName"
                   type="text"
                   required
                   placeholder="Ví dụ: Nguyễn Văn A"
@@ -207,10 +210,11 @@ export default function NewPrescriptionPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="patientId" className="block text-xs font-semibold text-slate-700 mb-1">
                   Mã định danh bệnh nhân (CCCD / BHYT / Mã hồ sơ) <span className="text-rose-500">*</span>
                 </label>
                 <input
+                  id="patientId"
                   type="text"
                   required
                   placeholder="Ví dụ: 001201000123"
@@ -267,7 +271,8 @@ export default function NewPrescriptionPage() {
                   Chỉ nhận định dạng PNG, JPG, JPEG (tối đa 5 MB)
                 </span>
                 <input
-                  type="file"
+                    type="file"
+                    aria-label="Ảnh đơn thuốc"
                   accept="image/png, image/jpeg, image/jpg"
                   onChange={handleFileChange}
                   className="hidden"
@@ -327,7 +332,7 @@ export default function NewPrescriptionPage() {
             >
               Hủy bỏ
             </Link>
-            <button
+            <ActionButton busy={submitting}
               type="submit"
               disabled={submitting || !file}
               className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center space-x-2"
@@ -343,7 +348,7 @@ export default function NewPrescriptionPage() {
                   <span>Gửi đơn thuốc</span>
                 </>
               )}
-            </button>
+            </ActionButton>
           </div>
         </form>
       </main>

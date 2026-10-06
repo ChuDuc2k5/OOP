@@ -1,14 +1,16 @@
 'use client';
+import { ActionButton } from '@/components/ActionButton';
+import { CheckoutPrescription } from '@/components/orders/CheckoutPrescription';
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { LoadingState } from '@/components/Status';
-import { ErrorState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { cartApi, ordersApi, prescriptionsApi, ApiException } from '@/lib/api';
+import { cartApi, ordersApi, paymentApi, prescriptionsApi, ApiException } from '@/lib/api';
+import { notify } from '@/lib/feedback';
 import { CartView, PlaceOrderInput, PrescriptionView, ReceiveMethod, SaleKind } from '@/lib/types';
 import { formatVND } from '@/lib/format';
 import {
@@ -18,14 +20,11 @@ import {
   User as UserIcon,
   Store,
   Truck,
-  FileText,
-  ShieldAlert,
   AlertCircle,
   RefreshCw,
   ArrowLeft,
   CheckCircle2,
   AlertTriangle,
-  ExternalLink,
 } from 'lucide-react';
 
 export default function CheckoutPage() {
@@ -47,7 +46,8 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState('');
   const [receiveMethod, setReceiveMethod] = useState<ReceiveMethod>('Delivery');
   const [address, setAddress] = useState('');
-  const [saleKind, setSaleKind] = useState<SaleKind>('OTC');
+  const saleKind: SaleKind = cart?.items.some(i => i.requiresPrescription || i.isControlled) ? 'Prescription' : 'OTC';
+  const [prescriptionUploading, setPrescriptionUploading] = useState(false);
   const [prescriptionId, setPrescriptionId] = useState<string>('');
 
   // 409 PRICE_CHANGED Modal State
@@ -69,13 +69,6 @@ export default function CheckoutPage() {
       }
       setCart(cartData);
 
-      // Nếu giỏ hàng có thuốc kê đơn hoặc kiểm soát -> Bắt buộc chọn Prescription
-      const needsPrescription = cartData.items.some(
-        (i) => i.requiresPrescription || i.isControlled
-      );
-      if (needsPrescription) {
-        setSaleKind('Prescription');
-      }
 
       // Nạp danh sách đơn thuốc có thể dùng
       try {
@@ -101,11 +94,20 @@ export default function CheckoutPage() {
       if (user.username) {
         setReceiverName(user.username);
       }
+      try {
+        const saved = JSON.parse(localStorage.getItem(`checkout:${user.userId}`) || 'null');
+        if (saved && typeof saved === 'object') {
+          if (typeof saved.receiverName === 'string') setReceiverName(saved.receiverName);
+          if (typeof saved.phone === 'string') setPhone(saved.phone);
+          if (['Pickup', 'Delivery'].includes(saved.receiveMethod)) setReceiveMethod(saved.receiveMethod);
+          if (typeof saved.address === 'string') setAddress(saved.address);
+        }
+      } catch { /* Thông tin người nhận vẫn nhập được khi bộ nhớ không khả dụng. */ }
     }
   }, [authorized, user, initData]);
 
   const handleSubmitOrder = async (expectedTotalOverride?: number) => {
-    if (!cart) return;
+    if (!cart || submitting || prescriptionUploading) return;
     setError(null);
     setFieldErrors({});
 
@@ -126,14 +128,6 @@ export default function CheckoutPage() {
       errors.address = ['Vui lòng nhập địa chỉ giao hàng'];
     }
 
-    const needsPrescription = cart.items.some(
-      (i) => i.requiresPrescription || i.isControlled
-    );
-    if (needsPrescription && saleKind !== 'Prescription') {
-      errors.saleKind = [
-        'Giỏ hàng chứa thuốc cần kê đơn/kiểm soát. Bắt buộc phải chọn loại đơn Theo đơn thuốc.',
-      ];
-    }
 
     if (saleKind === 'Prescription' && !prescriptionId) {
       errors.prescriptionId = ['Vui lòng chọn đơn thuốc đính kèm'];
@@ -157,9 +151,22 @@ export default function CheckoutPage() {
     setSubmitting(true);
     try {
       const createdOrder = await ordersApi.placeOrder(payload);
+      try { localStorage.setItem(`checkout:${user!.userId}`, JSON.stringify({ receiverName: payload.receiverName, phone: payload.phone, receiveMethod, address: address.trim() })); }
+      catch { /* Đặt hàng không phụ thuộc việc lưu thông tin người nhận. */ }
 
-      // Đặt hàng thành công!
-      router.push(`/orders/${createdOrder.orderId}`);
+      if (createdOrder.status === 'AwaitingPayment' && createdOrder.canPay) {
+        try {
+          await paymentApi.openOrGetPayment(createdOrder.orderId);
+          router.push(`/orders/${createdOrder.orderId}/payment?created=1`);
+        } catch (paymentError) {
+          const title = paymentError instanceof ApiException ? paymentError.title : 'Không thể mở thanh toán. Vui lòng thử lại tại đơn hàng.';
+          sessionStorage.setItem(`payment-error:${createdOrder.orderId}`, title);
+          router.push(`/orders/${createdOrder.orderId}?created=1`);
+        }
+      } else {
+        if (createdOrder.status === 'WaitingReview') notify({ kind: 'info', message: 'Đơn đang chờ dược sĩ kiểm tra đơn thuốc. Bạn sẽ thanh toán sau khi đơn thuốc được duyệt.' });
+        router.push(`/orders/${createdOrder.orderId}?created=1`);
+      }
     } catch (err: unknown) {
       if (err instanceof ApiException) {
         // Xử lý mã lỗi 409 PRICE_CHANGED
@@ -197,10 +204,6 @@ export default function CheckoutPage() {
   if (authLoading || !authorized) {
     return <LoadingState />;
   }
-
-  const needsPrescription = cart?.items.some(
-    (i) => i.requiresPrescription || i.isControlled
-  );
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -328,7 +331,7 @@ export default function CheckoutPage() {
                         <span>Giao tận nơi</span>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        Nhà thuốc giao thuốc đến địa chỉ của bạn (Miễn phí ship).
+                        Nhà thuốc giao thuốc đến địa chỉ của bạn.
                       </p>
                     </div>
                   </label>
@@ -393,100 +396,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Box 3: Quy chế kê đơn & Phân loại đơn */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-                <div className="flex items-center space-x-2 text-slate-900 font-bold text-base border-b border-slate-100 pb-3">
-                  <FileText className="w-5 h-5 text-emerald-600" />
-                  <span>3. Phân loại đơn &amp; Đơn thuốc đính kèm</span>
-                </div>
-
-                {needsPrescription ? (
-                  <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs text-purple-900 flex items-start space-x-2.5">
-                    <ShieldAlert className="w-5 h-5 text-purple-700 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="block font-semibold">Đơn hàng bắt buộc bán theo đơn thuốc (Rx):</strong>
-                      Giỏ hàng của bạn chứa sản phẩm thuộc danh mục thuốc kê đơn hoặc kiểm soát đặc biệt. Bạn phải chọn đơn thuốc hợp lệ để gửi kèm.
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-4 text-xs">
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="saleKind"
-                        value="OTC"
-                        checked={saleKind === 'OTC'}
-                        onChange={() => setSaleKind('OTC')}
-                        className="text-emerald-600"
-                      />
-                      <span className="font-semibold text-slate-800">Không theo đơn (OTC)</span>
-                    </label>
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="saleKind"
-                        value="Prescription"
-                        checked={saleKind === 'Prescription'}
-                        onChange={() => setSaleKind('Prescription')}
-                        className="text-emerald-600"
-                      />
-                      <span className="font-semibold text-slate-800">Theo đơn thuốc của bác sĩ</span>
-                    </label>
-                  </div>
-                )}
-
-                {fieldErrors.saleKind && <p className="text-xs text-rose-600">{fieldErrors.saleKind.join(' ')}</p>}
-                {saleKind === 'Prescription' && (
-                  <div className="space-y-3 pt-2">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-xs font-semibold text-slate-700">
-                        Chọn đơn thuốc của bạn <span className="text-rose-500">*</span>
-                      </label>
-                      <Link
-                        href="/prescriptions/new"
-                        target="_blank"
-                        className="inline-flex items-center space-x-1 text-xs text-emerald-700 font-semibold hover:underline"
-                      >
-                        <span>+ Tải lên đơn thuốc mới</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </Link>
-                    </div>
-
-                    {prescriptionError ? <ErrorState message={prescriptionError} retry={initData} /> : usablePrescriptions.length === 0 ? (
-                      <div role="status" className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-600 space-y-3">
-                        <p className="font-medium">Bạn chưa có đơn thuốc nào được duyệt hoặc đang chờ kiểm tra.</p>
-                        <p className="text-slate-600">
-                          Vui lòng bấm vào nút bên dưới để chụp ảnh và gửi đơn thuốc của bạn trước khi hoàn tất đặt hàng.
-                        </p>
-                        <Link
-                          href="/prescriptions/new"
-                          className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-semibold text-xs shadow-xs"
-                        >
-                          <span>Tải ảnh đơn thuốc ngay</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </Link>
-                      </div>
-                    ) : (
-                      <select id="prescriptionId"
-                        value={prescriptionId}
-                        onChange={(e) => setPrescriptionId(e.target.value)}
-                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white ${
-                          fieldErrors.prescriptionId ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
-                        }`}
-                      >
-                        {usablePrescriptions.map((pres) => (
-                          <option key={pres.prescriptionId} value={pres.prescriptionId}>
-                            {pres.prescriptionId} — Bệnh nhân: {pres.patientName} (Trạng thái:{' '}
-                            {pres.status === 'Approved' ? 'Đã duyệt' : 'Chờ kiểm tra'})
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                    {fieldErrors.prescriptionId && (
-                      <p className="text-[11px] text-rose-600">{fieldErrors.prescriptionId.join(', ')}</p>
-                    )}
-                  </div>
-                )}
-              </div>
+              {saleKind === 'Prescription' && <div className="space-y-2"><CheckoutPrescription options={usablePrescriptions} value={prescriptionId} onChange={setPrescriptionId} onCreated={p => { setUsablePrescriptions(list => [...list, p]); setPrescriptionId(p.prescriptionId); }} disabled={submitting} onBusy={setPrescriptionUploading} error={prescriptionError} retry={initData} />{fieldErrors.prescriptionId && <p role="alert" className="text-sm text-rose-700">{fieldErrors.prescriptionId.join(' ')}</p>}</div>}
             </div>
 
             {/* Right Col: Review Items & Submit Button */}
@@ -513,12 +423,8 @@ export default function CheckoutPage() {
 
               <div className="space-y-2 border-t border-slate-100 pt-3 text-xs">
                 <div className="flex justify-between text-slate-600">
-                  <span>Tạm tính tiền thuốc:</span>
+                  <span>Tổng tiền thuốc:</span>
                   <span className="font-semibold text-slate-800">{formatVND(cart?.subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>Phí giao hàng:</span>
-                  <span className="font-medium text-emerald-600">0 ₫</span>
                 </div>
                 <div className="pt-2 border-t border-slate-100 flex justify-between items-baseline">
                   <span className="text-sm font-bold text-slate-900">Tổng thanh toán:</span>
@@ -536,10 +442,10 @@ export default function CheckoutPage() {
                 <p>Chuyển khoản qua mã QR tĩnh (Admin/Staff duyệt đối chiếu) hoặc nhận tiền mặt tại quầy.</p>
               </div>
 
-              <button
+              <ActionButton busy={submitting}
                 type="button"
                 onClick={() => handleSubmitOrder()}
-                disabled={submitting}
+                disabled={submitting || prescriptionUploading}
                 className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition shadow-sm"
               >
                 {submitting ? (
@@ -550,10 +456,10 @@ export default function CheckoutPage() {
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4" />
-                    <span>Xác nhận đặt hàng</span>
+                    <span>Đặt hàng &amp; thanh toán</span>
                   </>
                 )}
-              </button>
+              </ActionButton>
             </div>
           </div>
         )}

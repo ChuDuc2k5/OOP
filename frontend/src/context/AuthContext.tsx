@@ -1,9 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { LoginInput, Me, RegisterInput, Role } from '@/lib/types';
 import { authApi, refreshCsrf } from '@/lib/api';
+import { isSafeLocalUrl } from '@/lib/url';
 
 interface AuthContextType {
   user: Me | null;
@@ -11,6 +12,7 @@ interface AuthContextType {
   login: (input: LoginInput) => Promise<Me>;
   register: (input: RegisterInput) => Promise<Me>;
   logout: () => Promise<void>;
+  loggingOut: boolean;
   refreshUser: () => Promise<Me | null>;
   isAuthenticated: boolean;
 }
@@ -20,6 +22,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Me | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const logoutLock = useRef(false);
 
   const refreshUser = useCallback(async (): Promise<Me | null> => {
     try {
@@ -46,17 +50,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (input: RegisterInput): Promise<Me> => {
-    const me = await authApi.register(input);
-    // Theo API contract F001: 201 Me, role luôn User, KHÔNG tự đăng nhập
+    await authApi.register(input);
+    const me = await authApi.getMe();
+    setUser(me);
+    await refreshCsrf();
     return me;
   };
 
   const logout = async (): Promise<void> => {
+    if (logoutLock.current) return;
+    logoutLock.current = true;
+    setLoggingOut(true);
     try {
       await authApi.logout();
-    } finally {
       setUser(null);
       await refreshCsrf();
+    } finally {
+      logoutLock.current = false;
+      setLoggingOut(false);
     }
   };
 
@@ -68,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        loggingOut,
         refreshUser,
         isAuthenticated: !!user,
       }}
@@ -118,16 +130,16 @@ export function useRequireAuth(allowedRoles?: Role[]) {
  * Hook cho trang công khai chỉ dành cho Guest (Login, Register).
  * Nếu đã đăng nhập thì tự động chuyển về homePath.
  */
-export function useGuestOnly() {
+export function useGuestOnly(destination?: string | null) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
     if (user) {
-      router.replace(user.homePath || '/');
+      router.replace(isSafeLocalUrl(destination) ? destination! : user.homePath || '/');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, destination]);
 
   return { isGuest: !user, loading };
 }

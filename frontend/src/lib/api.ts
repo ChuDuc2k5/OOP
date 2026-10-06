@@ -1,3 +1,4 @@
+import { mutationFeedback, notifyError } from './feedback';
 import {
   ApiError,
   CartView,
@@ -46,11 +47,14 @@ export class ApiException extends Error {
   data?: unknown;
 
   constructor(apiError: ApiError) {
-    super(apiError.title || 'Đã có lỗi xảy ra');
+    const title = apiError.code === 'PAYMENT_NOT_CONFIGURED'
+      ? 'Nhà thuốc chưa cấu hình tài khoản nhận tiền. Vui lòng thử lại sau.'
+      : apiError.title || 'Đã có lỗi xảy ra';
+    super(title);
     this.name = 'ApiException';
     this.status = apiError.status;
     this.code = apiError.code;
-    this.title = apiError.title;
+    this.title = title;
     this.errors = apiError.errors;
     this.data = apiError.data;
   }
@@ -228,6 +232,7 @@ async function handleMockRequest<T>(
       homePath: '/',
     };
 
+    setMockSession(newUser);
     return newUser as unknown as T;
   }
 
@@ -376,7 +381,7 @@ async function handleMockRequest<T>(
       totalAmount: o.totalAmount,
       receiveMethod: o.receiveMethod,
       paymentStatus: o.payment?.status,
-      customerUsername: 'user',
+      customerUsername: 'chuduc',
       handledByUsername: o.handledByUsername,
     }));
 
@@ -509,8 +514,8 @@ async function handleMockRequest<T>(
       prescriptionId,
       status: 'PendingReview',
       ownerUserId: 'U00000003',
-      ownerUsername: 'user',
-      createdByUsername: 'user',
+      ownerUsername: 'chuduc',
+      createdByUsername: 'chuduc',
       patientId,
       patientName,
       hasImage: true,
@@ -590,7 +595,7 @@ async function handleMockRequest<T>(
   if (path === '/api/health' && method === 'GET') {
     const health: HealthCheck = {
       status: 'ok',
-      service: 'Pharmacy.Api (Mock)',
+      service: 'Pharmacy.Api',
       timestamp: new Date().toISOString(),
     };
     return health as unknown as T;
@@ -599,7 +604,7 @@ async function handleMockRequest<T>(
   throw new ApiException({
     status: 404,
     code: 'NOT_FOUND',
-    title: `Mock endpoint không tồn tại: ${method} ${path}`,
+    title: 'Chức năng chưa khả dụng. Vui lòng thử lại sau.',
   });
 }
 
@@ -607,9 +612,10 @@ async function handleMockRequest<T>(
  * Fetch wrapper chính của ứng dụng
  * Tự động gắn credentials, CSRF token, parse JSON và ánh xạ ProblemDetails ApiError
  */
-export async function apiFetch<T>(
+async function requestApi<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  csrfRetried = false
 ): Promise<T> {
   if (isMockMode()) {
     return handleMockRequest<T>(endpoint, options);
@@ -659,11 +665,17 @@ export async function apiFetch<T>(
 
   if (!response.ok) {
     if (isJson) {
+      let errorData: ApiError | undefined;
       try {
-        const errorData = (await response.json()) as ApiError;
+        errorData = (await response.json()) as ApiError;
+      } catch { /* Dùng lỗi HTTP an toàn khi phản hồi không đọc được. */ }
+      if (errorData) {
+        if (response.status === 400 && errorData.code === 'ANTIFORGERY_INVALID'
+          && !csrfRetried && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+          await requestApi<void>('/api/auth/csrf');
+          return requestApi<T>(endpoint, options, true);
+        }
         throw new ApiException(errorData);
-      } catch (e) {
-        if (e instanceof ApiException) throw e;
       }
     }
 
@@ -689,6 +701,19 @@ export async function apiFetch<T>(
 // ==========================================
 // Các hàm gọi API tiện ích
 // ==========================================
+
+export async function apiFetch<T>(endpoint: string, options: RequestInit & { silent?: boolean } = {}): Promise<T> {
+  const { silent, ...requestOptions } = options;
+  const writing = ['POST', 'PUT', 'PATCH', 'DELETE'].includes((options.method || 'GET').toUpperCase());
+  try {
+    const result = await requestApi<T>(endpoint, requestOptions);
+    if (writing && !silent) mutationFeedback(endpoint, requestOptions, result);
+    return result;
+  } catch (error) {
+    if (writing && !silent) notifyError(error);
+    throw error;
+  }
+}
 
 export const authApi = {
   getCsrf: () => apiFetch<void>('/api/auth/csrf'),

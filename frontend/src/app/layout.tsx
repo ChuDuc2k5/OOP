@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import { ToastProvider } from '@/context/ToastContext';
+import { CartProvider } from '@/context/CartContext';
 
 export const metadata: Metadata = {
   title: 'Pharmacy Management System - Nhà Thuốc Trực Tuyến & Quản Lý GPP',
@@ -15,9 +17,9 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className="antialiased min-h-screen flex flex-col bg-slate-50 text-slate-900">
-        <AuthProvider>
+        <ToastProvider><AuthProvider><CartProvider>
           {children}
-        </AuthProvider>
+        </CartProvider></AuthProvider></ToastProvider>
       </body>
     </html>
   );

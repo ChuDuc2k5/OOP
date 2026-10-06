@@ -1,4 +1,5 @@
 'use client';
+import { ActionButton } from '@/components/ActionButton';
 
 import React, { useState, Suspense } from 'react';
 import { LoadingState } from '@/components/Status';
@@ -14,17 +15,15 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  CheckCircle2,
   ArrowLeft,
-  ArrowRight,
 } from 'lucide-react';
 
 function RegisterForm() {
   const { register } = useAuth();
-  const { isGuest, loading: authLoading } = useGuestOnly();
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next');
+  const { isGuest, loading: authLoading } = useGuestOnly(nextPath);
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -36,10 +35,10 @@ function RegisterForm() {
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
-  const [successUsername, setSuccessUsername] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setGeneralError(null);
     setFieldErrors({});
 
@@ -81,8 +80,7 @@ function RegisterForm() {
         confirmPassword,
       });
 
-      // Đăng ký thành công (theo API Contract F001: không tự đăng nhập)
-      setSuccessUsername(trimmedUsername);
+      router.replace(isSafeLocalUrl(nextPath) ? nextPath! : '/');
     } catch (err: unknown) {
       if (err instanceof ApiException) {
         if (err.errors && Object.keys(err.errors).length > 0) {
@@ -129,29 +127,7 @@ function RegisterForm() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
         <div className="bg-white py-8 px-6 shadow-sm border border-slate-200 rounded-2xl sm:px-10">
           {/* Success State */}
-          {successUsername ? (
-            <div className="text-center space-y-4 py-4">
-              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900">Đăng ký thành công!</h3>
-              <p className="text-sm text-slate-600">
-                Tài khoản <strong className="text-slate-900 font-semibold">{successUsername}</strong>{' '}
-                đã được tạo thành công với vai trò Khách hàng (User).
-              </p>
-              <div className="pt-2">
-                <Link
-                  href={`/login?username=${encodeURIComponent(successUsername)}${
-                    isSafeLocalUrl(nextPath) ? `&next=${encodeURIComponent(nextPath!)}` : ''
-                  }`}
-                  className="w-full inline-flex items-center justify-center space-x-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm transition"
-                >
-                  <span>Chuyển tới đăng nhập ngay</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-          ) : (
+          {(
             <>
               {/* General Error Banner */}
               {generalError && (
@@ -282,13 +258,13 @@ function RegisterForm() {
 
                 {/* Submit Button */}
                 <div className="pt-2">
-                  <button
+                  <ActionButton busy={submitting}
                     type="submit"
                     disabled={submitting}
                     className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-60 transition"
                   >
                     {submitting ? 'Đang tạo tài khoản...' : 'Đăng ký tài khoản'}
-                  </button>
+                  </ActionButton>
                 </div>
               </form>
             </>

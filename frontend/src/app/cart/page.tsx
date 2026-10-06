@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { ActionButton } from '@/components/ActionButton';
+import { notifyError } from '@/lib/feedback';
 import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -65,7 +67,7 @@ export default function CartPage() {
       setCart(updated);
     } catch (err: unknown) {
       const msg = err instanceof ApiException ? err.title : 'Không thể cập nhật số lượng';
-      alert(msg);
+      notifyError(err);
     } finally {
       setUpdatingDrugId(null);
     }
@@ -78,7 +80,7 @@ export default function CartPage() {
       setCart(updated);
     } catch (err: unknown) {
       const msg = err instanceof ApiException ? err.title : 'Không thể xóa sản phẩm';
-      alert(msg);
+      notifyError(err);
     } finally {
       setUpdatingDrugId(null);
     }
@@ -238,25 +240,25 @@ export default function CartPage() {
                       <div className="flex items-center justify-between sm:justify-end space-x-4 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-slate-100">
                         {/* Quantity controls */}
                         <div className="flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white">
-                          <button
+                          <ActionButton busy={isUpdating} compact
                             onClick={() => handleUpdateQuantity(item.drugId, item.quantity, -1)}
                             disabled={isUpdating}
                             className="p-1.5 text-slate-600 hover:bg-slate-100 disabled:opacity-50"
                             aria-label="Giảm số lượng"
                           >
                             <Minus className="w-3.5 h-3.5" />
-                          </button>
+                          </ActionButton>
                           <span className="px-3 py-1 text-xs font-bold text-slate-800 min-w-[2rem] text-center">
                             {isUpdating ? '...' : item.quantity}
                           </span>
-                          <button
+                          <ActionButton busy={isUpdating} compact
                             onClick={() => handleUpdateQuantity(item.drugId, item.quantity, 1)}
                             disabled={isUpdating}
                             className="p-1.5 text-slate-600 hover:bg-slate-100 disabled:opacity-50"
                             aria-label="Tăng số lượng"
                           >
                             <Plus className="w-3.5 h-3.5" />
-                          </button>
+                          </ActionButton>
                         </div>
 
                         {/* Line total */}
@@ -267,14 +269,14 @@ export default function CartPage() {
                         </div>
 
                         {/* Remove button */}
-                        <button
+                        <ActionButton busy={isUpdating} compact
                           onClick={() => handleRemoveItem(item.drugId)}
                           disabled={isUpdating}
                           className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                           title="Xóa khỏi giỏ"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </ActionButton>
                       </div>
                     </div>
                   );
@@ -290,14 +292,10 @@ export default function CartPage() {
 
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between text-slate-600">
-                  <span>Tổng tiền sản phẩm:</span>
+                  <span>Tổng tiền thuốc:</span>
                   <span className="font-semibold text-slate-800 text-sm">
                     {formatVND(cart.subtotal)}
                   </span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>Phí vận chuyển:</span>
-                  <span className="font-medium text-emerald-600">Miễn phí (SRS 1.2)</span>
                 </div>
                 <div className="pt-3 border-t border-slate-100 flex justify-between items-baseline">
                   <span className="text-sm font-bold text-slate-900">Tổng thanh toán:</span>
@@ -305,9 +303,6 @@ export default function CartPage() {
                     {formatVND(cart.subtotal)}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400">
-                  * Giá bán đã bao gồm thuế VAT theo quy định dược phẩm hiện hành.
-                </p>
               </div>
 
               {hasIssues && (

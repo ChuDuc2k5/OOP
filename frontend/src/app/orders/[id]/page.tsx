@@ -1,10 +1,13 @@
 'use client';
+import { ActionButton } from '@/components/ActionButton';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, use, useRef } from 'react';
 import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
+import { OrderProgress } from '@/components/orders/OrderProgress';
+import { ActionLink } from '@/components/ActionLink';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
 import { ApiException, ordersApi } from '@/lib/api';
@@ -50,23 +53,27 @@ export default function OrderDetailPage({
   const [order, setOrder] = useState<OrderView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const refreshing = useRef(false);
 
   // Cancel order modal
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
 
-  const fetchOrderDetail = React.useCallback(async () => {
-    setLoading(true);
+  const fetchOrderDetail = React.useCallback(async (background = false) => {
+    if (refreshing.current) return;
+    refreshing.current = true;
+    if (!background) setLoading(true);
     setError(null);
     try {
       const data = await ordersApi.getOrderById(orderId);
       setOrder(data);
     } catch (err: unknown) {
       const msg = err instanceof ApiException ? err.title : 'Không tìm thấy thông tin đơn hàng';
-      setError(msg);
+      if (!background) setError(msg);
     } finally {
       setLoading(false);
+      refreshing.current = false;
     }
   }, [orderId]);
 
@@ -75,8 +82,14 @@ export default function OrderDetailPage({
       fetchOrderDetail();
     }
   }, [authorized, user, fetchOrderDetail]);
+  useEffect(() => {
+    if (!authorized || !order || ['Completed', 'Cancelled', 'Rejected'].includes(order.status)) return;
+    const timer = setInterval(() => void fetchOrderDetail(true), 15_000);
+    return () => clearInterval(timer);
+  }, [authorized, order, fetchOrderDetail]);
 
   const handleCancelOrder = async () => {
+    if (cancelling) return;
     setCancelling(true);
     setCancelError(null);
     try {
@@ -134,6 +147,7 @@ export default function OrderDetailPage({
           </div>
         ) : (
           <div className="space-y-6">
+            <OrderProgress order={order} />
             {/* Top Status Banner Card */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
@@ -172,14 +186,14 @@ export default function OrderDetailPage({
                   </Link>
                 )}
 
-                {order.canPay && (
-                  <Link
+                {(order.canPay || order.payment?.status === 'PendingReview') && (
+                  <ActionLink
                     href={`/orders/${order.orderId}/payment`}
                     className="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition"
                   >
                     <CreditCard className="w-4 h-4" />
-                    <span>Mở thanh toán QR</span>
-                  </Link>
+                    <span>{order.payment?.status === 'PendingReview' ? 'Xem lại mã QR' : 'Mở thanh toán QR'}</span>
+                  </ActionLink>
                 )}
 
                 {order.canCancel && (
@@ -396,22 +410,22 @@ export default function OrderDetailPage({
               )}
 
               <div className="flex gap-2 pt-2">
-                <button
+                <ActionButton busy={cancelling}
                   type="button"
                   onClick={() => setShowCancelModal(false)}
                   disabled={cancelling}
                   className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold"
                 >
                   Không, giữ lại
-                </button>
-                <button
+                </ActionButton>
+                <ActionButton busy={cancelling}
                   type="button"
                   onClick={handleCancelOrder}
                   disabled={cancelling}
                   className="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs"
                 >
                   {cancelling ? 'Đang hủy...' : 'Đồng ý hủy đơn'}
-                </button>
+                </ActionButton>
               </div>
             </div>
           </div>

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, use, useRef } from 'react';
 import { LoadingState } from '@/components/Status';
 import { ErrorState } from '@/components/Status';
+import { ActionButton } from '@/components/ActionButton';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
@@ -11,6 +12,7 @@ import { ApiException, cartApi, productsApi } from '@/lib/api';
 import { Product } from '@/lib/types';
 import { formatVND } from '@/lib/format';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import {
   ArrowLeft,
   Pill,
@@ -34,13 +36,19 @@ export default function ProductDetailPage({
   const drugId = resolvedParams.drugId;
   const router = useRouter();
   const { user } = useAuth();
+  const { cart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [addedToast, setAddedToast] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
+  const existing = cart.items.find(item => item.drugId === drugId);
+  const available = product?.availableQuantity ?? existing?.availableQuantity;
+  const availableToAdd = available === undefined ? undefined : Math.max(0, available - (existing?.quantity || 0));
+  useEffect(() => {
+    if (availableToAdd !== undefined) setQuantity(q => Math.max(1, Math.min(q, availableToAdd)));
+  }, [availableToAdd]);
 
   useEffect(() => {
     async function fetchDetail() {
@@ -62,19 +70,20 @@ export default function ProductDetailPage({
   const hasPrice = typeof product?.unitPrice === 'number';
 
   const [addingToCart, setAddingToCart] = useState(false);
+  const addLock = useRef(false);
 
   const handleAddToCart = async () => {
-    if (!product) return;
+    if (!product || addLock.current) return;
+    addLock.current = true;
     setAddingToCart(true);
     setCartError(null);
     try {
       await cartApi.addItem({ drugId: product.drugId, quantity });
-      setAddedToast(true);
-      setTimeout(() => setAddedToast(false), 3000);
     } catch (err) {
       setCartError(err instanceof ApiException ? err.title : 'Không thể thêm thuốc vào giỏ. Vui lòng thử lại.');
     } finally {
       setAddingToCart(false);
+      addLock.current = false;
     }
   };
 
@@ -139,7 +148,7 @@ export default function ProductDetailPage({
                   ) : (
                     <span className="inline-flex items-center space-x-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200">
                       <XCircle className="w-3.5 h-3.5" />
-                      <span>Tạm hết hàng</span>
+                      <span>Hết hàng</span>
                     </span>
                   )}
 
@@ -235,8 +244,8 @@ export default function ProductDetailPage({
                           {quantity}
                         </span>
                         <button
-                          onClick={() => setQuantity((q) => q + 1)}
-                          disabled={!product.inStock}
+                          onClick={() => setQuantity((q) => Math.min(q + 1, availableToAdd ?? Number.MAX_SAFE_INTEGER))}
+                          disabled={!product.inStock || (availableToAdd !== undefined && quantity >= availableToAdd)}
                           className="p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-40"
                           aria-label="Tăng"
                         >
@@ -252,9 +261,9 @@ export default function ProductDetailPage({
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                      <button
-                        onClick={handleAddToCart}
-                        disabled={!product.inStock}
+                        <ActionButton busy={addingToCart}
+                          onClick={handleAddToCart}
+                          disabled={!product.inStock || availableToAdd === 0}
                         className={`flex-1 flex items-center justify-center space-x-2 py-3 px-6 rounded-xl font-semibold text-sm transition shadow-sm ${
                           product.inStock
                             ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
@@ -263,15 +272,9 @@ export default function ProductDetailPage({
                       >
                         <ShoppingCart className="w-4 h-4" />
                         <span>{product.inStock ? 'Thêm vào giỏ hàng' : 'Tạm hết hàng'}</span>
-                      </button>
+                      </ActionButton>
                     </div>
 
-                    {addedToast && (
-                      <div className="flex items-center space-x-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-lg animate-fadeIn">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Đã thêm {quantity} {product.saleUnit} {product.name} vào giỏ hàng!</span>
-                      </div>
-                    )}
                   </>
                 ) : (
                   <div className="space-y-3">
