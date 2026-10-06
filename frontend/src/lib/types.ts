@@ -307,13 +307,14 @@ export type OrderView = {
   payment?: PaymentSummary;
   invoiceId?: string;
   handledByUsername?: string;
+  readyAt?: string;
   canCancel: boolean;
   canPay: boolean;
 };
 
 export type OrderRow = Pick<
   OrderView,
-  "orderId" | "createdAt" | "saleKind" | "status" | "totalAmount" | "receiveMethod"
+  "orderId" | "createdAt" | "saleKind" | "status" | "totalAmount" | "receiveMethod" | "readyAt"
 > & {
   paymentStatus?: PaymentStatus;
   customerUsername?: string;

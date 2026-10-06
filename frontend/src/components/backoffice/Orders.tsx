@@ -4,11 +4,13 @@ import { Suspense, use, useCallback, useState } from "react";
 import { useSearchParams } from 'next/navigation';
 import { LoadingState } from '@/components/Status';
 import { PaymentButtons, ReviewForm, type ReviewMode } from './Payments';
-import type { OrderRow, PaymentRow } from '@/lib/types';
+import type { OrderRow, OrderView, PaymentRow } from '@/lib/types';
+import { notify } from '@/lib/feedback';
 import Link from "next/link";
 import { staffOrdersApi } from "@/lib/backoffice-api";
 import {
   formatDateTime,
+  formatTime,
   formatVND,
   ORDER_STATUS_LABELS,
   PAYMENT_STATUS_LABELS,
@@ -106,14 +108,30 @@ function ConfirmedOrderAction({ order, refresh }: { order: OrderRow; refresh: ()
   const action = useAction();
   const o = r.data;
   const eligible = o?.payment?.status === 'Confirmed' && ['Preparing', 'Delivering'].includes(o.status);
-  const label = !o?.invoiceId ? 'Thử xuất kho lại' : o.receiveMethod === 'Pickup' ? 'Khách đã nhận thuốc' : o.status === 'Delivering' ? 'Đã giao xong' : 'Bắt đầu giao';
-  return <div className="space-y-2"><Feedback {...action} /><LoadState {...r} retry={r.reload} />{eligible && <ActionButton busy={action.busy} className={buttonClass} onClick={() => {
-    if (label !== 'Bắt đầu giao' && !window.confirm(`${label} cho ${o.orderId}?`)) return;
+  const next = o ? fulfilledAction(o) : null;
+  const label = next?.label || 'Thử xuất kho lại';
+  return <div className="space-y-2"><Feedback {...action} /><LoadState {...r} retry={r.reload} />{eligible && <>
+    <p className="text-sm text-slate-600">{o.status === 'Delivering' ? 'Đang giao' : o.readyAt ? 'Chờ khách đến lấy' : 'Chuẩn bị đơn'}</p>
+    {o.receiveMethod === 'Pickup' && o.readyAt && <p className="text-sm text-emerald-700">Sẵn sàng từ {formatTime(o.readyAt)}</p>}
+    <ActionButton busy={action.busy} className={`${buttonClass} whitespace-nowrap`} onClick={() => {
+    if ((!next || next.key === 'complete') && !window.confirm(`${label} cho ${o.orderId}?`)) return;
     void action.run(async () => {
       if (!o.invoiceId) await staffOrdersApi.fulfill(o.orderId);
-      else await staffOrdersApi.action(o.orderId, o.receiveMethod === 'Delivery' && o.status === 'Preparing' ? 'ship' : 'complete');
+      else if (next) {
+        await staffOrdersApi.action(o.orderId, next.key, undefined, next.key === 'ready');
+        if (next.key === 'ready') notify({ kind: 'success', message: 'Đã báo khách đến nhận thuốc' });
+      }
     }, refresh);
-  }}>{label}</ActionButton>}</div>;
+  }}>{label}</ActionButton></>}</div>;
+}
+
+function fulfilledAction(o: OrderView): { key: 'ready' | 'ship' | 'complete'; label: string } | null {
+  if (!o.invoiceId || o.payment?.status !== 'Confirmed') return null;
+  if (o.status === 'Preparing') {
+    if (o.receiveMethod === 'Delivery') return { key: 'ship', label: 'Đã chuẩn bị xong – Bắt đầu giao' };
+    return o.readyAt ? { key: 'complete', label: 'Khách đã nhận thuốc' } : { key: 'ready', label: 'Đã chuẩn bị xong' };
+  }
+  return o.status === 'Delivering' && o.receiveMethod === 'Delivery' ? { key: 'complete', label: 'Đã giao xong' } : null;
 }
 export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -123,17 +141,20 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
   const [reviewMode, setReviewMode] = useState<ReviewMode | null>(null);
   const resource = useResource(useCallback(() => staffOrdersApi.get(id), [id]));
   const o = resource.data;
+  const nextAction = o ? fulfilledAction(o) : null;
   const transition = (key: string, reason?: string) =>
     action.run(
       () =>
         staffOrdersApi.action(
           id,
-          key as "claim" | "ship" | "complete" | "reject" | "cancel",
+          key as "claim" | "ready" | "ship" | "complete" | "reject" | "cancel",
           reason,
+          key === 'ready',
         ),
       async () => {
         await resource.reload();
-        action.setSuccess("Đã cập nhật đơn hàng.");
+        action.setSuccess(key === 'ready' ? 'Đã báo khách đến nhận thuốc' : "Đã cập nhật đơn hàng.");
+        if (key === 'ready') notify({ kind: 'success', message: 'Đã báo khách đến nhận thuốc' });
       },
     );
   const fulfill = () =>
@@ -191,6 +212,7 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
               </p>
               <p>Loại đơn: {SALE_KIND_LABELS[o.saleKind]}</p>
               <p>Người xử lý: {o.handledByUsername || "—"}</p>
+              {o.receiveMethod === 'Pickup' && o.readyAt && <p className="font-semibold text-emerald-700">Sẵn sàng từ {formatTime(o.readyAt)}</p>}
             </div>
             {o.prescriptionId && (
               <DetailLink
@@ -264,35 +286,9 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
                     Thử xuất kho lại
                   </ActionButton>
                 )}
-              {o.status === "Preparing" &&
-                o.payment?.status === "Confirmed" &&
-                o.invoiceId &&
-                o.receiveMethod === "Delivery" && (
-                  <ActionButton busy={action.busy}
-                    className={buttonClass}
-                    disabled={action.busy}
-                    onClick={() => transition("ship")}
-                  >
-                    Bắt đầu giao
-                  </ActionButton>
-                )}
-              {o.invoiceId &&
-                o.payment?.status === "Confirmed" &&
-                ((o.status === "Delivering" &&
-                  o.receiveMethod === "Delivery") ||
-                  (o.status === "Preparing" &&
-                    o.receiveMethod === "Pickup")) && (
-                  <ActionButton busy={action.busy}
-                    className={buttonClass}
-                    disabled={action.busy}
-                    onClick={() => {
-                      if (window.confirm("Xác nhận khách đã nhận hàng?"))
-                        void transition("complete");
-                    }}
-                  >
-                    {o.receiveMethod === 'Pickup' ? 'Khách đã nhận thuốc' : 'Đã giao xong'}
-                  </ActionButton>
-                )}
+              {nextAction && <ActionButton busy={action.busy} className={buttonClass} onClick={() => {
+                if (nextAction.key !== 'complete' || window.confirm('Xác nhận khách đã nhận hàng?')) void transition(nextAction.key);
+              }}>{nextAction.label}</ActionButton>}
             </div>
             {["Completed", "Cancelled", "Rejected"].includes(o.status) && (
               <p>Đơn đã kết thúc, không còn thao tác xử lý.</p>
