@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { productsApi } from '@/lib/api';
+import { cartApi, productsApi } from '@/lib/api';
 import { Product } from '@/lib/types';
 import { formatVND } from '@/lib/format';
 import { useAuth } from '@/context/AuthContext';
@@ -58,10 +58,20 @@ export default function ProductDetailPage({
 
   const hasPrice = typeof product?.unitPrice === 'number';
 
-  const handleAddToCart = () => {
-    // Tạm thời hiển thị phản hồi đã thêm thành công (chuẩn bị cho M2 giỏ hàng)
-    setAddedToast(true);
-    setTimeout(() => setAddedToast(false), 3000);
+  const [addingToCart, setAddingToCart] = useState(false);
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+    setAddingToCart(true);
+    try {
+      await cartApi.addItem({ drugId: product.drugId, quantity });
+      setAddedToast(true);
+      setTimeout(() => setAddedToast(false), 3000);
+    } catch (err) {
+      console.warn('Lỗi thêm giỏ hàng:', err);
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   return (
