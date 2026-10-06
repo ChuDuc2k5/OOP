@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { prescriptionsApi } from '@/lib/api';
+import { ApiException, prescriptionsApi } from '@/lib/api';
 import {
   FileText,
   Upload,
@@ -119,30 +120,15 @@ export default function NewPrescriptionPage() {
       const created = await prescriptionsApi.createPrescription(formData);
       router.push(`/prescriptions/${created.prescriptionId}`);
     } catch (err: unknown) {
-      const anyErr = err as {
-        message?: string;
-        errors?: Record<string, string[]>;
-      };
-      if (anyErr?.errors) {
-        setFieldErrors(anyErr.errors);
-      }
-      setSubmitError(
-        anyErr?.message || 'Không thể tải lên đơn thuốc. Vui lòng kiểm tra lại kết nối và thử lại.'
-      );
+      if (err instanceof ApiException) setFieldErrors(err.errors || {});
+      setSubmitError(err instanceof ApiException ? err.title : 'Không thể tải lên đơn thuốc. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
   };
 
   if (authLoading || !authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex items-center space-x-2 text-emerald-700 font-medium">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Đang xác thực quyền truy cập...</span>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (

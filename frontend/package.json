@@ -7,7 +7,8 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "next lint"
+    "lint": "eslint src e2e scripts playwright.config.ts --ext .js,.mjs,.ts,.tsx",
+    "test:e2e": "node e2e/run.mjs test"
   },
   "dependencies": {
     "lucide-react": "^1.16.0",
@@ -16,6 +17,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

@@ -3,7 +3,7 @@
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
 import { useRequireAuth } from '@/context/AuthContext';
-import { RefreshCw } from 'lucide-react';
+import { LoadingState } from '@/components/Status';
 
 export default function AdminLayout({
   children,
@@ -16,10 +16,7 @@ export default function AdminLayout({
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100">
-        <div className="flex items-center space-x-2 text-emerald-700 font-medium">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Đang xác thực quyền Quản trị viên...</span>
-        </div>
+        <LoadingState />
       </div>
     );
   }

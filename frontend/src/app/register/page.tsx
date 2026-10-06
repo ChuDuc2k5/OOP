@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, Suspense } from 'react';
+import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/context/AuthContext';
@@ -91,20 +92,13 @@ function RegisterForm() {
       } else {
         setGeneralError('Đã có lỗi kết nối máy chủ. Vui lòng thử lại.');
       }
-      // Giữ lại username đã nhập, chỉ reset ô mật khẩu
-      setPassword('');
-      setConfirmPassword('');
     } finally {
       setSubmitting(false);
     }
   };
 
   if (authLoading || !isGuest) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, use, useCallback } from 'react';
+import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Header from '@/components/Header';
@@ -74,14 +75,7 @@ export default function InvoiceDetailPage({
   };
 
   if (authLoading || !authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex items-center space-x-2 text-emerald-700 font-medium">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Đang xác thực quyền truy cập...</span>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
@@ -120,13 +114,8 @@ export default function InvoiceDetailPage({
           </div>
         </div>
 
-        {loading ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-600">Đang tải hóa đơn #{invoiceId}...</p>
-          </div>
-        ) : error || !invoice ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
+        {loading ? <LoadingState /> : error || !invoice ? (
+          <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 space-y-3">
             <XCircle className="w-12 h-12 text-rose-500 mx-auto" />
             <h2 className="text-lg font-bold text-slate-800">Không tìm thấy hóa đơn</h2>
             <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">

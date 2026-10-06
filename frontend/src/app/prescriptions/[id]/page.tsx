@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, use, useCallback } from 'react';
+import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { prescriptionsApi } from '@/lib/api';
+import { ApiException, prescriptionsApi } from '@/lib/api';
 import { PrescriptionView } from '@/lib/types';
 import {
   formatDate,
@@ -51,7 +52,7 @@ export default function PrescriptionDetailPage({
       const data = await prescriptionsApi.getPrescriptionById(prescriptionId);
       setPrescription(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không tìm thấy thông tin đơn thuốc';
+      const msg = err instanceof ApiException ? err.title : 'Không tìm thấy thông tin đơn thuốc';
       setError(msg);
     } finally {
       setLoading(false);
@@ -65,14 +66,7 @@ export default function PrescriptionDetailPage({
   }, [authorized, user, fetchPrescription]);
 
   if (authLoading || !authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex items-center space-x-2 text-emerald-700 font-medium">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Đang xác thực quyền truy cập...</span>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
@@ -98,15 +92,8 @@ export default function PrescriptionDetailPage({
           </Link>
         </div>
 
-        {loading ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-600">
-              Đang tải chi tiết đơn thuốc #{prescriptionId}...
-            </p>
-          </div>
-        ) : error || !prescription ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
+        {loading ? <LoadingState /> : error || !prescription ? (
+          <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 space-y-3">
             <XCircle className="w-12 h-12 text-rose-500 mx-auto" />
             <h2 className="text-lg font-bold text-slate-800">Không tìm thấy đơn thuốc</h2>
             <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
