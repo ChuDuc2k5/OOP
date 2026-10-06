@@ -42,7 +42,7 @@ Tài khoản demo:
 | user | User@12345 | User |
 | user2 | User@12345 | User |
 
-Seed có 12 thuốc, các biên lô D−5/D/D+1/D+20/D+30/D+31, thuốc tồn bằng ngưỡng/tồn bằng 0, thuốc kiểm soát/tắt bán và ba đơn thuốc. QR demo được sao chép từ resource nguồn vào `backend/storage/qr/demo-qr.png` khi seed; nội dung chỉ là chuỗi demo, **không dùng để chuyển tiền thật**. Không ghi đè file đã tồn tại. File runtime được ignore; resource nguồn nằm trong `Pharmacy.Core/Data/Assets`.
+Seed DB trống có 56 thuốc và 56 ảnh minh họa: giữ nguyên 12 thuốc cũ với các biên lô D−5/D/D+1/D+20/D+30/D+31, tồn bằng ngưỡng/tồn bằng 0, thuốc kiểm soát/tắt bán và ba đơn thuốc; thêm 44 thuốc từ catalog demo. Chi tiết nạp thêm cho DB hiện có ở mục M6 bên dưới. QR demo được sao chép từ resource nguồn vào `backend/storage/qr/demo-qr.png` khi seed; nội dung chỉ là chuỗi demo, **không dùng để chuyển tiền thật**. Không ghi đè file đã tồn tại. File runtime được ignore; resource nguồn nằm trong `Pharmacy.Core/Data/Assets`.
 
 Luồng gọi API:
 
@@ -293,3 +293,41 @@ PerformanceTests tạo DB SQLite có tên ngẫu nhiên trong temp, migrate, see
 Log lỗi API chỉ ghi loại exception và trace ID, không ghi exception message/inner exception, request body hoặc cấu hình. Log provider EF Core bị tắt vì lỗi provider có thể chứa giá trị dữ liệu; không bật sensitive-data logging. NFR02_NFR08_LoginAndDatabaseFailure_DoNotLeakSecretsInLogsOr500Response kiểm tra mật khẩu đăng nhập sai và lỗi DB chứa chuỗi kết nối giả: log không chứa bí mật, HTTP 500 chỉ có ProblemDetails chung, không có stack trace. Khi điều tra lỗi, dùng trace ID và loại exception để đối chiếu thao tác tái hiện trên DB test.
 
 Với `dotnet run`, thứ tự cấu hình ở mục appsettings đúng như mô tả. Riêng `npm run dev:api` dùng Node --env-file-if-exists: các giá trị `.env` trở thành biến môi trường của API, nên có thể ghi đè appsettings.Local.json. Nên chọn **một** file chứa cấu hình database (`.env` hoặc appsettings.Local.json); nếu dùng appsettings.Local.json qua npm thì bỏ các khóa database trùng khỏi `.env` và môi trường shell. Không sửa file mẫu thành bí mật hoặc commit file local. Nếu dùng JSON, escape dấu ngoặc kép trong Password theo JSON và Npgsql khi cần.
+
+
+## M6: nạp thêm danh mục demo và ảnh
+
+Catalog `Pharmacy.Core/Data/Seed/catalog.json` và toàn bộ `Data/Assets/drugs/*.png` được nhúng vào assembly; không cần chạy script sinh ảnh lúc chạy API. Giá/phân loại/mô tả lấy đúng catalog do dự án cung cấp, ảnh chỉ minh họa cho đồ án.
+
+Khi DB trống, DbSeeder giữ nguyên 12 thuốc cũ và mọi thuộc tính/lô, chỉ gắn ảnh; thêm 44 thuốc mới với ảnh, đúng catalog và đang bán. Tổng 56 thuốc/56 ảnh, thuốc DEMO12 vẫn tắt bán. Có 103 lô mới, 2–3 lô mỗi thuốc, số lô L<yy><nnn>, hạn thường D+60..D+540; 6 thuốc có thêm biên gần hết hạn trong 30 ngày. Lượng nhập InitialQuantity là 20–200; 4 thuốc có lô đã sử dụng một phần qua DrugBatch.Deduct để tồn còn lại thấp hơn/bằng ngưỡng catalog (5–30), làm báo cáo tồn thấp có dữ liệu mới. Chỉ tạo các lô này cho thuốc mới; không trừ lô/ghi bán hàng của DB hiện có. Dữ liệu tất định theo thứ tự catalog và ngày nghiệp vụ, không random theo lần seed.
+
+DB đã có dữ liệu (SQLite hoặc PostgreSQL/Supabase), cấu hình provider/connection/storage như các mục trên, rồi chạy từ gốc repository:
+
+```powershell
+dotnet run --project backend/Pharmacy.Api --launch-profile http -- --seed-demo-catalog
+```
+
+Lệnh migrate bằng provider đã cấu hình, chỉ thêm DrugId chưa có trong 44 thuốc mới cùng lô của chúng; gắn ảnh cho thuốc catalog/legacy đang chưa có ảnh. Không tạo lại tài khoản, đơn thuốc, đơn hàng, giỏ, thanh toán, Sale hay hóa đơn. Không sửa tên/giá/đơn vị/phân loại/ngưỡng/mô tả/trạng thái bán hoặc lô của thuốc đã tồn tại, kể cả thuốc catalog đang thiếu lô; không đổi ảnh đã gắn, không ghi đè file PNG đã có trong storage. LegacyImage chỉ gắn cho DrugId legacy đang có; không tự tạo 12 thuốc cũ trên DB hiện có.
+
+Ảnh lưu `Storage:Root/drugs/<drugId>.png` (mặc định backend/storage/drugs). File mới được copy vào file tạm rồi đổi tên không ghi đè; giữ nguyên file đích nếu có. Thay đổi DB nằm trong một transaction; file đã copy có thể còn lại nếu DB rollback, chạy lại tái sử dụng file đó. Không xóa ảnh hay dữ liệu cũ. GET /api/products trả imageUrl qua /api/files/drugs/{fileName}.
+
+Chạy xong lệnh thoát, không mở web server, không chiếm cổng 5000; output UTF-8 ghi số thuốc/lô/ảnh được gắn và file ảnh mới. Ví dụ DB M5 có đủ 12 thuốc cũ chưa có ảnh: thêm 44 thuốc, 103 lô, gắn 56 ảnh, tạo 56 file (trừ các file đã có). Chạy lại trả 0/0/0/0, kể cả đổi ngày nghiệp vụ. Exit code 0 khi thành công, 1 khi lỗi; lỗi không in mật khẩu/connection string. DB mới muốn có đầy đủ tài khoản/12 thuốc legacy thì khởi động API bình thường để seed trống; lệnh này chỉ nạp danh mục và ảnh.
+
+Test M6:
+
+```powershell
+dotnet test Pharmacy.sln --filter FullyQualifiedName~DemoCatalogTests
+dotnet build Pharmacy.sln
+dotnet test Pharmacy.sln
+```
+
+| Test | Kiểm chứng |
+|---|---|
+| EmptySeed_Has56EmbeddedImages_ExactCatalogFields_AndPreservesLegacyBatches | 56 thuốc/ảnh, đúng catalog, lô legacy giữ nguyên, imageUrl và đọc ảnh Guest |
+| ExistingDatabase_ImportOnlyAddsMissingDrugsAndImages_ThenIsIdempotent | Thuốc đã sửa/ảnh/file/batch cũ giữ nguyên; bảng đơn/hóa đơn/tài khoản không đổi; chạy lại ngày khác không nhân đôi |
+| Command_ImportsAndExitsWithoutServer_SecondRunReportsZero | Chạy process API với --seed-demo-catalog, thoát 0, không mở server, nạp lại báo 0 |
+| FreshSeeds_AreDeterministic_ReportsIncludeNewLowStockAndExpiringDrugs | Hai DB mới có lô giống nhau; báo cáo có 4 thuốc mới tồn thấp, 6 thuốc gần hết hạn |
+
+Smoke PostgreSQL opt-in hiện có đã bổ sung bước nạp catalog và kiểm chạy lại 0, không đổi số tài khoản. Cần PHARMACY_TEST_POSTGRES trỏ DB test riêng để chạy; không tự dùng DB Supabase vận hành cho test.
+
+Kiểm chứng M6: build cuối 0 warning/0 error; smoke dotnet run của lệnh nạp đã pass với SQLite temp, giữ dữ liệu/file custom và chạy lại báo 0. Suite trước bước chuẩn hóa BatchId sang B + 8 ký tự đạt 179 pass/0 fail/1 skip (bật performance). Suite của mã cuối bị Windows Application Control chặn Pharmacy.Tests.dll (0x800711C7), kể cả retry --no-build; cần chạy lại trên môi trường được phép thực thi assembly test trước khi chốt DoD. Chưa chạy PostgreSQL thật trong phiên này.

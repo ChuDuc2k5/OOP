@@ -47,7 +47,7 @@ public sealed class CatalogTests : IDisposable
     {
         using var client = factory.Client();
         var json = await (await client.GetAsync("/api/products")).Json();
-        Assert.Equal(11, json.GetProperty("total").GetInt32());
+        Assert.Equal(55, json.GetProperty("total").GetInt32());
         foreach (var product in json.GetProperty("items").EnumerateArray())
         {
             Assert.False(product.TryGetProperty("unitPrice", out _));

@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Data/Assets/demo-qr.png" />
+    <EmbeddedResource Include="Data/Seed/catalog.json" />
+    <EmbeddedResource Include="Data/Assets/drugs/*.png" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.11" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
