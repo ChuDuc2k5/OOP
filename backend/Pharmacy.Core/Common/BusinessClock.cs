@@ -1,11 +1,16 @@
 using System.Globalization;
-
 namespace Pharmacy.Core.Common;
 
 public interface IBusinessClock
 {
-    DateOnly Today { get; }
-    DateTimeOffset Now { get; }
+    DateOnly Today
+    {
+        get;
+    }
+    DateTimeOffset Now
+    {
+        get;
+    }
 }
 
 public sealed class BusinessClock(string? dateOverride = null) : IBusinessClock
@@ -17,7 +22,10 @@ public sealed class BusinessClock(string? dateOverride = null) : IBusinessClock
         : DateOnly.ParseExact(dateOverride, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 }
 
-public interface IInventoryLock { Task<IDisposable> AcquireAsync(CancellationToken cancellationToken = default); }
+public interface IInventoryLock
+{
+    Task<IDisposable> AcquireAsync(CancellationToken cancellationToken = default);
+}
 public sealed class InventoryLock : IInventoryLock
 {
     private readonly SemaphoreSlim semaphore = new(1, 1);
@@ -29,6 +37,13 @@ public sealed class InventoryLock : IInventoryLock
     private sealed class Lease(SemaphoreSlim semaphore) : IDisposable
     {
         private bool disposed;
-        public void Dispose() { if (!disposed) { disposed = true; semaphore.Release(); } }
+        public void Dispose()
+        {
+            if (!disposed)
+            {
+                disposed = true;
+                semaphore.Release();
+            }
+        }
     }
 }

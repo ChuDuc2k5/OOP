@@ -1,13 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Pharmacy.Core.Domain;
-
 namespace Pharmacy.Core.Data;
 
 public sealed class DailySequence
 {
     public string Key { get; set; } = "";
-    public int Value { get; set; }
+    public int Value
+    {
+        get; set;
+    }
 }
 
 public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> options) : DbContext(options)
@@ -27,7 +29,6 @@ public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> option
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
     public DbSet<BatchAllocation> BatchAllocations => Set<BatchAllocation>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
-
     protected override void OnModelCreating(ModelBuilder m)
     {
         m.Entity<UserAccount>().HasKey(x => x.UserId);
@@ -45,12 +46,15 @@ public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> option
         m.Entity<PrescriptionItem>().HasIndex(x => new { x.PrescriptionId, x.DrugId }).IsUnique();
         DrugFk(m.Entity<PrescriptionItem>());
         m.Entity<CartItem>().HasKey(x => new { x.UserId, x.DrugId });
-        UserFk(m.Entity<CartItem>(), nameof(CartItem.UserId)); DrugFk(m.Entity<CartItem>());
+        UserFk(m.Entity<CartItem>(), nameof(CartItem.UserId));
+        DrugFk(m.Entity<CartItem>());
         m.Entity<Order>().HasKey(x => x.OrderId);
-        UserFk(m.Entity<Order>(), nameof(Order.UserId)); UserFk(m.Entity<Order>(), nameof(Order.HandledByUserId));
+        UserFk(m.Entity<Order>(), nameof(Order.UserId));
+        UserFk(m.Entity<Order>(), nameof(Order.HandledByUserId));
         m.Entity<Order>().HasOne<Prescription>().WithMany().HasForeignKey(x => x.PrescriptionId);
         m.Entity<Order>().HasMany(x => x.Items).WithOne().HasForeignKey(x => x.OrderId);
-        m.Entity<OrderItem>().HasKey(x => x.OrderItemId); DrugFk(m.Entity<OrderItem>());
+        m.Entity<OrderItem>().HasKey(x => x.OrderItemId);
+        DrugFk(m.Entity<OrderItem>());
         m.Entity<OrderItem>().HasIndex(x => new { x.OrderId, x.DrugId }).IsUnique();
         m.Entity<Payment>().HasKey(x => x.PaymentId);
         m.Entity<Payment>().HasOne<Order>().WithOne().HasForeignKey<Payment>(x => x.OrderId);
@@ -65,12 +69,14 @@ public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> option
         m.Entity<StockReservation>().HasIndex(x => new { x.OrderId, x.DrugId }).IsUnique().HasFilter("\"Status\" = 'Active'");
         m.Entity<Sale>().HasKey(x => x.SaleId);
         m.Entity<Sale>().HasDiscriminator(x => x.Kind).HasValue<OTCSale>(SaleKind.OTC).HasValue<PrescriptionSale>(SaleKind.Prescription);
-        UserFk(m.Entity<Sale>(), nameof(Sale.CreatedByUserId)); UserFk(m.Entity<Sale>(), nameof(Sale.BuyerUserId));
+        UserFk(m.Entity<Sale>(), nameof(Sale.CreatedByUserId));
+        UserFk(m.Entity<Sale>(), nameof(Sale.BuyerUserId));
         m.Entity<Sale>().HasOne<Order>().WithMany().HasForeignKey(x => x.OrderId);
         m.Entity<Sale>().HasOne<Prescription>().WithMany().HasForeignKey(x => x.PrescriptionId);
         m.Entity<Sale>().HasIndex(x => x.OrderId).IsUnique().HasFilter("\"Status\" = 'Completed' AND \"OrderId\" IS NOT NULL");
         m.Entity<Sale>().HasMany(x => x.Items).WithOne().HasForeignKey(x => x.SaleId);
-        m.Entity<SaleItem>().HasKey(x => x.SaleItemId); DrugFk(m.Entity<SaleItem>());
+        m.Entity<SaleItem>().HasKey(x => x.SaleItemId);
+        DrugFk(m.Entity<SaleItem>());
         m.Entity<SaleItem>().HasIndex(x => new { x.SaleId, x.DrugId }).IsUnique();
         m.Entity<SaleItem>().HasMany(x => x.Allocations).WithOne().HasForeignKey(x => x.SaleItemId);
         m.Entity<BatchAllocation>().HasKey(x => x.AllocationId);
@@ -79,16 +85,25 @@ public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> option
         m.Entity<Invoice>().HasOne(x => x.Sale).WithOne().HasForeignKey<Invoice>(x => x.SaleId);
         m.Entity<Invoice>().HasIndex(x => x.SaleId).IsUnique();
         m.Entity<DailySequence>().HasKey(x => x.Key);
-
         foreach (var entity in m.Model.GetEntityTypes())
         {
             foreach (var p in entity.GetProperties())
             {
                 var type = Nullable.GetUnderlyingType(p.ClrType) ?? p.ClrType;
-                if (type.IsEnum) m.Entity(entity.ClrType).Property(p.Name).HasConversion<string>();
-                if (p.Name == "Version") m.Entity(entity.ClrType).Property(p.Name).IsConcurrencyToken();
+                if (type.IsEnum)
+                {
+                    m.Entity(entity.ClrType).Property(p.Name).HasConversion<string>();
+                }
+
+                if (p.Name == "Version")
+                {
+                    m.Entity(entity.ClrType).Property(p.Name).IsConcurrencyToken();
+                }
             }
-            foreach (var fk in entity.GetForeignKeys()) fk.DeleteBehavior = DeleteBehavior.Restrict;
+            foreach (var fk in entity.GetForeignKeys())
+            {
+                fk.DeleteBehavior = DeleteBehavior.Restrict;
+            }
         }
         Check<Drug>(m, "DrugRules", "length(trim(Name)) > 0 AND length(trim(SaleUnit)) > 0 AND CAST(UnitPrice AS REAL) > 0 AND CAST(UnitPrice AS REAL) = CAST(UnitPrice AS INTEGER) AND LowStockThreshold >= 0 AND (IsControlled = 0 OR RequiresPrescription = 1)");
         Check<DrugBatch>(m, "BatchQuantity", "InitialQuantity > 0 AND Quantity >= 0 AND Quantity <= InitialQuantity AND length(trim(BatchNumber)) > 0");
@@ -97,7 +112,10 @@ public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> option
         Check<StockReservation>(m, "ReservationRules", "Quantity > 0 AND Status IN ('Active','Consumed','Released')");
         Check<BatchAllocation>(m, "AllocationQuantity", "Quantity > 0");
         foreach (var t in new[] { typeof(OrderItem), typeof(SaleItem) })
+        {
             m.Entity(t).ToTable(tb => tb.HasCheckConstraint("CK_" + t.Name + "_Money", "Quantity > 0 AND CAST(UnitPrice AS REAL) > 0 AND CAST(UnitPrice AS REAL) = CAST(UnitPrice AS INTEGER) AND CAST(LineTotal AS REAL) = Quantity * CAST(UnitPrice AS REAL)"));
+        }
+
         Check<UserAccount>(m, "AccountRules", "length(Username) BETWEEN 3 AND 30 AND Username NOT GLOB '*[^A-Za-z0-9._-]*' AND length(PasswordHash) > 0 AND NormalizedUsername = upper(trim(Username)) AND Role IN ('User','Staff','Admin')");
         Check<PaymentSetting>(m, "Singleton", "Id = 1");
         Check<Order>(m, "OrderRules", "SaleKind IN ('OTC','Prescription') AND ReceiveMethod IN ('Pickup','Delivery') AND Status IN ('WaitingReview','AwaitingPayment','Preparing','Delivering','Completed','Cancelled','Rejected') AND length(trim(ReceiverName)) > 0 AND length(trim(Phone)) > 0 AND (ReceiveMethod <> 'Delivery' OR (Address IS NOT NULL AND length(trim(Address)) > 0)) AND (SaleKind <> 'Prescription' OR (PrescriptionId IS NOT NULL AND PatientId IS NOT NULL)) AND CAST(TotalAmount AS REAL) >= 0 AND CAST(TotalAmount AS REAL) = CAST(TotalAmount AS INTEGER)");
@@ -113,9 +131,18 @@ public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> option
     {
         ChangeTracker.DetectChanges();
         foreach (var entry in ChangeTracker.Entries<VersionedEntity>().Where(e => e.State == EntityState.Modified))
+        {
             entry.Property(x => x.Version).CurrentValue = checked(entry.Property(x => x.Version).OriginalValue + 1);
+        }
     }
-    public override int SaveChanges(bool acceptAllChangesOnSuccess) { AdvanceVersions(); return base.SaveChanges(acceptAllChangesOnSuccess); }
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        AdvanceVersions();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
-    { AdvanceVersions(); return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken); }
+    {
+        AdvanceVersions();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
 }

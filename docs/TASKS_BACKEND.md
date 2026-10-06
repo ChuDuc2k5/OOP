@@ -58,10 +58,10 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 - Seed chỉ khi domain DB trống; không sửa DB có dữ liệu một phần. Bốn account demo, 12 thuốc, các biên hạn/tồn, ba đơn thuốc, cấu hình ngân hàng và QR demo từ resource nguồn. DB/storage/key runtime được ignore.
 - TC-01..TC-08, TC-55 có integration test WebApplicationFactory + SQLite file tạm/clock giả. TC-06/55 dùng fixture domain gồm giỏ/đơn/nháp/kho/đã cấp/giữ/thanh toán/phân bổ/hóa đơn; TC-55 restart host trên cùng DB với ngày khác và kiểm tra QR không bị ghi đè. Thêm test nền tảng cho ràng buộc, concurrency, cấp mã đồng thời, file storage và lỗi.
 - Kiểm chứng: `dotnet build Pharmacy.sln` 0 warning/0 error; `dotnet test Pharmacy.sln` 43 pass/0 fail. Smoke HTTP: health 200, csrf 204, register 201, login/me 200, logout 204 và me sau logout 401, demo Admin/accounts/OpenAPI 200; đã tắt API.
-- Cách chạy, cấu hình, demo account và bảng TC ↔ tên test có trong `backend/README.md`. Không push/merge/đổi nhánh. Chưa stage/commit được: `git add` và `git commit` bị chặn khi tạo `OOP/.git/worktrees/OOP-be/index.lock` (Permission denied; ACL Deny Write trên metadata). Phiên không cho nâng quyền; toàn bộ thay đổi vẫn nằm trong worktree.
+- Cách chạy, cấu hình, demo account và bảng TC ↔ tên test có trong `backend/README.md`. PO đã commit code M1 trên `be/m1-foundation`; phần sửa review do PO commit. Không push/merge/đổi nhánh.
+- Sửa review M1: khôi phục tiếng Việt và lưu UTF-8; tách câu lệnh, khối điều khiển và constructor dài để dễ đọc; seed có mô tả/đơn vị thực tế cho từng thuốc và Vitamin C đang bán nhưng tồn bằng 0. Bổ sung kiểm tra các dữ liệu seed này vào test hiện có.
 
 ## Câu hỏi cho PO
-- ARCHITECTURE §1/§3 và `.gitignore` đặt DB ở `backend/data`, nhưng §9 ghi `Data Source=data/pharmacy.db` tương đối với `backend/Pharmacy.Api` (thành `backend/Pharmacy.Api/data`). M1 chọn `Data Source=../data/pharmacy.db` để khớp sơ đồ và ignore; PO vui lòng thống nhất đường dẫn trong tài liệu. API contract không thay đổi.
-- Antiforgery ASP.NET cần cookie secret riêng với request token. M1 dùng `pharmacy.antiforgery` HttpOnly cho secret và `XSRF-TOKEN` JS-readable cho request token/header, đúng luồng FE của contract. Ghi nhận để PO/FE biết có thêm cookie hạ tầng.
-- Dải mã 4 số giới hạn 9.999 mã/prefix/ngày. M1 dùng sequence bền vững và trả `409 INVALID_STATE` khi hết dải; không đổi định dạng. Nếu cần mở rộng sau này, PO cần quyết định định dạng.
-- Cần quyền ghi Git metadata của worktree để hoàn tất commit. Dự kiến chia: `feat(be): add M1 domain SQLite foundation and empty-database seed`; `feat(be): F001-F003 add cookie authentication and antiforgery API`; `test(be): cover TC01-TC08 and TC55 and document M1`. Hiện chưa có commit mới do ACL; không tự sửa ACL hoặc dùng cách vượt sandbox.
+- **Đã trả lời:** PO chốt DB ở `backend/data`, dùng `Data Source=../data/pharmacy.db`; giữ nguyên cấu hình hiện tại.
+- **Đã trả lời:** PO chấp nhận cookie secret `pharmacy.antiforgery` HttpOnly, đi cùng request token `XSRF-TOKEN` JS-readable/header theo contract.
+- **Đã trả lời:** PO chấp nhận giới hạn 9.999 mã/prefix/ngày; giữ sequence bền vững và trả `409 INVALID_STATE` khi hết dải.
