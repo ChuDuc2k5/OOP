@@ -246,8 +246,8 @@ dotnet test Pharmacy.sln --filter FullyQualifiedName~CheckoutTests
 | TC-42 | `TC42_OpenQr_ReturnsExpectedAmountOrderContentAndPrivateImage`, `TC42_MissingPaymentConfigurationOrQrFile_DoesNotReserve`, `TC42_PaymentGetAndOpen_HideOtherOwners_RequireExistingPayment`, `TC42_QrUpload_InvalidContentOrOversize_DoesNotChangeConfiguration` |
 | TC-43 | `TC43_OpeningQrOrWritingNote_DoesNotConfirmOrDeductStock` |
 | TC-44 | `TC44_RepeatedQrOpening_KeepsSnapshotAndReservation_AfterSettingsChange`, `TC44_ConcurrentOpeningWithTwoScopes_CreatesOnePaymentAndReservation` |
-| TC-45 | `TC45_StaffAndAdminReviewEnoughMoney_RecordAuditAndPrepareWithoutDeduction`, `TC45_InvalidReviewFields_DoNotWritePaymentOrOrder` |
-| TC-46 | `TC46_Underpayment_Returns200PendingAndShortfallNote` |
+| TC-45 | `TC45_StaffAndAdminReviewEnoughMoney_RecordAuditAndPrepareWithoutDeduction`, `TC45_InvalidReviewFields_DoNotWritePaymentOrOrder`, `TC45_D13_QuickReview_DefaultsAmountsAndTime_TwoPaymentsWithoutReferencesConfirm` |
+| TC-46 | `TC46_Underpayment_Returns200PendingAndShortfallNote`, `TC46_D13_UnderpaymentWithoutReference_RemainsPending_QuickReviewCanConfirmLater` |
 | TC-47 | `TC47_Overpayment_ConfirmsExpectedTotal_PreservesReceivedAmount` |
 | TC-48 | `TC48_ConcurrentReview_WithTwoScopes_OnlyOneConfirmation`, `TC48_ConcurrentFulfillWithTwoScopes_CreatesOneInvoiceAndConsumesOnce` |
 | TC-49 | `TC49_DuplicateConfirmedBankReference_IsRejectedWithoutPartialWrite` |
@@ -332,3 +332,18 @@ dotnet test Pharmacy.sln
 Smoke PostgreSQL opt-in hiện có đã bổ sung bước nạp catalog và kiểm chạy lại 0, không đổi số tài khoản. Cần PHARMACY_TEST_POSTGRES trỏ DB test riêng để chạy; không tự dùng DB Supabase vận hành cho test.
 
 Kiểm chứng M6: build cuối 0 warning/0 error; smoke dotnet run của lệnh nạp đã pass với SQLite temp, giữ dữ liệu/file custom và chạy lại báo 0. Suite trước bước chuẩn hóa BatchId sang B + 8 ký tự đạt 179 pass/0 fail/1 skip (bật performance). Suite của mã cuối bị Windows Application Control chặn Pharmacy.Tests.dll (0x800711C7), kể cả retry --no-build; cần chạy lại trên môi trường được phép thực thi assembly test trước khi chốt DoD. Chưa chạy PostgreSQL thật trong phiên này.
+
+
+`POST /api/staff/payments/{id}/review` chấp nhận `{}` để xác nhận đúng số tiền dự kiến tại thời điểm hiện tại. `bankReference` tùy chọn: null/rỗng/trắng lưu null; nếu có mã thì trim và vẫn duy nhất giữa các thanh toán Confirmed. `receivedAmount` thiếu/null mặc định ExpectedAmount, `receivedAt` thiếu/null mặc định IBusinessClock.Now; số tiền thực nhận nhỏ hơn dự kiến vẫn PendingReview với ghi chú thiếu tiền, HTTP 200/approved=false. Duyệt không trừ kho; fulfill vẫn riêng theo D8.
+
+Migration `OptionalPaymentReference` của cả SQLite và PostgreSQL bỏ điều kiện bắt buộc BankReference trong CHECK khi Confirmed; cột đã nullable và unique index giữ nguyên. API tự migrate khi khởi động. SQLite rebuild Payments, giữ dữ liệu và index; rollback migration khi đã có Confirmed không mã sẽ bị CHECK cũ chặn, cần xử lý các bản ghi đó trước khi downgrade.
+
+
+Test bổ sung:
+
+| Test | Kiểm chứng |
+|---|---|
+| TC45_D13_QuickReview_DefaultsAmountsAndTime_TwoPaymentsWithoutReferencesConfirm | Hai đơn không mã vẫn xác nhận, giá trị mặc định và null/rỗng/trắng |
+| TC46_D13_UnderpaymentWithoutReference_RemainsPending_QuickReviewCanConfirmLater | Thiếu tiền không mã, sau đó xác nhận nhanh đúng dự kiến |
+| TC49_DuplicateConfirmedBankReference_IsRejectedWithoutPartialWrite | Mã có giá trị vẫn bị chặn trùng |
+| DatabaseProviderTests.D13_OptionalReferenceMigration_PreservesExistingData_AndAllowsConfirmationWithoutReference | Nâng cấp SQLite bảo toàn dữ liệu và cho phép xác nhận không mã |
