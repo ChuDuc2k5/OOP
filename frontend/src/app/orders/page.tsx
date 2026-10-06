@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, Suspense } from 'react';
+import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { ordersApi } from '@/lib/api';
+import { ApiException, ordersApi } from '@/lib/api';
 import { OrderRow, OrderStatus, Paged } from '@/lib/types';
 import {
   formatDate,
@@ -66,7 +67,7 @@ function OrdersContent() {
       });
       setOrdersData(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể tải danh sách đơn hàng';
+      const msg = err instanceof ApiException ? err.title : 'Không thể tải danh sách đơn hàng';
       setError(msg);
     } finally {
       setLoading(false);
@@ -90,14 +91,7 @@ function OrdersContent() {
   };
 
   if (authLoading || !authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex items-center space-x-2 text-emerald-700 font-medium">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Đang xác thực quyền truy cập...</span>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   const totalPages = Math.ceil(ordersData.total / ordersData.pageSize) || 1;
@@ -155,13 +149,8 @@ function OrdersContent() {
         </div>
 
         {/* Orders List Area */}
-        {loading ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-600">Đang tải danh sách đơn hàng...</p>
-          </div>
-        ) : error ? (
-          <div className="bg-rose-50 border border-rose-200 text-rose-800 p-6 rounded-2xl text-center space-y-3">
+        {loading ? <LoadingState /> : error ? (
+          <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 space-y-3">
             <AlertCircle className="w-8 h-8 text-rose-600 mx-auto" />
             <p className="font-semibold">{error}</p>
             <button
@@ -172,7 +161,7 @@ function OrdersContent() {
             </button>
           </div>
         ) : ordersData.items.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
+          <div role="status" className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-600 space-y-3">
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
               <ShoppingBag className="w-8 h-8" />
             </div>

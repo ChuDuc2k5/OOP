@@ -77,13 +77,15 @@ export default function Sidebar({ role }: SidebarProps) {
         <div className="flex items-center space-x-2 font-bold text-emerald-400">
           <Pill className="w-5 h-5 text-emerald-400" />
           <span>
-            {role === "Admin" ? "Admin Dashboard" : "Staff Dashboard"}
+            {role === "Admin" ? "Quản trị nhà thuốc" : "Nhân viên nhà thuốc"}
           </span>
         </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
-          aria-label="Toggle Navigation"
+          aria-label="Mở menu quản lý"
+          aria-expanded={mobileOpen}
+          aria-controls="dashboard-menu"
         >
           {mobileOpen ? (
             <X className="w-6 h-6" />
@@ -103,9 +105,10 @@ export default function Sidebar({ role }: SidebarProps) {
 
       {/* Sidebar container */}
       <aside
+        id="dashboard-menu"
         className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:static lg:h-screen lg:z-10`}
+          mobileOpen ? "visible translate-x-0" : "invisible -translate-x-full"
+        } lg:visible lg:static lg:h-screen lg:z-10`}
       >
         {/* Brand Header */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-950/50">
@@ -126,6 +129,7 @@ export default function Sidebar({ role }: SidebarProps) {
             </div>
           </Link>
           <button
+            aria-label="Đóng menu quản lý"
             onClick={() => setMobileOpen(false)}
             className="lg:hidden text-slate-400 hover:text-white"
           >
@@ -145,7 +149,7 @@ export default function Sidebar({ role }: SidebarProps) {
                   {user?.username || "Chưa đăng nhập"}
                 </p>
                 <p className="text-xs text-emerald-400 font-medium truncate">
-                  {user ? ROLE_LABELS[user.role] : "Guest"}
+                  {user ? ROLE_LABELS[user.role] : "Khách"}
                 </p>
               </div>
             </div>

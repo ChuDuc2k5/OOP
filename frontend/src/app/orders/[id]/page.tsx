@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, use } from 'react';
+import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { ordersApi } from '@/lib/api';
+import { ApiException, ordersApi } from '@/lib/api';
 import { OrderView } from '@/lib/types';
 import {
   formatDateTime,
@@ -62,7 +63,7 @@ export default function OrderDetailPage({
       const data = await ordersApi.getOrderById(orderId);
       setOrder(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không tìm thấy thông tin đơn hàng';
+      const msg = err instanceof ApiException ? err.title : 'Không tìm thấy thông tin đơn hàng';
       setError(msg);
     } finally {
       setLoading(false);
@@ -83,7 +84,7 @@ export default function OrderDetailPage({
       setOrder(updated);
       setShowCancelModal(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể hủy đơn hàng';
+      const msg = err instanceof ApiException ? err.title : 'Không thể hủy đơn hàng';
       setCancelError(msg);
     } finally {
       setCancelling(false);
@@ -91,14 +92,7 @@ export default function OrderDetailPage({
   };
 
   if (authLoading || !authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex items-center space-x-2 text-emerald-700 font-medium">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Đang xác thực quyền truy cập...</span>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
@@ -124,13 +118,8 @@ export default function OrderDetailPage({
           </Link>
         </div>
 
-        {loading ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-600">Đang tải thông tin đơn hàng #{orderId}...</p>
-          </div>
-        ) : error || !order ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
+        {loading ? <LoadingState /> : error || !order ? (
+          <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 space-y-3">
             <XCircle className="w-12 h-12 text-rose-500 mx-auto" />
             <h2 className="text-lg font-bold text-slate-800">Không tìm thấy đơn hàng</h2>
             <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">

@@ -25,6 +25,7 @@ import {
   useAction,
   useResource,
   validateImage,
+  errorTitle,
 } from "./shared";
 import { StockSummary } from "./Inventory";
 
@@ -421,7 +422,7 @@ function ImageUpload({
                 setFile(selected);
               } catch (err) {
                 action.setError(
-                  err instanceof Error ? err.message : "Ảnh không hợp lệ.",
+                  errorTitle(err),
                 );
               }
             }
@@ -558,7 +559,7 @@ export function DrugDetail({
             title="Ảnh thuốc"
             imageUrl={d.imageUrl}
             send={(file) => adminApi.drugImage(drugId, file)}
-            saved={r.reload}
+            saved={async () => r.setData(await adminApi.drug(drugId))}
           />
           <Card>
             <h2 className="font-bold">Tồn kho hiện tại</h2>
@@ -584,14 +585,13 @@ export function PaymentSettings() {
     accountNumber: "",
     accountName: "",
   });
+  const bankName = r.data?.bankName;
+  const accountNumber = r.data?.accountNumber;
+  const accountName = r.data?.accountName;
   useEffect(() => {
-    if (r.data)
-      setForm({
-        bankName: r.data.bankName,
-        accountNumber: r.data.accountNumber,
-        accountName: r.data.accountName,
-      });
-  }, [r.data]);
+    if (bankName !== undefined && accountNumber !== undefined && accountName !== undefined)
+      setForm({ bankName, accountNumber, accountName });
+  }, [bankName, accountNumber, accountName]);
   return (
     <Page title="Cấu hình tài khoản nhận tiền & QR">
       <LoadState {...r} retry={r.reload} />

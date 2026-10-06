@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, use } from 'react';
+import { LoadingState } from '@/components/Status';
+import { ErrorState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { cartApi, productsApi } from '@/lib/api';
+import { ApiException, cartApi, productsApi } from '@/lib/api';
 import { Product } from '@/lib/types';
 import { formatVND } from '@/lib/format';
 import { useAuth } from '@/context/AuthContext';
@@ -38,6 +40,7 @@ export default function ProductDetailPage({
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [addedToast, setAddedToast] = useState(false);
+  const [cartError, setCartError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDetail() {
@@ -47,7 +50,7 @@ export default function ProductDetailPage({
         const data = await productsApi.getProductById(drugId);
         setProduct(data);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Không tìm thấy thông tin sản phẩm';
+        const msg = err instanceof ApiException ? err.title : 'Không tìm thấy thông tin sản phẩm';
         setError(msg);
       } finally {
         setLoading(false);
@@ -63,12 +66,13 @@ export default function ProductDetailPage({
   const handleAddToCart = async () => {
     if (!product) return;
     setAddingToCart(true);
+    setCartError(null);
     try {
       await cartApi.addItem({ drugId: product.drugId, quantity });
       setAddedToast(true);
       setTimeout(() => setAddedToast(false), 3000);
     } catch (err) {
-      console.warn('Lỗi thêm giỏ hàng:', err);
+      setCartError(err instanceof ApiException ? err.title : 'Không thể thêm thuốc vào giỏ. Vui lòng thử lại.');
     } finally {
       setAddingToCart(false);
     }
@@ -88,15 +92,9 @@ export default function ProductDetailPage({
           <span>Quay lại danh sách sản phẩm</span>
         </Link>
 
-        {loading ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 flex items-center justify-center min-h-[300px]">
-            <div className="flex items-center space-x-2 text-emerald-700 font-medium">
-              <RefreshCw className="w-5 h-5 animate-spin" />
-              <span>Đang tải thông tin sản phẩm...</span>
-            </div>
-          </div>
-        ) : error || !product ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
+        {cartError && <ErrorState message={cartError} />}
+        {loading ? <LoadingState /> : error || !product ? (
+          <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 space-y-3">
             <XCircle className="w-12 h-12 text-rose-500 mx-auto" />
             <h2 className="text-xl font-bold text-slate-800">Không tìm thấy sản phẩm</h2>
             <p className="text-sm text-slate-500 max-w-md mx-auto">

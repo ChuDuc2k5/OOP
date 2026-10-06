@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, Suspense } from 'react';
+import { LoadingState } from '@/components/Status';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import HealthBadge from '@/components/HealthBadge';
-import { productsApi } from '@/lib/api';
+import { ApiException, productsApi } from '@/lib/api';
 import { Product, Paged } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
 import { Search, Filter, RefreshCw, AlertCircle, Shield, Truck, Clock } from 'lucide-react';
@@ -46,7 +47,7 @@ function HomeContent() {
       });
       setProductsData(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể tải danh sách sản phẩm';
+      const msg = err instanceof ApiException ? err.title : 'Không thể tải danh sách sản phẩm';
       setError(msg);
     } finally {
       setLoading(false);
@@ -190,22 +191,8 @@ function HomeContent() {
         </div>
 
         {/* Product Grid Area */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-8">
-            {Array.from({ length: 8 }).map((_, idx) => (
-              <div
-                key={idx}
-                className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 animate-pulse"
-              >
-                <div className="aspect-video bg-slate-200 rounded-lg" />
-                <div className="h-4 bg-slate-200 rounded w-3/4" />
-                <div className="h-3 bg-slate-200 rounded w-1/2" />
-                <div className="h-8 bg-slate-200 rounded w-full mt-4" />
-              </div>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-6 text-center space-y-3">
+        {loading ? <LoadingState /> : error ? (
+          <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 space-y-3">
             <AlertCircle className="w-8 h-8 text-rose-600 mx-auto" />
             <p className="font-semibold text-base">Không thể tải dữ liệu sản phẩm</p>
             <p className="text-sm text-rose-600">{error}</p>
@@ -218,7 +205,7 @@ function HomeContent() {
             </button>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center space-y-3">
+          <div role="status" className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-600 space-y-3">
             <AlertCircle className="w-10 h-10 text-slate-400 mx-auto" />
             <h3 className="font-bold text-slate-800 text-lg">Không tìm thấy sản phẩm</h3>
             <p className="text-sm text-slate-500 max-w-md mx-auto">

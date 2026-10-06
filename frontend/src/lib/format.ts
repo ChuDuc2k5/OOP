@@ -26,35 +26,22 @@ export function formatVND(amount: number | null | undefined): string {
  */
 export function formatDate(dateString: string | null | undefined): string {
   if (!dateString) return '-';
-  try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return dateString;
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch {
-    return dateString;
-  }
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '-';
+  return date.toLocaleDateString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric',
+  });
 }
 
-/**
- * Định dạng ngày giờ dd/MM/yyyy HH:mm
- */
-export function formatDateTime(dateTimeString: string | null | undefined): string {
-  if (!dateTimeString) return '-';
-  try {
-    const d = new Date(dateTimeString);
-    if (isNaN(d.getTime())) return dateTimeString;
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-  } catch {
-    return dateTimeString;
-  }
+/** ??nh d?ng ng?y gi? dd/MM/yyyy HH:mm theo gi? Vi?t Nam. */
+export function formatDateTime(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '-';
+  const time = date.toLocaleTimeString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  });
+  return formatDate(dateString) + ' ' + time;
 }
 
 /**
