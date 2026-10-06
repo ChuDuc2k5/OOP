@@ -102,7 +102,8 @@ public sealed class Payment : VersionedEntity
         decimal amount,
         DateTimeOffset receivedAt,
         string approver,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        string? note = null)
     {
         Guard.State(Status == PaymentStatus.PendingReview && amount >= ExpectedAmount);
         BankReference = Guard.Required(reference);
@@ -110,6 +111,7 @@ public sealed class Payment : VersionedEntity
         ReceivedAt = receivedAt;
         ApprovedByUserId = Guard.Required(approver);
         ApprovedAt = now;
+        ReviewNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
         Status = PaymentStatus.Confirmed;
     }
     public void RecordUnderpayment(

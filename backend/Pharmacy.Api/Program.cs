@@ -74,6 +74,11 @@ builder.Services.AddScoped<PrescriptionService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<SaleEvaluation>();
+builder.Services.AddScoped<CheckoutService>();
+builder.Services.AddScoped<SaleService>();
+builder.Services.AddScoped<ManualPaymentService>();
+builder.Services.AddScoped<InvoiceService>();
 builder.Services.AddScoped<DbSeeder>();
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
