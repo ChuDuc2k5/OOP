@@ -98,7 +98,7 @@ public sealed class Payment : VersionedEntity
         get; private set;
     }
     public void Confirm(
-        string reference,
+        string? reference,
         decimal amount,
         DateTimeOffset receivedAt,
         string approver,
@@ -106,7 +106,7 @@ public sealed class Payment : VersionedEntity
         string? note = null)
     {
         Guard.State(Status == PaymentStatus.PendingReview && amount >= ExpectedAmount);
-        BankReference = Guard.Required(reference);
+        BankReference = string.IsNullOrWhiteSpace(reference) ? null : reference.Trim();
         ReceivedAmount = Guard.Money(amount);
         ReceivedAt = receivedAt;
         ApprovedByUserId = Guard.Required(approver);
@@ -116,13 +116,13 @@ public sealed class Payment : VersionedEntity
     }
     public void RecordUnderpayment(
         decimal amount,
-        string reference,
+        string? reference,
         DateTimeOffset receivedAt,
         string note)
     {
         Guard.State(Status == PaymentStatus.PendingReview && amount >= 0 && amount < ExpectedAmount && decimal.Truncate(amount) == amount);
         ReceivedAmount = amount;
-        BankReference = Guard.Required(reference);
+        BankReference = string.IsNullOrWhiteSpace(reference) ? null : reference.Trim();
         ReceivedAt = receivedAt;
         ReviewNote = Guard.Required(note);
     }

@@ -128,6 +128,10 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 
 - Kiểm chứng M10: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Pharmacy.sln 193 pass/0 fail/2 skip (PostgreSQL/performance opt-in). Windows không chặn binary trong lượt này.
 
+- Migration OptionalPaymentReference tạo bằng EF CLI cho cả SQLite và PostgreSQL: BankReference đã nullable, chỉ bỏ điều kiện bắt buộc mã khỏi CHECK CK_Payment_PaymentRules; giữ unique index và các điều kiện còn lại. Có test nâng cấp DB cũ, bảo toàn dữ liệu nghiệp vụ/payment và xác nhận không mã sau nâng cấp. SQLite rebuild bảng Payments có thể đổi thứ tự cột vật lý nên test so sánh Payment theo thuộc tính. Script PostgreSQL idempotent đã sinh offline trong temp; không sửa migration cũ.
+
+- Kiểm chứng M11: build cuối 0 warning/0 error. Lượt trước đạt 205 pass/1 fail/2 skip; fail duy nhất ở assertion migration so snapshot theo thứ tự cột Payments sau rebuild SQLite. Assertion đã sửa để so sánh thuộc tính Payment và giữ kiểm tra tất cả bảng khác, nhưng dotnet test Pharmacy.sln cuối bị Windows Application Control chặn Pharmacy.Tests.dll (FileLoadException 0x800711C7) trước discovery. Retry --no-build --no-restore cùng binary vẫn bị chặn; PO cần chạy lại test ở worktree khác. Các test doanh thu/duyệt nhanh và hồi quy đã pass trong lượt trước. PostgreSQL mới kiểm model/migration/script offline, chưa có PHARMACY_TEST_POSTGRES để kiểm chứng runtime; performance opt-in chưa bật. Không thay/tắt bảo vệ máy.
+
 ## Câu hỏi cho PO
 - M3.5 không đổi API contract. Phạm vi IInventoryLock vẫn một tiến trình ứng dụng; dùng schema pharmacy không exposed qua Supabase Data API. Chưa có connection PostgreSQL để chạy smoke thật; cần chạy nhóm opt-in trên DB test riêng trước demo Supabase.
 - M3: DB M1 không có thời điểm tạo đơn thuốc. Migration giữ bản ghi cũ và dùng CreatedAt = UnixEpoch làm giá trị chưa biết; bản ghi mới lưu thời điểm thật. Không đổi API contract; README đã nêu giới hạn dữ liệu cũ.

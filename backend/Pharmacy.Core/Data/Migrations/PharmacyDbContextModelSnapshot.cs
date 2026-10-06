@@ -359,7 +359,7 @@ namespace Pharmacy.Core.Data.Migrations
 
                     b.ToTable("Payments", t =>
                         {
-                            t.HasCheckConstraint("CK_Payment_PaymentRules", "CAST(ExpectedAmount AS REAL) > 0 AND CAST(ExpectedAmount AS REAL) = CAST(ExpectedAmount AS INTEGER) AND (ReceivedAmount IS NULL OR (CAST(ReceivedAmount AS REAL) >= 0 AND CAST(ReceivedAmount AS REAL) = CAST(ReceivedAmount AS INTEGER))) AND (Status <> 'Confirmed' OR (BankReference IS NOT NULL AND ApprovedByUserId IS NOT NULL AND ApprovedAt IS NOT NULL AND CAST(ReceivedAmount AS REAL) >= CAST(ExpectedAmount AS REAL)))");
+                            t.HasCheckConstraint("CK_Payment_PaymentRules", "CAST(ExpectedAmount AS REAL) > 0 AND CAST(ExpectedAmount AS REAL) = CAST(ExpectedAmount AS INTEGER) AND (ReceivedAmount IS NULL OR (CAST(ReceivedAmount AS REAL) >= 0 AND CAST(ReceivedAmount AS REAL) = CAST(ReceivedAmount AS INTEGER))) AND (Status <> 'Confirmed' OR (ApprovedByUserId IS NOT NULL AND ApprovedAt IS NOT NULL AND CAST(ReceivedAmount AS REAL) >= CAST(ExpectedAmount AS REAL)))");
 
                             t.HasCheckConstraint("CK_Payment_PaymentStatus", "Status IN ('PendingReview','Confirmed','Closed') AND length(trim(BankName)) > 0 AND length(trim(AccountNumber)) > 0 AND length(trim(AccountName)) > 0 AND length(trim(QrImagePath)) > 0");
                         });

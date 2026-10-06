@@ -1,4 +1,6 @@
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.Identity;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -12,6 +14,46 @@ namespace Pharmacy.Tests;
 
 public sealed class DatabaseProviderTests
 {
+    [Fact]
+    public async Task D13_OptionalReferenceMigration_PreservesExistingData_AndAllowsConfirmationWithoutReference()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "pharmacy-payment-upgrade-" + Guid.NewGuid() + ".db");
+        try
+        {
+            await using var db = new PharmacyDbContext(new DbContextOptionsBuilder<PharmacyDbContext>()
+                .UseSqlite("Data Source=" + path + ";Pooling=False").Options);
+            var previous = db.Database.GetMigrations().Last(x => !x.EndsWith("OptionalPaymentReference"));
+            await db.GetService<IMigrator>().MigrateAsync(previous);
+            var clock = new TestClock();
+            await new DbSeeder(db, clock, new PasswordHasher<UserAccount>(), new IdGenerator(db, clock), new(path + "-storage")).SeedAsync();
+            await PersistenceFixture.AddBusinessData(db);
+            var before = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(await PersistenceFixture.Snapshot(db))!;
+            var paymentsBefore = JsonSerializer.Serialize(await db.Payments.AsNoTracking().OrderBy(x => x.PaymentId).ToListAsync());
+            await db.Database.MigrateAsync();
+            var after = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(await PersistenceFixture.Snapshot(db))!;
+            foreach (var table in before.Keys.Where(x => x != "Payments"))
+            {
+                Assert.Equal(before[table], after[table]);
+            }
+            // SQLite rebuilds Payments and can reorder physical columns; compare mapped values.
+            Assert.Equal(paymentsBefore, JsonSerializer.Serialize(await db.Payments.AsNoTracking().OrderBy(x => x.PaymentId).ToListAsync()));
+            var order = new Order("UPORDER", "U0000003", clock.Now, SaleKind.OTC,
+                "Chu Đức", "0900000000", ReceiveMethod.Pickup);
+            order.AddItem(new("UPITEM", order.OrderId, "PARA500", "Paracetamol 500mg", "Viên", 1, 1000));
+            db.Orders.Add(order);
+            var setting = await db.PaymentSettings.SingleAsync();
+            var payment = new Payment("UPPAY", order.OrderId, 1000, setting.CreateSnapshot(), clock.Now);
+            payment.Confirm(null, 1000, clock.Now, "U0000002", clock.Now);
+            db.Payments.Add(payment);
+            await db.SaveChangesAsync();
+            Assert.Null((await db.Payments.AsNoTracking().SingleAsync(x => x.PaymentId == "UPPAY")).BankReference);
+        }
+        finally
+        {
+            ApiFactory.Cleanup(path);
+        }
+    }
+
     [Theory]
     [InlineData(2067, true)]
     [InlineData(1555, true)]
@@ -34,9 +76,9 @@ public sealed class DatabaseProviderTests
     {
         using var sqlite = new SqliteMigrationFactory().CreateDbContext([]);
         using var postgres = new PostgresMigrationFactory().CreateDbContext([]);
-        Assert.Equal(2, sqlite.Database.GetMigrations().Count());
-        Assert.Single(postgres.Database.GetMigrations());
-        Assert.DoesNotContain(postgres.Database.GetMigrations().Single(), sqlite.Database.GetMigrations());
+        Assert.Equal(3, sqlite.Database.GetMigrations().Count());
+        Assert.Equal(2, postgres.Database.GetMigrations().Count());
+        Assert.All(postgres.Database.GetMigrations(), migration => Assert.DoesNotContain(migration, sqlite.Database.GetMigrations()));
         Assert.False(sqlite.Database.HasPendingModelChanges());
         Assert.False(postgres.Database.HasPendingModelChanges());
         var script = postgres.GetService<IMigrator>().GenerateScript(options: MigrationsSqlGenerationOptions.Idempotent);
