@@ -1,0 +1,4 @@
+.tools/
+.packages/
+smoke-*.log
+/storage/

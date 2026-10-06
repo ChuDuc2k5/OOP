@@ -51,7 +51,17 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 ---
 
 ## Đã làm
-_(Dev cập nhật sau mỗi milestone)_
+- M1 (`be/m1-foundation`, 2026-10-06): thêm Pharmacy.Core/Pharmacy.Tests vào solution; toàn bộ entity theo SRS 7.4/CL-01, Sale TPH và Validate đa hình, collection chỉ đọc, phương thức bảo vệ tồn/đã cấp/trạng thái.
+- DbContext + migration InitialFoundation: FK Restrict, unique/partial index, CHECK số lượng/giá/role/trạng thái, Version concurrency token tự tăng trên năm entity yêu cầu. Auto migrate lúc khởi động.
+- IBusinessClock theo múi giờ Việt Nam (override chỉ Development/Test), IdGenerator có sequence SQLite atomic/persist, IInventoryLock, IFileStorage kiểm tra magic/MIME/extension/5 MB/path traversal; BusinessException và ProblemDetails tiếng Việt, log lỗi nội bộ, không trả stack trace.
+- F001–F003, csrf/me, cookie HttpOnly/SameSite=Lax, policy role, PasswordHasher; 401/403 JSON; đăng ký bỏ qua trường ngoài DTO và không tự login; token được cấp lại sau login/logout.
+- Seed chỉ khi domain DB trống; không sửa DB có dữ liệu một phần. Bốn account demo, 12 thuốc, các biên hạn/tồn, ba đơn thuốc, cấu hình ngân hàng và QR demo từ resource nguồn. DB/storage/key runtime được ignore.
+- TC-01..TC-08, TC-55 có integration test WebApplicationFactory + SQLite file tạm/clock giả. TC-06/55 dùng fixture domain gồm giỏ/đơn/nháp/kho/đã cấp/giữ/thanh toán/phân bổ/hóa đơn; TC-55 restart host trên cùng DB với ngày khác và kiểm tra QR không bị ghi đè. Thêm test nền tảng cho ràng buộc, concurrency, cấp mã đồng thời, file storage và lỗi.
+- Kiểm chứng: `dotnet build Pharmacy.sln` 0 warning/0 error; `dotnet test Pharmacy.sln` 43 pass/0 fail. Smoke HTTP: health 200, csrf 204, register 201, login/me 200, logout 204 và me sau logout 401, demo Admin/accounts/OpenAPI 200; đã tắt API.
+- Cách chạy, cấu hình, demo account và bảng TC ↔ tên test có trong `backend/README.md`. Không push/merge/đổi nhánh. Chưa stage/commit được: `git add` và `git commit` bị chặn khi tạo `OOP/.git/worktrees/OOP-be/index.lock` (Permission denied; ACL Deny Write trên metadata). Phiên không cho nâng quyền; toàn bộ thay đổi vẫn nằm trong worktree.
 
 ## Câu hỏi cho PO
-_(Dev ghi câu hỏi ở đây)_
+- ARCHITECTURE §1/§3 và `.gitignore` đặt DB ở `backend/data`, nhưng §9 ghi `Data Source=data/pharmacy.db` tương đối với `backend/Pharmacy.Api` (thành `backend/Pharmacy.Api/data`). M1 chọn `Data Source=../data/pharmacy.db` để khớp sơ đồ và ignore; PO vui lòng thống nhất đường dẫn trong tài liệu. API contract không thay đổi.
+- Antiforgery ASP.NET cần cookie secret riêng với request token. M1 dùng `pharmacy.antiforgery` HttpOnly cho secret và `XSRF-TOKEN` JS-readable cho request token/header, đúng luồng FE của contract. Ghi nhận để PO/FE biết có thêm cookie hạ tầng.
+- Dải mã 4 số giới hạn 9.999 mã/prefix/ngày. M1 dùng sequence bền vững và trả `409 INVALID_STATE` khi hết dải; không đổi định dạng. Nếu cần mở rộng sau này, PO cần quyết định định dạng.
+- Cần quyền ghi Git metadata của worktree để hoàn tất commit. Dự kiến chia: `feat(be): add M1 domain SQLite foundation and empty-database seed`; `feat(be): F001-F003 add cookie authentication and antiforgery API`; `test(be): cover TC01-TC08 and TC55 and document M1`. Hiện chưa có commit mới do ACL; không tự sửa ACL hoặc dùng cách vượt sandbox.
