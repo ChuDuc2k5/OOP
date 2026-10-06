@@ -178,6 +178,7 @@ type PrescriptionView = {
   reviewedByUsername?: string; reviewedAt?: string; reviewNote?: string;
   createdAt: string;
   items: PrescriptionItemView[];
+  linkedOrders: { orderId: string; status: OrderStatus; items: { drugId: string; drugName: string; unit: string; quantity: number }[] }[];  // D12: đơn hàng online dùng đơn thuốc này (chỉ trả cho S,A; với U là [])
 }
 type PrescriptionRow = Pick<PrescriptionView, "prescriptionId"|"status"|"patientId"|"patientName"|"ownerUsername"|"createdAt"|"validUntil">
 type PrescriptionDetailsInput = {
