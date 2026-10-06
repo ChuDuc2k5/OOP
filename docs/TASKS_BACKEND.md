@@ -117,6 +117,12 @@ Chỉ sửa trong `backend/` và `Pharmacy.sln`.
 
 - Kiểm chứng M8: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Pharmacy.sln 189 pass/0 fail/2 skip (PostgreSQL và performance opt-in chưa bật). Windows Application Control không chặn binary trong lượt này.
 
+- M9 (`be/m9-presentation-data`, 2026-10-06): áp dụng D11, 12 thuốc nền dùng mã có nghĩa và tên từ legacyImages.name; HYDRO1 giữ tắt bán với mô tả ngừng kinh doanh. Giữ nguyên giá/ngưỡng/cờ/đơn vị/lô/biên ngày. Tài khoản admin/staff/chuduc/nguyenvana dùng U0000001..U0000004; đơn thuốc thuộc chuduc, bệnh nhân Chu Đức/BN001 và người kê BS. Nguyễn Văn Minh cho các đơn đã có chi tiết.
+- Seed không tạo PaymentSetting hoặc QR; Admin cấu hình qua F017, chưa cấu hình trả PAYMENT_NOT_CONFIGURED. Xóa resource QR cũ; test ảnh dùng PNG thuốc có sẵn, PaymentFixture tạo cấu hình/ảnh kiểm thử riêng khi cần. Test TC42 mới kiểm tra DB mới không có QR, mở thanh toán không ghi Payment/reservation hay đổi đơn. CatalogSeedTests kiểm tra đủ 56 ảnh/thuốc, tên mới và mọi thuộc tính/lô nền giữ nguyên.
+- Đổi class/file thành CatalogSeeder và CatalogSeedTests, lệnh --seed-catalog; giữ alias cũ chỉ trong Program.cs, không giới thiệu trong README. Catalog chỉ giữ dữ liệu thuốc/ảnh đang dùng, bỏ bảng ánh xạ mã cũ không còn được đọc sau khi áp dụng tên mới. Rà chuỗi nguồn backend chỉ còn alias tương thích; cập nhật README/tài khoản, hướng dẫn cấu hình QR và TEST_REPORT_BE.md. Không đổi schema/migration, không sửa dữ liệu DB đang có, không git add/commit/đổi nhánh.
+
+- Kiểm chứng M9 lúc 17:23 +07:00 ngày 2026-10-06: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Pharmacy.sln 190 pass/0 fail/2 skip (PostgreSQL/performance opt-in). Rà *.cs/*.md/*.json backend ngoài bin/obj chỉ còn alias lệnh cũ trong Program.cs. Windows không chặn binary trong lượt này.
+
 ## Câu hỏi cho PO
 - M3.5 không đổi API contract. Phạm vi IInventoryLock vẫn một tiến trình ứng dụng; dùng schema pharmacy không exposed qua Supabase Data API. Chưa có connection PostgreSQL để chạy smoke thật; cần chạy nhóm opt-in trên DB test riêng trước demo Supabase.
 - M3: DB M1 không có thời điểm tạo đơn thuốc. Migration giữ bản ghi cũ và dùng CreatedAt = UnixEpoch làm giá trị chưa biết; bản ghi mới lưu thời điểm thật. Không đổi API contract; README đã nêu giới hạn dữ liệu cũ.

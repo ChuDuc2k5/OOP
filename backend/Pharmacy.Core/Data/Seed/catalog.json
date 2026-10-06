@@ -591,18 +591,5 @@
       "group": "controlled",
       "description": "An thần, giải lo âu. Thuốc hướng thần kiểm soát đặc biệt, chỉ cấp theo đơn hợp lệ."
     }
-  ],
-  "legacyRename": {
-    "DEMO02": "VITC500",
-    "DEMO03": "NACL09",
-    "DEMO04": "ORESOL",
-    "DEMO05": "CETI10",
-    "DEMO06": "ZINC10",
-    "DEMO07": "AMOX500",
-    "DEMO08": "CEFI200",
-    "DEMO09": "METF500",
-    "DEMO10": "AMLO5",
-    "DEMO11": "DIAZ5",
-    "DEMO12": "HYDRO1"
-  }
+  ]
 }

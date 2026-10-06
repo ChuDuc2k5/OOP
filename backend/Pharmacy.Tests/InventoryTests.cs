@@ -39,8 +39,8 @@ public sealed class InventoryTests : IDisposable
     public async Task TC14_AddValidBatch_IncreasesStock_AndReturnsContractDto()
     {
         using var client = await Staff(true);
-        var before = await (await client.GetAsync("/api/inventory/DEMO02")).Json();
-        var added = await client.PostAsJsonAsync("/api/admin/drugs/DEMO02/batches", new
+        var before = await (await client.GetAsync("/api/inventory/VITC500")).Json();
+        var added = await client.PostAsJsonAsync("/api/admin/drugs/VITC500/batches", new
         {
             batchNumber = "  FRESH  ",
             expiryDate = "2026-10-07",
@@ -52,7 +52,7 @@ public sealed class InventoryTests : IDisposable
         Assert.Equal("FRESH", batch.GetProperty("batchNumber").GetString());
         Assert.Equal(9, batch.GetProperty("initialQuantity").GetInt32());
         Assert.False(batch.GetProperty("isExpired").GetBoolean());
-        var after = await (await client.GetAsync("/api/inventory/DEMO02")).Json();
+        var after = await (await client.GetAsync("/api/inventory/VITC500")).Json();
         Assert.Equal(before.GetProperty("totalQuantity").GetInt32() + 9, after.GetProperty("totalQuantity").GetInt32());
         Assert.Equal(9, after.GetProperty("availableQuantity").GetInt32());
     }
@@ -67,11 +67,11 @@ public sealed class InventoryTests : IDisposable
             expiryDate = "2026-11-01",
             quantity = 2
         };
-        Assert.Equal(HttpStatusCode.Created, (await client.PostAsJsonAsync("/api/admin/drugs/DEMO02/batches", body)).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await client.PostAsJsonAsync("/api/admin/drugs/VITC500/batches", body)).StatusCode);
         var before = await factory.WithDb(PersistenceFixture.Snapshot);
-        await (await client.PostAsJsonAsync("/api/admin/drugs/DEMO02/batches", body)).Error(409, "DUPLICATE", "batchNumber");
+        await (await client.PostAsJsonAsync("/api/admin/drugs/VITC500/batches", body)).Error(409, "DUPLICATE", "batchNumber");
         Assert.Equal(before, await factory.WithDb(PersistenceFixture.Snapshot));
-        Assert.Equal(HttpStatusCode.Created, (await client.PostAsJsonAsync("/api/admin/drugs/DEMO11/batches", body)).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await client.PostAsJsonAsync("/api/admin/drugs/DIAZ5/batches", body)).StatusCode);
         await (await client.PostAsJsonAsync("/api/admin/drugs/MISSING/batches", body)).Error(404, "NOT_FOUND");
     }
 
@@ -136,7 +136,7 @@ public sealed class InventoryTests : IDisposable
         using var client = factory.Client();
         if (login)
         {
-            Assert.Equal(HttpStatusCode.OK, (await client.Login("user", "User@12345")).StatusCode);
+            Assert.Equal(HttpStatusCode.OK, (await client.Login("chuduc", "User@12345")).StatusCode);
         }
         foreach (var url in new[] { "/api/inventory", "/api/inventory/PARA500", "/api/reports/low-stock", "/api/reports/expiring" })
         {
@@ -246,10 +246,10 @@ public sealed class InventoryTests : IDisposable
         {
             foreach (var entry in new[] { ("DH2610069001", 25), ("DH2610069002", 7) })
             {
-                var order = new Order(entry.Item1, "UDEMO0003", new TestClock().Now,
-                    SaleKind.Prescription, "Khách demo", "0900000000", ReceiveMethod.Pickup,
+                var order = new Order(entry.Item1, "U0000003", new TestClock().Now,
+                    SaleKind.Prescription, "Chu Đức", "0900000000", ReceiveMethod.Pickup,
                     prescriptionId: "DT2610060001", patientId: "BN001");
-                order.AddItem(new(entry.Item1 + "LINE", order.OrderId, "DEMO07", "Amoxicillin", "Viên", entry.Item2, 7000));
+                order.AddItem(new(entry.Item1 + "LINE", order.OrderId, "AMOX500", "Amoxicillin", "Viên", entry.Item2, 7000));
                 db.Orders.Add(order);
             }
             await db.SaveChangesAsync();

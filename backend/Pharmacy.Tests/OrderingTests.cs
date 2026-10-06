@@ -24,8 +24,9 @@ public sealed class OrderingTests : IDisposable
         ApiFactory.Cleanup(path);
     }
 
-    private async Task<HttpClient> Login(string role = "user")
+    private async Task<HttpClient> Login(string role = "chuduc")
     {
+        await factory.ConfigurePayments();
         var client = factory.Client();
         var password = role == "staff" ? "Staff@12345" : role == "admin" ? "Admin@12345" : "User@12345";
         Assert.Equal(200, (int)(await client.Login(role, password)).StatusCode);
@@ -50,7 +51,7 @@ public sealed class OrderingTests : IDisposable
             address = receive == "Delivery" ? "Địa chỉ giao" : null,
             prescriptionId = prescription,
             expectedTotal = total,
-            userId = "UDEMO0004",
+            userId = "U0000004",
             unitPrice = 1
         };
 
@@ -58,11 +59,11 @@ public sealed class OrderingTests : IDisposable
         => new
         {
             patientId = patient,
-            patientName = "Khách demo",
+            patientName = "Chu Đức",
             prescriberName = "Bác sĩ thử",
             issueDate = date,
             validUntil = "2026-10-20",
-            items = new[] { new { drugId = "DEMO07", quantity } }
+            items = new[] { new { drugId = "AMOX500", quantity } }
         };
 
     private async Task Add(HttpClient client, string drugId = "PARA500", int quantity = 2)
@@ -82,7 +83,7 @@ public sealed class OrderingTests : IDisposable
 
     private static byte[] Png()
     {
-        using var stream = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.demo-qr.png")!;
+        using var stream = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.drugs.PARA500.png")!;
         using var bytes = new MemoryStream();
         stream.CopyTo(bytes);
         return bytes.ToArray();
@@ -92,7 +93,7 @@ public sealed class OrderingTests : IDisposable
     {
         using var form = new MultipartFormDataContent();
         form.Add(new StringContent("BN001"), "patientId");
-        form.Add(new StringContent("Khách demo"), "patientName");
+        form.Add(new StringContent("Chu Đức"), "patientName");
         var image = new ByteArrayContent(bytes ?? Png());
         image.Headers.ContentType = new(mime);
         form.Add(image, "image", name);
@@ -163,8 +164,8 @@ public sealed class OrderingTests : IDisposable
         using var staff = await Login("staff");
         var quantity = await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity));
         var online = await Ok(await Upload(user), 201);
-        Assert.Equal("UDEMO0003", online.GetProperty("ownerUserId").GetString());
-        Assert.Equal("user", online.GetProperty("createdByUsername").GetString());
+        Assert.Equal("U0000003", online.GetProperty("ownerUserId").GetString());
+        Assert.Equal("chuduc", online.GetProperty("createdByUsername").GetString());
         Assert.Equal("PendingReview", online.GetProperty("status").GetString());
         Assert.Empty(online.GetProperty("items").EnumerateArray());
         Assert.Equal(new TestClock().Now, online.GetProperty("createdAt").GetDateTimeOffset());
@@ -172,11 +173,11 @@ public sealed class OrderingTests : IDisposable
         {
             prescriptionId = "PAPER001",
             patientId = "BN001",
-            patientName = "Khách demo",
+            patientName = "Chu Đức",
             prescriberName = "Bác sĩ",
             issueDate = "2026-10-06",
             validUntil = "2026-10-20",
-            items = new[] { new { drugId = "DEMO07", quantity = 10 } }
+            items = new[] { new { drugId = "AMOX500", quantity = 10 } }
         }), 201);
         Assert.Equal(JsonValueKind.Null, counter.GetProperty("ownerUserId").ValueKind);
         Assert.Equal("staff", counter.GetProperty("createdByUsername").GetString());
@@ -254,7 +255,7 @@ public sealed class OrderingTests : IDisposable
             prescriberName = "Bác sĩ",
             issueDate = "2026-10-06",
             validUntil = "2026-10-20",
-            items = new[] { new { drugId = "DEMO07", quantity = 10 } }
+            items = new[] { new { drugId = "AMOX500", quantity = 10 } }
         };
         await Ok(await staff.PostAsJsonAsync("/api/prescriptions/counter", input), 201);
         var before = await factory.WithDb(PersistenceFixture.Snapshot);
@@ -336,7 +337,7 @@ public sealed class OrderingTests : IDisposable
     public async Task TC25_PrescriptionImages_RejectInvalidFilesAndHideOtherOwners()
     {
         using var user = await Login();
-        using var other = await Login("user2");
+        using var other = await Login("nguyenvana");
         using var staff = await Login("staff");
         using var guest = factory.Client();
         var online = await Ok(await Upload(user), 201);
@@ -360,7 +361,7 @@ public sealed class OrderingTests : IDisposable
     {
         using var user = await Login();
         using var staff = await Login("staff");
-        await Add(user, "DEMO07", 2);
+        await Add(user, "AMOX500", 2);
         var order = await Ok(await user.PostAsJsonAsync("/api/orders", Place(14000, "Prescription", "DT2610060003")), 201);
         var id = order.GetProperty("orderId").GetString();
         await Ok(await staff.PutAsJsonAsync("/api/prescriptions/DT2610060003/details", Details()));
@@ -371,7 +372,7 @@ public sealed class OrderingTests : IDisposable
             prescriberName = "Bác sĩ",
             issueDate = "2026-10-06",
             validUntil = "2026-10-20",
-            items = new[] { new { drugId = "DEMO07", quantity = 3 }, new { drugId = "DEMO07", quantity = 4 } }
+            items = new[] { new { drugId = "AMOX500", quantity = 3 }, new { drugId = "AMOX500", quantity = 4 } }
         }));
         Assert.Single(details.GetProperty("items").EnumerateArray());
         Assert.Equal(7, details.GetProperty("items")[0].GetProperty("prescribedQuantity").GetInt32());
@@ -406,7 +407,7 @@ public sealed class OrderingTests : IDisposable
     {
         using var user = await Login();
         using var staff = await Login("staff");
-        await Add(user, "DEMO07", 2);
+        await Add(user, "AMOX500", 2);
         var order = await Ok(await user.PostAsJsonAsync("/api/orders", Place(14000, "Prescription", "DT2610060003")), 201);
         if (action == "cancel")
         {
@@ -442,17 +443,17 @@ public sealed class OrderingTests : IDisposable
         using var user = await Login();
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<PharmacyDbContext>();
-        var rx = new Prescription("QUOTA", "UDEMO0003", "UDEMO0002", "PATIENT", "Tên", createdAt: new TestClock().Now);
+        var rx = new Prescription("QUOTA", "U0000003", "U0000002", "PATIENT", "Tên", createdAt: new TestClock().Now);
         var date = new TestClock().Today;
         rx.SetDetails("Bác sĩ", date.AddDays(scenario == "future" ? 1 : -2),
-            date.AddDays(scenario == "expired" ? -1 : 10), [new("QI", rx.PrescriptionId, "DEMO07", 3)]);
-        rx.Approve("UDEMO0002", new TestClock().Now);
+            date.AddDays(scenario == "expired" ? -1 : 10), [new("QI", rx.PrescriptionId, "AMOX500", 3)]);
+        rx.Approve("U0000002", new TestClock().Now);
         db.Prescriptions.Add(rx);
         await db.SaveChangesAsync();
         var service = scope.ServiceProvider.GetRequiredService<PrescriptionService>();
         var error = await Assert.ThrowsAsync<BusinessException>(() => service.ValidateQuota(rx,
             scenario == "patient" ? "OTHER" : "PATIENT",
-            [new(scenario == "outside" ? "PARA500" : "DEMO07", scenario == "quota" ? 4 : 1)]));
+            [new(scenario == "outside" ? "PARA500" : "AMOX500", scenario == "quota" ? 4 : 1)]));
         Assert.Equal("PRESCRIPTION_INVALID", error.Code);
     }
 
@@ -465,9 +466,9 @@ public sealed class OrderingTests : IDisposable
         {
             foreach (var id in new[] { "DH2610069001", "DH2610069002" })
             {
-                var order = new Order(id, "UDEMO0003", new TestClock().Now, SaleKind.Prescription,
+                var order = new Order(id, "U0000003", new TestClock().Now, SaleKind.Prescription,
                     "Tên", "0900000000", ReceiveMethod.Pickup, prescriptionId: "DT2610060001", patientId: "BN001");
-                order.AddItem(new(id + "L", id, "DEMO07", "Thuốc", "Viên", 20, 7000));
+                order.AddItem(new(id + "L", id, "AMOX500", "Thuốc", "Viên", 20, 7000));
                 db.Orders.Add(order);
             }
             await db.SaveChangesAsync();
@@ -536,12 +537,12 @@ public sealed class OrderingTests : IDisposable
     }
 
     [Theory]
-    [InlineData("DEMO02", 0, 1, false, "Thuốc tạm hết hàng.")]
-    [InlineData("DEMO02", 2, 1, false, "Thuốc tạm hết hàng.")]
+    [InlineData("VITC500", 0, 1, false, "Thuốc tạm hết hàng.")]
+    [InlineData("VITC500", 2, 1, false, "Thuốc tạm hết hàng.")]
     [InlineData("PARA500", 0, 81, false, "Không đủ hàng, chỉ còn 80 Viên.")]
     [InlineData("PARA500", 2, 79, false, "Không đủ hàng, chỉ còn 80 Viên.")]
     [InlineData("PARA500", 2, 81, true, "Không đủ hàng, chỉ còn 80 Viên.")]
-    [InlineData("DEMO02", 2, 3, true, "Thuốc tạm hết hàng.")]
+    [InlineData("VITC500", 2, 3, true, "Thuốc tạm hết hàng.")]
     public async Task TC29_D9_CartStockGuard_RejectsWithoutWriting(
         string drugId, int existingQuantity, int requestedQuantity, bool update, string title)
     {
@@ -550,7 +551,7 @@ public sealed class OrderingTests : IDisposable
         {
             await factory.WithDb(async db =>
             {
-                db.CartItems.Add(new("UDEMO0003", drugId, existingQuantity));
+                db.CartItems.Add(new("U0000003", drugId, existingQuantity));
                 await db.SaveChangesAsync();
             });
         }
@@ -569,21 +570,21 @@ public sealed class OrderingTests : IDisposable
         using var user = await Login();
         await factory.WithDb(async db =>
         {
-            db.CartItems.Add(new("UDEMO0003", "DEMO02", 3));
+            db.CartItems.Add(new("U0000003", "VITC500", 3));
             await db.SaveChangesAsync();
         });
         var cart = await Ok(await user.GetAsync("/api/cart"));
         Assert.Equal("INSUFFICIENT_STOCK", cart.GetProperty("items")[0].GetProperty("issue").GetString());
         using var guest = factory.Client();
-        var product = await Ok(await guest.GetAsync("/api/products/DEMO02"));
+        var product = await Ok(await guest.GetAsync("/api/products/VITC500"));
         Assert.False(product.GetProperty("inStock").GetBoolean());
         foreach (var quantity in new[] { 3, 2, 1 })
         {
-            var changed = await Ok(await user.PutAsJsonAsync("/api/cart/items/DEMO02", new { quantity }));
+            var changed = await Ok(await user.PutAsJsonAsync("/api/cart/items/VITC500", new { quantity }));
             Assert.Equal(quantity, changed.GetProperty("items")[0].GetProperty("quantity").GetInt32());
             Assert.Equal("INSUFFICIENT_STOCK", changed.GetProperty("items")[0].GetProperty("issue").GetString());
         }
-        var empty = await Ok(await user.DeleteAsync("/api/cart/items/DEMO02"));
+        var empty = await Ok(await user.DeleteAsync("/api/cart/items/VITC500"));
         Assert.Empty(empty.GetProperty("items").EnumerateArray());
     }
 
@@ -640,15 +641,15 @@ public sealed class OrderingTests : IDisposable
     }
 
     [Theory]
-    [InlineData("DEMO12", "NOT_FOR_SALE")]
-    [InlineData("DEMO02", "INSUFFICIENT_STOCK")]
+    [InlineData("HYDRO1", "NOT_FOR_SALE")]
+    [InlineData("VITC500", "INSUFFICIENT_STOCK")]
     public async Task TC31_CartIssues_BlockInvalidOrder_KeepCartUnchanged(string drugId, string code)
     {
         using var user = await Login();
         await factory.WithDb(async db =>
         {
             // A previously saved line remains visible after stock or sale status changes.
-            db.CartItems.Add(new("UDEMO0003", drugId, 1));
+            db.CartItems.Add(new("U0000003", drugId, 1));
             await db.SaveChangesAsync();
         });
         var cart = await Ok(await user.GetAsync("/api/cart"));
@@ -682,7 +683,7 @@ public sealed class OrderingTests : IDisposable
         Assert.True(detail.GetProperty("canCancel").GetBoolean());
         Assert.Empty((await Ok(await user.GetAsync("/api/cart"))).GetProperty("items").EnumerateArray());
         Assert.Equal(0, await factory.WithDb(db => db.StockReservations.CountAsync()));
-        Assert.Equal("UDEMO0003", await factory.WithDb(async db => (await db.Orders.SingleAsync()).UserId));
+        Assert.Equal("U0000003", await factory.WithDb(async db => (await db.Orders.SingleAsync()).UserId));
         Assert.NotEqual(id, await Order(user, receive));
         Assert.Equal(2, (await Ok(await user.GetAsync("/api/orders/mine?status=AwaitingPayment&pageSize=1"))).GetProperty("total").GetInt32());
     }
@@ -691,7 +692,7 @@ public sealed class OrderingTests : IDisposable
     public async Task TC32_OrderValidation_BlocksMissingAddressAndPrescriptionRequired()
     {
         using var user = await Login();
-        await Add(user, "DEMO07", 1);
+        await Add(user, "AMOX500", 1);
         await (await user.PostAsJsonAsync("/api/orders", Place(7000))).Error(409, "PRESCRIPTION_REQUIRED");
         await (await user.PostAsJsonAsync("/api/orders", new
         {
@@ -708,19 +709,19 @@ public sealed class OrderingTests : IDisposable
     public async Task TC33_PendingPrescriptionOrder_WaitsWithoutReservation_ApprovedOrderChecksQuota()
     {
         using var user = await Login();
-        await Add(user, "DEMO07", 2);
+        await Add(user, "AMOX500", 2);
         var waiting = await Ok(await user.PostAsJsonAsync("/api/orders", Place(14000, "Prescription", "DT2610060003")), 201);
         Assert.Equal("WaitingReview", waiting.GetProperty("status").GetString());
         Assert.False(waiting.GetProperty("canPay").GetBoolean());
         Assert.Equal(0, await factory.WithDb(db => db.StockReservations.CountAsync()));
-        await Add(user, "DEMO07", 2);
+        await Add(user, "AMOX500", 2);
         var ready = await Ok(await user.PostAsJsonAsync("/api/orders", Place(14000, "Prescription", "DT2610060001")), 201);
         Assert.Equal("AwaitingPayment", ready.GetProperty("status").GetString());
         using (var scope = factory.Services.CreateScope())
         {
             await scope.ServiceProvider.GetRequiredService<InventoryService>().Reserve(ready.GetProperty("orderId").GetString()!);
         }
-        await Add(user, "DEMO07", 29);
+        await Add(user, "AMOX500", 29);
         await (await user.PostAsJsonAsync("/api/orders", Place(203000, "Prescription", "DT2610060001"))).Error(409, "PRESCRIPTION_INVALID");
         Assert.Equal(2, await factory.WithDb(db => db.Orders.CountAsync()));
     }
@@ -729,7 +730,7 @@ public sealed class OrderingTests : IDisposable
     public async Task TC34_GuestOrOtherOwner_CannotPlaceReadCancelOrUsePrescription()
     {
         using var user = await Login();
-        using var other = await Login("user2");
+        using var other = await Login("nguyenvana");
         using var guest = factory.Client();
         await guest.Csrf();
         var id = await Order(user);
@@ -738,7 +739,7 @@ public sealed class OrderingTests : IDisposable
         await (await other.GetAsync("/api/orders/" + id)).Error(404, "NOT_FOUND");
         await (await other.PostAsync("/api/orders/" + id + "/cancel", null)).Error(404, "NOT_FOUND");
         Assert.Equal(before, await factory.WithDb(PersistenceFixture.Snapshot));
-        await Add(other, "DEMO07", 1);
+        await Add(other, "AMOX500", 1);
         await (await other.PostAsJsonAsync("/api/orders", Place(7000, "Prescription", "DT2610060001"))).Error(409, "PRESCRIPTION_INVALID");
     }
 
@@ -778,12 +779,12 @@ public sealed class OrderingTests : IDisposable
             var order = await db.Orders.Include(x => x.Items).SingleAsync(x => x.OrderId == id);
             var settings = await db.PaymentSettings.SingleAsync();
             var payment = new Payment(id + "P", id, order.TotalAmount, settings.CreateSnapshot(), now);
-            payment.Confirm(id + "REF", order.TotalAmount, now, "UDEMO0002", now);
+            payment.Confirm(id + "REF", order.TotalAmount, now, "U0000002", now);
             db.Payments.Add(payment);
             order.MarkPreparing();
             if (invoice)
             {
-                var sale = new OTCSale(id + "S", "UDEMO0002", now, SaleChannel.Online, order.UserId, order.OrderId);
+                var sale = new OTCSale(id + "S", "U0000002", now, SaleChannel.Online, order.UserId, order.OrderId);
                 var batch = await db.DrugBatches.FirstAsync(x => x.DrugId == "PARA500" && x.ExpiryDate > new TestClock().Today);
                 var item = order.Items.Single();
                 var line = new SaleItem(id + "SL", sale.SaleId, item.DrugId, item.DrugName, item.Unit, item.Quantity, item.UnitPrice);
@@ -810,7 +811,7 @@ public sealed class OrderingTests : IDisposable
         var physical = await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity));
         var unclaimed = await Ok(await staff.GetAsync("/api/staff/orders/" + id));
         Assert.Equal(JsonValueKind.Null, unclaimed.GetProperty("handledByUsername").ValueKind);
-        Assert.Equal("user", unclaimed.GetProperty("customerUsername").GetString());
+        Assert.Equal("chuduc", unclaimed.GetProperty("customerUsername").GetString());
         Assert.False(unclaimed.GetProperty("canCancel").GetBoolean());
         if (receive == "Delivery")
         {
@@ -832,7 +833,7 @@ public sealed class OrderingTests : IDisposable
         var summary = await Ok(await staff.GetAsync("/api/dashboard/summary"));
         Assert.Equal(0, summary.GetProperty("preparingOrders").GetInt32());
         await (await user.GetAsync("/api/dashboard/summary")).Error(403, "FORBIDDEN");
-        var list = await Ok(await staff.GetAsync("/api/staff/orders?search=user&status=Completed"));
+        var list = await Ok(await staff.GetAsync("/api/staff/orders?search=chuduc&status=Completed"));
         Assert.Equal(1, list.GetProperty("total").GetInt32());
     }
 

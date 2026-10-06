@@ -19,7 +19,7 @@ dotnet run --project backend/Pharmacy.Api --launch-profile http
 
 API tại `http://localhost:5000`; `GET /api/health` trả `{ "status": "ok", "service": "Pharmacy.Api" }`. Development có `/openapi/v1.json`. `npm run dev:api` vẫn dùng script có sẵn của repository. Dừng bằng Ctrl+C.
 
-Ứng dụng tự migrate rồi seed **chỉ khi các bảng domain chưa có dữ liệu**. Không xóa/nạp lại khi mở ứng dụng; DB đã có một phần dữ liệu cũng được giữ nguyên. Không tự bổ sung tài khoản demo vào DB đang dùng.
+Ứng dụng tự migrate rồi seed **chỉ khi các bảng domain chưa có dữ liệu**. Không xóa/nạp lại khi mở ứng dụng; DB đã có một phần dữ liệu cũng được giữ nguyên. Không tự bổ sung tài khoản khởi tạo vào DB đang dùng.
 
 | Cấu hình | Mặc định, tương đối với `backend/Pharmacy.Api` |
 |---|---|
@@ -33,23 +33,23 @@ Biến môi trường dùng dấu `__`, ví dụ `$env:BusinessDate__Override = 
 
 DB, key ring xác thực và file upload là dữ liệu runtime, không commit. Giữ thư mục `backend/data/keys` qua lần chạy để cookie vẫn giải mã được. Key ring mặc định lưu trên filesystem; khi triển khai ngoài localhost cần bảo vệ quyền đọc thư mục này và cấu hình mã hóa khóa phù hợp môi trường.
 
-Tài khoản demo:
+Tài khoản khởi tạo:
 
 | Username | Password | Role |
 |---|---|---|
 | admin | Admin@12345 | Admin |
 | staff | Staff@12345 | Staff |
-| user | User@12345 | User |
-| user2 | User@12345 | User |
+| chuduc | User@12345 | User |
+| nguyenvana | User@12345 | User |
 
-Seed DB trống có 56 thuốc và 56 ảnh minh họa: giữ nguyên 12 thuốc cũ với các biên lô D−5/D/D+1/D+20/D+30/D+31, tồn bằng ngưỡng/tồn bằng 0, thuốc kiểm soát/tắt bán và ba đơn thuốc; thêm 44 thuốc từ catalog demo. Chi tiết nạp thêm cho DB hiện có ở mục M6 bên dưới. QR demo được sao chép từ resource nguồn vào `backend/storage/qr/demo-qr.png` khi seed; nội dung chỉ là chuỗi demo, **không dùng để chuyển tiền thật**. Không ghi đè file đã tồn tại. File runtime được ignore; resource nguồn nằm trong `Pharmacy.Core/Data/Assets`.
+Seed DB trống có 56 thuốc và 56 ảnh minh họa: giữ nguyên 12 thuốc cũ với các biên lô D−5/D/D+1/D+20/D+30/D+31, tồn bằng ngưỡng/tồn bằng 0, thuốc kiểm soát/tắt bán và ba đơn thuốc; thêm 44 thuốc từ catalog. Chi tiết nạp thêm cho DB hiện có ở mục M6 bên dưới. Không seed cấu hình thanh toán hoặc ảnh QR. Admin phải cập nhật ngân hàng/số tài khoản/chủ tài khoản qua `PUT /api/admin/payment-settings`, sau đó tải ảnh QR PNG/JPG ≤5 MB qua `POST /api/admin/payment-settings/qr-image` (F017). Trước khi cấu hình đầy đủ, mở QR trả `409 PAYMENT_NOT_CONFIGURED`.
 
 Luồng gọi API:
 
 1. Gọi `GET /api/auth/csrf` với cookie được giữ; nhận cookie JS-readable `XSRF-TOKEN` và cookie secret `pharmacy.antiforgery`.
 2. Với mọi POST/PUT/PATCH/DELETE, gửi `X-XSRF-TOKEN` bằng giá trị cookie `XSRF-TOKEN` cùng các cookie.
-3. Đăng ký: `POST /api/auth/register` body `{ "username": "demo-new", "password": "Password1", "confirmPassword": "Password1" }` trả `201 Me`, luôn User, không tự đăng nhập.
-4. Đăng nhập: `POST /api/auth/login` body `{ "username": "user", "password": "User@12345" }`; cookie `pharmacy.auth` HttpOnly/SameSite=Lax. Role quyết định `homePath`.
+3. Đăng ký: `POST /api/auth/register` body `{ "username": "new-account", "password": "Password1", "confirmPassword": "Password1" }` trả `201 Me`, luôn User, tự đăng nhập và cấp lại XSRF-TOKEN.
+4. Đăng nhập: `POST /api/auth/login` body `{ "username": "chuduc", "password": "User@12345" }`; cookie `pharmacy.auth` HttpOnly/SameSite=Lax. Role quyết định `homePath`.
 5. Sau login/logout gọi lại `/api/auth/csrf` để đọc token hiện tại. Server cũng tự cấp cookie request token phù hợp identity mới trong response login/logout.
 6. `GET /api/auth/me`; `POST /api/auth/logout`. Admin dùng `GET /api/admin/accounts?search=&role=&page=&pageSize=` và `POST /api/admin/accounts/staff` với body giống đăng ký.
 
@@ -178,7 +178,7 @@ ConnectionStrings__Default=Host=<pooler-host>;Port=5432;Database=postgres;Userna
 
 Đây là chuỗi Npgsql dạng key/value, không phải URI hoặc API key Supabase. Dùng mật khẩu database; không percent-encode như URI. Nếu mật khẩu có dấu chấm phẩy, đặt giá trị Password trong dấu ngoặc kép theo cú pháp Npgsql. Không ghi connection string thật vào Git, log hoặc frontend. File `.env` đã được ignore; template để trống connection string.
 
-Ứng dụng tự migrate rồi seed khi DB domain trống. PostgreSQL dùng schema riêng `pharmacy` cho toàn bộ bảng và migration history; không thêm schema này vào danh sách exposed schemas của Data API. FE tiếp tục qua Web API với cookie và phân quyền server. Seed chỉ chứa ngân hàng/QR demo; không dùng dữ liệu nhận tiền thật. Ảnh thuốc/đơn thuốc/QR vẫn ở `backend/storage`, không dùng Supabase Storage. Muốn quay về SQLite: `Database__Provider=Sqlite`, bỏ connection string PostgreSQL hoặc đặt `Data Source=../data/pharmacy.db`. Chuyển provider không tự sao chép dữ liệu giữa hai DB.
+Ứng dụng tự migrate rồi seed khi DB domain trống. PostgreSQL dùng schema riêng `pharmacy` cho toàn bộ bảng và migration history; không thêm schema này vào danh sách exposed schemas của Data API. FE tiếp tục qua Web API với cookie và phân quyền server. Seed không tạo thông tin ngân hàng/QR; Admin cấu hình thông tin nhận tiền và tải ảnh QR qua F017 trước khi mở thanh toán. Ảnh thuốc/đơn thuốc/QR vẫn ở `backend/storage`, không dùng Supabase Storage. Muốn quay về SQLite: `Database__Provider=Sqlite`, bỏ connection string PostgreSQL hoặc đặt `Data Source=../data/pharmacy.db`. Chuyển provider không tự sao chép dữ liệu giữa hai DB.
 
 Migration SQLite hiện có giữ nguyên file và ID ở `Data/Migrations`, gắn với `PharmacyDbContext`; migration PostgreSQL ở `Data/Migrations/Postgres`, gắn với `PostgresPharmacyDbContext`. Hai context có snapshot riêng trong cùng assembly. Factory design-time nằm trong Core, dùng connection mẫu để sinh model/script, không đọc bí mật hoặc khởi động API. Để thêm migration PostgreSQL và sinh SQL offline:
 
@@ -258,7 +258,7 @@ dotnet test Pharmacy.sln --filter FullyQualifiedName~CheckoutTests
 | TC-54 | `TC54_Invoices_RespectUserStaffCreatorHandlerAndAdminScopes` |
 | TC-56 | `TC56_SameCheckoutServiceCall_WithSaleTypedSubtypes_ValidatesPolymorphically` |
 
-Smoke HTTP dùng SQLite/storage/key riêng trong temp: user đặt OTC → mở QR → staff review đủ tiền → fulfill → complete → xem hóa đơn; staff lập nháp OTC tại quầy → checkout → xem hóa đơn. Cả hai luồng pass, API đã tắt và dữ liệu smoke đã xóa. Chưa chạy luồng M4 trên PostgreSQL thật trong lần kiểm chứng này; bộ opt-in PostgreSQL chỉ chạy khi có PHARMACY_TEST_POSTGRES. Báo cáo 132 pass/1 skip ở phần M3.5 phía trên là kết quả lịch sử; PO đã kiểm chứng M3.5 trên Supabase thật.
+Smoke HTTP dùng SQLite/storage/key riêng trong temp: chuduc đặt OTC → mở QR → staff review đủ tiền → fulfill → complete → xem hóa đơn; staff lập nháp OTC tại quầy → checkout → xem hóa đơn. Cả hai luồng pass, API đã tắt và dữ liệu smoke đã xóa. Chưa chạy luồng M4 trên PostgreSQL thật trong lần kiểm chứng này; bộ opt-in PostgreSQL chỉ chạy khi có PHARMACY_TEST_POSTGRES. Báo cáo 132 pass/1 skip ở phần M3.5 phía trên là kết quả lịch sử; PO đã kiểm chứng M3.5 trên Supabase thật.
 
 Kiểm chứng M4: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Pharmacy.sln 170 pass/0 fail/1 skip (PostgreSQL opt-in). CheckoutTests có 38 trường hợp, 31 method, phủ 21 mã TC yêu cầu. Các test SQLite chạy không cần mạng.
 
@@ -275,7 +275,7 @@ Báo cáo đủ 56 TC backend, thời điểm chạy, NFR-01 và giới hạn ki
 
 OOP-01: `PrescriptionSale.Validate` tự kiểm tra chủ đơn online; `Sale.ApplyCompletionEffects` là phương thức virtual, subtype PrescriptionSale override để gọi RecordDispense. CheckoutService gọi qua Sale, không phân nhánh Kind để kiểm tra chủ hoặc cấp thuốc; factory tạo subtype vẫn chọn theo SaleKind. TC-56 chạy cùng CheckoutService với hai subtype, thêm test chủ đúng/sai/null và hiệu ứng OTC/Prescription. Không đổi model hay migration của hai provider.
 
-Seed lớn là **test riêng**, không có endpoint hoặc cờ CLI làm thay đổi DB demo. Chạy opt-in:
+Seed lớn là **test riêng**, không có endpoint hoặc cờ CLI làm thay đổi DB vận hành. Chạy opt-in:
 
 ```powershell
 $env:PHARMACY_TEST_PERFORMANCE = '1'
@@ -295,16 +295,16 @@ Log lỗi API chỉ ghi loại exception và trace ID, không ghi exception mess
 Với `dotnet run`, thứ tự cấu hình ở mục appsettings đúng như mô tả. Riêng `npm run dev:api` dùng Node --env-file-if-exists: các giá trị `.env` trở thành biến môi trường của API, nên có thể ghi đè appsettings.Local.json. Nên chọn **một** file chứa cấu hình database (`.env` hoặc appsettings.Local.json); nếu dùng appsettings.Local.json qua npm thì bỏ các khóa database trùng khỏi `.env` và môi trường shell. Không sửa file mẫu thành bí mật hoặc commit file local. Nếu dùng JSON, escape dấu ngoặc kép trong Password theo JSON và Npgsql khi cần.
 
 
-## M6: nạp thêm danh mục demo và ảnh
+## M6: nạp thêm danh mục và ảnh
 
 Catalog `Pharmacy.Core/Data/Seed/catalog.json` và toàn bộ `Data/Assets/drugs/*.png` được nhúng vào assembly; không cần chạy script sinh ảnh lúc chạy API. Giá/phân loại/mô tả lấy đúng catalog do dự án cung cấp, ảnh chỉ minh họa cho đồ án.
 
-Khi DB trống, DbSeeder giữ nguyên 12 thuốc cũ và mọi thuộc tính/lô, chỉ gắn ảnh; thêm 44 thuốc mới với ảnh, đúng catalog và đang bán. Tổng 56 thuốc/56 ảnh, thuốc DEMO12 vẫn tắt bán. Có 103 lô mới, 2–3 lô mỗi thuốc, số lô L<yy><nnn>, hạn thường D+60..D+540; 6 thuốc có thêm biên gần hết hạn trong 30 ngày. Lượng nhập InitialQuantity là 20–200; 4 thuốc có lô đã sử dụng một phần qua DrugBatch.Deduct để tồn còn lại thấp hơn/bằng ngưỡng catalog (5–30), làm báo cáo tồn thấp có dữ liệu mới. Chỉ tạo các lô này cho thuốc mới; không trừ lô/ghi bán hàng của DB hiện có. Dữ liệu tất định theo thứ tự catalog và ngày nghiệp vụ, không random theo lần seed.
+Khi DB trống, DbSeeder giữ nguyên 12 thuốc cũ và mọi thuộc tính/lô, chỉ gắn ảnh; thêm 44 thuốc mới với ảnh, đúng catalog và đang bán. Tổng 56 thuốc/56 ảnh, thuốc HYDRO1 vẫn tắt bán. Có 103 lô mới, 2–3 lô mỗi thuốc, số lô L<yy><nnn>, hạn thường D+60..D+540; 6 thuốc có thêm biên gần hết hạn trong 30 ngày. Lượng nhập InitialQuantity là 20–200; 4 thuốc có lô đã sử dụng một phần qua DrugBatch.Deduct để tồn còn lại thấp hơn/bằng ngưỡng catalog (5–30), làm báo cáo tồn thấp có dữ liệu mới. Chỉ tạo các lô này cho thuốc mới; không trừ lô/ghi bán hàng của DB hiện có. Dữ liệu tất định theo thứ tự catalog và ngày nghiệp vụ, không random theo lần seed.
 
 DB đã có dữ liệu (SQLite hoặc PostgreSQL/Supabase), cấu hình provider/connection/storage như các mục trên, rồi chạy từ gốc repository:
 
 ```powershell
-dotnet run --project backend/Pharmacy.Api --launch-profile http -- --seed-demo-catalog
+dotnet run --project backend/Pharmacy.Api --launch-profile http -- --seed-catalog
 ```
 
 Lệnh migrate bằng provider đã cấu hình, chỉ thêm DrugId chưa có trong 44 thuốc mới cùng lô của chúng; gắn ảnh cho thuốc catalog/legacy đang chưa có ảnh. Không tạo lại tài khoản, đơn thuốc, đơn hàng, giỏ, thanh toán, Sale hay hóa đơn. Không sửa tên/giá/đơn vị/phân loại/ngưỡng/mô tả/trạng thái bán hoặc lô của thuốc đã tồn tại, kể cả thuốc catalog đang thiếu lô; không đổi ảnh đã gắn, không ghi đè file PNG đã có trong storage. LegacyImage chỉ gắn cho DrugId legacy đang có; không tự tạo 12 thuốc cũ trên DB hiện có.
@@ -316,7 +316,7 @@ Chạy xong lệnh thoát, không mở web server, không chiếm cổng 5000; o
 Test M6:
 
 ```powershell
-dotnet test Pharmacy.sln --filter FullyQualifiedName~DemoCatalogTests
+dotnet test Pharmacy.sln --filter FullyQualifiedName~CatalogSeedTests
 dotnet build Pharmacy.sln
 dotnet test Pharmacy.sln
 ```
@@ -325,8 +325,9 @@ dotnet test Pharmacy.sln
 |---|---|
 | EmptySeed_Has56EmbeddedImages_ExactCatalogFields_AndPreservesLegacyBatches | 56 thuốc/ảnh, đúng catalog, lô legacy giữ nguyên, imageUrl và đọc ảnh Guest |
 | ExistingDatabase_ImportOnlyAddsMissingDrugsAndImages_ThenIsIdempotent | Thuốc đã sửa/ảnh/file/batch cũ giữ nguyên; bảng đơn/hóa đơn/tài khoản không đổi; chạy lại ngày khác không nhân đôi |
-| Command_ImportsAndExitsWithoutServer_SecondRunReportsZero | Chạy process API với --seed-demo-catalog, thoát 0, không mở server, nạp lại báo 0 |
+| Command_ImportsAndExitsWithoutServer_SecondRunReportsZero | Chạy process API với --seed-catalog, thoát 0, không mở server, nạp lại báo 0 |
 | FreshSeeds_AreDeterministic_ReportsIncludeNewLowStockAndExpiringDrugs | Hai DB mới có lô giống nhau; báo cáo có 4 thuốc mới tồn thấp, 6 thuốc gần hết hạn |
+| TC42_FreshSeed_HasNoPaymentSettings_OpeningQrRequiresAdminConfiguration | DB mới không có cấu hình/ảnh QR; mở thanh toán trả PAYMENT_NOT_CONFIGURED và không ghi dữ liệu |
 
 Smoke PostgreSQL opt-in hiện có đã bổ sung bước nạp catalog và kiểm chạy lại 0, không đổi số tài khoản. Cần PHARMACY_TEST_POSTGRES trỏ DB test riêng để chạy; không tự dùng DB Supabase vận hành cho test.
 

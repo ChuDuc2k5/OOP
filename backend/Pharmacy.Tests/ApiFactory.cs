@@ -51,6 +51,12 @@ internal sealed class ApiFactory(
         });
     }
     public HttpClient Client() => CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+    public async Task ConfigurePayments()
+    {
+        await WithDb(PaymentFixture.Configure);
+        await PaymentFixture.WriteImage(databasePath + "-storage");
+    }
+
     public async Task<T> WithDb<T>(Func<PharmacyDbContext, Task<T>> action)
     {
         using var scope = Services.CreateScope();
