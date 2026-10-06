@@ -135,7 +135,7 @@ Chạy lệnh từ gốc repository với SQLite riêng dành cho kiểm thử v
 
 Toast dùng chung cho thao tác ghi, tự đóng sau khoảng 4 giây và có nút đóng. Giỏ hàng đồng bộ từ backend sau thay đổi, badge chỉ hiện với khách hàng đã đăng nhập. Nút gửi có spinner và khóa khi đang xử lý. Chi tiết đơn có tiến trình, hộp “Bước tiếp theo” và banner sau đặt hàng; đơn thuốc có banner sau gửi ảnh. Trang QR tự kiểm tra trạng thái mỗi 15 giây, có nút làm mới và thông báo khi được xác nhận; không có nút xác nhận tự chuyển tiền.
 
-Chi tiết đơn tự làm mới mỗi 10 giây theo M7, giữ nút xem lại QR khi chờ xác nhận. Đơn Pickup đã thanh toán hiện lời mời đến quầy và mã đơn lớn; Delivery hiện đang chuẩn bị/đang giao. Form **Xác nhận đã nhận tiền** dùng chung cho Staff/Admin ở danh sách thanh toán và chi tiết đơn: review đủ tiền → fulfill ngay; lỗi xuất kho giữ thanh toán và nút **Thử xuất kho lại**. Pickup có **Khách đã nhận thuốc**, Delivery có **Bắt đầu giao** rồi **Đã giao xong**. Thuốc hết hàng vẫn được hiển thị nhưng khóa thêm giỏ; số lượng vượt tồn bị backend từ chối bằng lỗi 409 và toast.
+Chi tiết đơn tự làm mới mỗi 10 giây theo M7, giữ nút xem lại QR khi chờ xác nhận. Đơn Pickup đã thanh toán hiện lời mời đến quầy và mã đơn lớn; Delivery hiện đang chuẩn bị/đang giao. Theo D13, nút **Đã nhận đủ tiền** ở danh sách đơn/thanh toán và chi tiết đơn mở hộp xác nhận ngắn với mã giao dịch tùy chọn; không gửi số tiền/thời điểm. Review đủ tiền → fulfill ngay; lỗi xuất kho giữ thanh toán và nút **Thử xuất kho lại**. **Chưa đủ tiền** nhập số thực nhận và ghi chú, hiển thị rõ chuyển thiếu. Pickup có **Khách đã nhận thuốc**, Delivery có **Bắt đầu giao** rồi **Đã giao xong**. Thuốc hết hàng vẫn được hiển thị nhưng khóa thêm giỏ; số lượng vượt tồn bị backend từ chối bằng lỗi 409 và toast.
 
 D10: đăng ký tự lấy phiên đăng nhập và chuyển tới `next` an toàn hoặc trang chủ. Checkout tự chọn loại đơn theo giỏ; giỏ có thuốc kê đơn/kiểm soát có thể chọn đơn đã gửi hoặc tải PNG/JPG tối đa 5 MB ngay tại checkout. Thông tin người nhận được nhớ trong localStorage theo userId sau khi tạo đơn thành công. Form duyệt tiền điền sẵn số tiền cần nhận và giờ hiện tại; đơn thuốc có nút **Lưu & chấp nhận**. Bán tại quầy dùng một màn hình chọn thuốc/sửa dòng/xem tổng và **Thu tiền mặt & hoàn tất**, tự tạo đúng loại nháp rồi lưu dòng và checkout. Lỗi giữ dữ liệu và liên kết nháp, thử lại dùng cùng nháp. Form thêm thuốc Admin hỗ trợ ảnh và lô đầu tiên tùy chọn; nếu bước sau lỗi, giữ thuốc đã tạo và liên kết chi tiết.
 
@@ -179,5 +179,7 @@ npm run test:e2e --workspace frontend -- --project=390
 # Mở báo cáo vừa chạy
 node frontend/e2e/run.mjs show-report frontend/playwright-report
 ```
+
+Dashboard Admin theo D14 chỉ có số liệu quản lý tài khoản/thuốc/đơn và cảnh báo kho. Menu 8 mục Quản lý; **Làm việc như nhân viên** mở `/staff`, giữ vai trò Admin và có thanh **Quay lại trang quản lý** trên mọi trang Staff. Route `/admin/payments`, `/admin/sales/...`, `/admin/prescriptions/...` chuyển tới Staff tương ứng. E2e đối chiếu số liệu với API, kiểm tra body review rỗng khi không nhập mã, xuất kho/hóa đơn và chuyển giao diện; ảnh `TC45-F018-one-tap-*`, `AC02-admin-dashboard-*` ở 1366/390 px.
 
 Build e2e không thay cấu hình proxy của build `.next` dùng cho môi trường dev/production thông thường.

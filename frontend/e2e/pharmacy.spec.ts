@@ -9,6 +9,11 @@ async function visit(page: Page, url: string) {
     if (!(error instanceof Error) || !error.message.includes('ERR_NETWORK_IO_SUSPENDED')) throw error;
     await page.goto(url);
   }
+  const requested = new URL(url, page.url()).pathname;
+  if (/^\/admin\/(payments|sales|prescriptions)(\/|$)/.test(requested)) {
+    await expect(page).toHaveURL(new RegExp(requested.replace('/admin/', '/staff/') + '(\\?|$)'));
+    visitedRoutes.add(requested);
+  }
 }
 async function ready(page: Page) {
   await expect(page.getByText('Đang tải dữ liệu...', { exact: true })).toHaveCount(0);
@@ -184,24 +189,33 @@ test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: lu�
   staff.on('dialog', dialog => dialog.accept());
   await login(staff, 'staff');
   await visit(staff, '/staff/payments'); await ready(staff);
-  await staff.getByRole('row').filter({ has: staff.getByRole('link', { name: order.orderId, exact: true }) }).getByRole('button', { name: 'Đối chiếu', exact: true }).click();
-  await staff.getByLabel('Mã giao dịch ngân hàng').fill(`UI-${info.project.name}-${order.orderId}`);
+  await staff.getByRole('row').filter({ has: staff.getByRole('link', { name: order.orderId, exact: true }) }).getByRole('button', { name: 'Chưa đủ tiền', exact: true }).click();
   await staff.getByLabel('Số tiền thực nhận (VND)').fill(String(order.totalAmount - 1));
-  await staff.getByRole('button', { name: 'Xác nhận đã nhận tiền', exact: true }).click();
+  await staff.getByLabel('Ghi chú chuyển thiếu').fill('Khách chuyển thiếu tiền thuốc');
+  await staff.getByRole('button', { name: 'Ghi nhận chuyển thiếu', exact: true }).click();
   await expect(staff.getByText('Chuyển thiếu – chưa duyệt thanh toán', { exact: true })).toBeVisible();
   await shot(staff, 'TC46-F018-short-payment', info);
   await page.getByRole('button', { name: 'Làm mới', exact: true }).click();
   await expect(page.getByRole('status', { name: 'Trạng thái thanh toán' })).toContainText('Ghi chú đối chiếu:');
   await shot(page, 'TC46-F017-user-review-note', info);
   const autoRefresh = page.waitForResponse(response => response.url().endsWith(`/api/orders/${order.orderId}/payment`) && response.request().method() === 'GET', { timeout: 25_000 });
-  await staff.getByLabel('Số tiền thực nhận (VND)').fill(String(order.totalAmount));
-  await staff.getByRole('button', { name: 'Xác nhận đã nhận tiền', exact: true }).click();
+  await staff.getByRole('button', { name: 'Đóng', exact: true }).click();
+  await visit(staff, '/staff/orders'); await ready(staff);
+  await staff.getByRole('row').filter({ has: staff.getByRole('link', { name: order.orderId, exact: true }) }).getByRole('button', { name: 'Đã nhận đủ tiền', exact: true }).click();
+  await expect(staff.getByRole('dialog')).toContainText(`cho ${order.orderId}?`);
+  await expect(staff.getByLabel('Mã giao dịch ngân hàng (tùy chọn)')).toHaveValue('');
+  await expect(staff.getByLabel('Số tiền thực nhận (VND)')).toHaveCount(0);
+  const oneTapReview = staff.waitForRequest(r => r.url().endsWith(`/api/staff/payments/${payment.paymentId}/review`) && r.method() === 'POST');
+  await shot(staff, 'TC45-F018-one-tap', info);
+  await staff.getByRole('button', { name: 'Xác nhận', exact: true }).click();
+  expect((await oneTapReview).postDataJSON()).toEqual({});
   await expect(staff.locator('main')).toContainText('Đã xác nhận tiền và lập hóa đơn HD');
   expect((await autoRefresh).ok()).toBeTruthy();
   await expect(page.getByRole('status', { name: 'Trạng thái thanh toán' })).toContainText('Đã xác nhận');
   await expect(page.getByTestId('toast')).toContainText('Đã xác nhận thanh toán.');
   await shot(page, 'TC45-F017-qr-confirmed', info);
   await shot(staff, 'TC45-F018-approved', info);
+  await staff.getByRole('button', { name: 'Đóng', exact: true }).click();
   await page.getByRole('link', { name: 'Đóng / Về đơn hàng', exact: true }).click(); await ready(page);
   await expect(page.getByRole('heading', { name: 'Đã thanh toán – Mời bạn đến quầy nhận thuốc' })).toBeVisible();
   await shot(page, 'TC45-F014-pickup-paid', info);
@@ -211,7 +225,11 @@ test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: lu�
   await expect(invoiceLink).toBeVisible();
   const invoiceId = (await invoiceLink.getAttribute('href'))!.split('/').at(-1)!;
   await shot(staff, 'TC37-F019-fulfill', info);
-  await staff.getByRole('button', { name: 'Khách đã nhận thuốc', exact: true }).click();
+  await visit(staff, '/staff/orders'); await ready(staff);
+  const pickupRow = staff.getByRole('row').filter({ has: staff.getByRole('link', { name: order.orderId, exact: true }) });
+  await pickupRow.getByRole('button', { name: 'Khách đã nhận thuốc', exact: true }).click();
+  await expect(pickupRow).toContainText('Hoàn tất');
+  await visit(staff, `/staff/orders/${order.orderId}`); await ready(staff);
   await expect(staff.getByText('Đơn đã kết thúc, không còn thao tác xử lý.')).toBeVisible();
   await shot(staff, 'TC37-F015-completed', info);
   await staffContext.close();
@@ -290,26 +308,37 @@ test('TC32/TC42/TC45/TC37: giao hàng và thử xuất kho lại sau xác nhận
   const staffContext = await page.context().browser()!.newContext({ baseURL: new URL(page.url()).origin, viewport: page.viewportSize()!, locale: 'vi-VN' });
   const staff = await staffContext.newPage(); staff.on('dialog', dialog => dialog.accept());
   await login(staff, 'staff'); await visit(staff, `/staff/orders/${order.orderId}`); await ready(staff);
+  await expect(staff.getByLabel('Lý do (bắt buộc)', { exact: true })).toHaveCount(0);
+  await staff.getByRole('button', { name: 'Từ chối đơn hàng', exact: true }).click();
+  await expect(staff.getByLabel('Lý do (bắt buộc)', { exact: true })).toBeVisible();
+  await expect(staff.getByRole('button', { name: 'Xác nhận từ chối đơn hàng', exact: true })).toBeDisabled();
+  await staff.getByRole('button', { name: 'Đóng', exact: true }).click();
+  await expect(staff.getByLabel('Lý do (bắt buộc)', { exact: true })).toHaveCount(0);
+  await staff.getByRole('button', { name: 'Đã nhận đủ tiền', exact: true }).click();
   await staff.getByLabel('Mã giao dịch ngân hàng').fill(`DELIVERY-${info.project.name}-${order.orderId}`);
-  await expect(staff.getByLabel('Số tiền thực nhận (VND)')).toHaveValue(String(order.totalAmount));
-  await expect(staff.getByLabel('Thời điểm nhận tiền')).toHaveValue(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
+  await expect(staff.getByLabel('Số tiền thực nhận (VND)')).toHaveCount(0);
+  await expect(staff.getByLabel('Thời điểm nhận tiền')).toHaveCount(0);
   await shot(staff, 'TC45-F018-prefilled-review', info);
   await staff.route(`**/api/staff/orders/${order.orderId}/fulfill`, route => route.abort('failed'), { times: 1 });
-  await staff.getByRole('button', { name: 'Xác nhận đã nhận tiền', exact: true }).click();
+  await staff.getByRole('button', { name: 'Xác nhận', exact: true }).click();
   await expect(staff.locator('main')).toContainText('Đã xác nhận tiền nhưng chưa xuất kho được: Không thể kết nối đến máy chủ.');
   const reviewed = await api(staff.request, `/staff/orders/${order.orderId}`);
   expect(reviewed.payment.status).toBe('Confirmed'); expect(reviewed.invoiceId).toBeFalsy();
-  await expect(staff.getByRole('button', { name: 'Xác nhận đã nhận tiền', exact: true })).toHaveCount(0);
+  await expect(staff.getByRole('button', { name: 'Đã nhận đủ tiền', exact: true })).toHaveCount(0);
   await shot(staff, 'TC37-F019-fulfill-retry', info);
   await staff.getByRole('button', { name: 'Thử xuất kho lại', exact: true }).click();
   await expect(staff.getByRole('link', { name: /^Hóa đơn HD/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Đã thanh toán – Nhà thuốc đang chuẩn bị', exact: true })).toBeVisible({ timeout: 25_000 });
   await shot(page, 'TC45-F014-delivery-paid', info);
-  await staff.getByRole('button', { name: 'Bắt đầu giao', exact: true }).click();
-  await expect(staff.getByRole('button', { name: 'Đã giao xong', exact: true })).toBeVisible();
+  await visit(staff, '/staff/orders'); await ready(staff);
+  const deliveryRow = staff.getByRole('row').filter({ has: staff.getByRole('link', { name: order.orderId, exact: true }) });
+  await deliveryRow.getByRole('button', { name: 'Bắt đầu giao', exact: true }).click();
+  await expect(deliveryRow.getByRole('button', { name: 'Đã giao xong', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Đã thanh toán – Nhà thuốc đang giao', exact: true })).toBeVisible({ timeout: 25_000 });
   await shot(page, 'TC37-F015-delivering', info);
-  await staff.getByRole('button', { name: 'Đã giao xong', exact: true }).click();
+  await deliveryRow.getByRole('button', { name: 'Đã giao xong', exact: true }).click();
+  await expect(deliveryRow).toContainText('Hoàn tất');
+  await visit(staff, `/staff/orders/${order.orderId}`); await ready(staff);
   await expect(staff.locator('main')).toContainText('Đơn đã kết thúc');
   await shot(staff, 'TC37-F015-delivery-completed', info);
   await visit(page, `/orders/${order.orderId}`); await ready(page);
@@ -624,6 +653,44 @@ test('F017: Admin cấu hình QR và lỗi theo trường giữ dữ liệu', as
   await expect(page.getByLabel('Tên ngân hàng')).toHaveValue('Tên đang sửa chưa lưu');
   await page.getByLabel('Tên ngân hàng').fill('Ngân hàng kiểm thử');
   await shot(page, 'F017-admin-qr-settings', info);
+});
+
+test('AC02: dashboard quản lý và chuyển sang giao diện nhân viên', async ({ page }, info) => {
+  await login(page, 'admin');
+  await expect(page.getByRole('heading', { name: 'Tổng quan quản lý', exact: true })).toBeVisible();
+  for (const role of ['Admin', 'Staff', 'User']) {
+    const accounts = await api(page.request, `/admin/accounts?role=${role}&pageSize=1`);
+    await expect(page.getByTestId(`account-count-${role}`)).toHaveText(String(accounts.total));
+  }
+  const products = await api(page.request, '/products?pageSize=100');
+  await expect(page.getByTestId('selling-drug-count')).toHaveText(String(products.total));
+  await expect(page.getByTestId('out-of-stock-count')).toHaveText(String(products.items.filter((p: { inStock: boolean }) => !p.inStock).length));
+  const summary = await api(page.request, '/dashboard/summary');
+  await expect(page.getByTestId('low-stock-count')).toHaveText(String(summary.lowStockCount));
+  await expect(page.getByTestId('expiring-count')).toHaveText(String(summary.expiringCount));
+  const latest = await api(page.request, '/staff/orders?pageSize=5');
+  await expect(page.locator('main tbody tr')).toHaveCount(latest.items.length);
+  for (const order of latest.items) await expect(page.locator('main').getByRole('link', { name: order.orderId, exact: true })).toBeVisible();
+  await expect(page.locator('main')).not.toContainText(/doanh thu|thu chi|Chức năng nghiệp vụ/i);
+  if (info.project.name === '390') await page.getByRole('button', { name: 'Mở menu quản lý' }).click();
+  const sidebar = page.locator('aside');
+  await expect(sidebar.locator('nav a')).toHaveCount(8);
+  await expect(sidebar).not.toContainText(/Duyệt thanh toán|Bán tại quầy|Đơn thuốc/);
+  await expect(sidebar.getByRole('link', { name: 'Làm việc như nhân viên', exact: true })).toBeVisible();
+  if (info.project.name === '390') await page.getByRole('button', { name: 'Đóng menu quản lý' }).click();
+  await shot(page, 'AC02-admin-dashboard', info);
+  await page.locator('main').getByRole('link', { name: 'Làm việc như nhân viên', exact: true }).click();
+  await expect(page).toHaveURL(/\/staff$/); await ready(page);
+  await expect(page.getByText('Bạn đang dùng giao diện nhân viên', { exact: true })).toBeVisible();
+  if (info.project.name === '390') await page.getByRole('button', { name: 'Mở menu quản lý' }).click();
+  await expect(sidebar.getByRole('link', { name: 'Duyệt thanh toán', exact: true })).toBeVisible();
+  await expect(sidebar.getByText('Quản trị viên', { exact: true })).toBeVisible();
+  if (info.project.name === '390') await page.getByRole('button', { name: 'Đóng menu quản lý' }).click();
+  await page.getByRole('link', { name: 'Quay lại trang quản lý', exact: true }).click();
+  await expect(page).toHaveURL(/\/admin$/); await ready(page);
+  await page.locator('main').getByRole('link', { name: /Chờ thanh toán/ }).click();
+  await expect(page).toHaveURL(/\/admin\/orders\?status=AwaitingPayment$/);
+  await expect(page.getByRole('combobox', { name: 'Trạng thái', exact: true })).toHaveValue('AwaitingPayment');
 });
 
 test('M4: rà tất cả route, loading/rỗng/lỗi và menu mobile', async ({ page }, info) => {

@@ -1,7 +1,10 @@
 "use client";
 import { ActionButton } from '@/components/ActionButton';
-import { use, useCallback, useState } from "react";
-import { ReviewForm } from './Payments';
+import { Suspense, use, useCallback, useState } from "react";
+import { useSearchParams } from 'next/navigation';
+import { LoadingState } from '@/components/Status';
+import { PaymentButtons, ReviewForm, type ReviewMode } from './Payments';
+import type { OrderRow, PaymentRow } from '@/lib/types';
 import Link from "next/link";
 import { staffOrdersApi } from "@/lib/backoffice-api";
 import {
@@ -35,11 +38,23 @@ function PrescriptionReviewLink({ orderId }: { orderId: string }) {
   return <DetailLink href={r.data?.prescriptionId ? `${base}/prescriptions/${encodeURIComponent(r.data.prescriptionId)}` : `${base}/orders/${encodeURIComponent(orderId)}`}>Kiểm tra đơn thuốc</DetailLink>;
 }
 export function OrderList() {
+  return <Suspense fallback={<LoadingState />}><OrderListContent /></Suspense>;
+}
+function OrderListContent() {
   const base = useBasePath();
+  const requestedStatus = useSearchParams().get('status') || '';
+  const initialStatus = Object.hasOwn(ORDER_STATUS_LABELS, requestedStatus) ? requestedStatus : '';
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [selected, setSelected] = useState<{ payment: PaymentRow; mode: ReviewMode } | null>(null);
+  const action = useAction();
+  const reload = () => setRefreshKey(k => k + 1);
   return (
     <RecordList
+      key={initialStatus}
+      initialStatus={initialStatus}
       title="Đơn hàng trực tuyến"
       load={staffOrdersApi.list}
+      refreshKey={refreshKey}
       statuses={ORDER_STATUS_LABELS}
       rowKey={(o) => o.orderId}
       headers={[
@@ -72,18 +87,40 @@ export function OrderList() {
           </td>
           <td>{RECEIVE_METHOD_LABELS[o.receiveMethod]}</td>
           <td>{formatVND(o.totalAmount)}</td>
-          <td>{o.handledByUsername || "Chưa nhận"}</td>
-          <td>{['Completed', 'Cancelled', 'Rejected'].includes(o.status) ? 'Đã kết thúc' : o.status === 'WaitingReview' ? <PrescriptionReviewLink orderId={o.orderId} /> : o.paymentStatus === 'PendingReview' ? 'Chờ xác nhận tiền' : o.paymentStatus === 'Confirmed' ? o.receiveMethod === 'Pickup' ? 'Chờ khách đến lấy' : o.status === 'Delivering' ? 'Xác nhận giao xong' : 'Cần giao' : 'Chờ khách thanh toán'}</td>
+          <td>{o.handledByUsername || "—"}</td>
+          <td>{['Completed', 'Cancelled', 'Rejected'].includes(o.status) ? 'Đã kết thúc' : o.status === 'WaitingReview' ? <PrescriptionReviewLink orderId={o.orderId} /> : o.paymentStatus === 'PendingReview' ? <PaymentButtons disabled={action.busy} onSelect={mode => void action.run(() => staffOrdersApi.get(o.orderId), detail => {
+            if (detail.payment?.status !== 'PendingReview') { reload(); return; }
+            setSelected({ mode, payment: { paymentId: detail.payment.paymentId, orderId: detail.orderId, expectedAmount: detail.payment.expectedAmount, customerUsername: detail.customerUsername || '', status: 'PendingReview', createdAt: detail.createdAt, receivedAmount: detail.payment.receivedAmount, reviewNote: detail.payment.reviewNote } });
+          })} /> : o.paymentStatus === 'Confirmed' ? <ConfirmedOrderAction order={o} refresh={reload} /> : 'Chờ khách thanh toán'}</td>
         </>
       )}
-    />
+    >
+      <Feedback {...action} />
+      {selected && <ReviewForm key={`${selected.payment.paymentId}-${selected.mode}`} payment={selected.payment} mode={selected.mode} close={() => setSelected(null)} refresh={reload} />}
+    </RecordList>
   );
+}
+
+function ConfirmedOrderAction({ order, refresh }: { order: OrderRow; refresh: () => void }) {
+  const r = useResource(useCallback(() => staffOrdersApi.get(order.orderId), [order.orderId]));
+  const action = useAction();
+  const o = r.data;
+  const eligible = o?.payment?.status === 'Confirmed' && ['Preparing', 'Delivering'].includes(o.status);
+  const label = !o?.invoiceId ? 'Thử xuất kho lại' : o.receiveMethod === 'Pickup' ? 'Khách đã nhận thuốc' : o.status === 'Delivering' ? 'Đã giao xong' : 'Bắt đầu giao';
+  return <div className="space-y-2"><Feedback {...action} /><LoadState {...r} retry={r.reload} />{eligible && <ActionButton busy={action.busy} className={buttonClass} onClick={() => {
+    if (label !== 'Bắt đầu giao' && !window.confirm(`${label} cho ${o.orderId}?`)) return;
+    void action.run(async () => {
+      if (!o.invoiceId) await staffOrdersApi.fulfill(o.orderId);
+      else await staffOrdersApi.action(o.orderId, o.receiveMethod === 'Delivery' && o.status === 'Preparing' ? 'ship' : 'complete');
+    }, refresh);
+  }}>{label}</ActionButton>}</div>;
 }
 export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const base = useBasePath();
   const action = useAction();
   const [fulfillError, setFulfillError] = useState('');
+  const [reviewMode, setReviewMode] = useState<ReviewMode | null>(null);
   const resource = useResource(useCallback(() => staffOrdersApi.get(id), [id]));
   const o = resource.data;
   const transition = (key: string, reason?: string) =>
@@ -128,7 +165,8 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
       <LoadState {...resource} retry={resource.reload} />
       <Feedback {...action} />
       {fulfillError && o?.payment?.status === 'Confirmed' && !o.invoiceId && <p role="alert" className="rounded-lg border border-rose-300 bg-rose-50 p-4 text-rose-900">{fulfillError}</p>}
-      {o?.payment?.status === 'PendingReview' && <ReviewForm payment={{ paymentId: o.payment.paymentId, orderId: o.orderId, expectedAmount: o.payment.expectedAmount, customerUsername: o.customerUsername || '', status: 'PendingReview', createdAt: o.createdAt, receivedAmount: o.payment.receivedAmount, reviewNote: o.payment.reviewNote }} refresh={async failure => { setFulfillError(failure || ''); await resource.reload(); }} />}
+      {o?.payment?.status === 'PendingReview' && <PaymentButtons onSelect={setReviewMode} />}
+      {o?.payment?.status === 'PendingReview' && reviewMode && <ReviewForm key={reviewMode} mode={reviewMode} close={() => setReviewMode(null)} payment={{ paymentId: o.payment.paymentId, orderId: o.orderId, expectedAmount: o.payment.expectedAmount, customerUsername: o.customerUsername || '', status: 'PendingReview', createdAt: o.createdAt, receivedAmount: o.payment.receivedAmount, reviewNote: o.payment.reviewNote }} refresh={async failure => { setFulfillError(failure || ''); await resource.reload(); }} />}
       {!resource.loading && !resource.error && o && (
         <>
           <Card>
@@ -152,7 +190,7 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
                 {o.address && `· ${o.address}`}
               </p>
               <p>Loại đơn: {SALE_KIND_LABELS[o.saleKind]}</p>
-              <p>Người xử lý: {o.handledByUsername || "Chưa nhận"}</p>
+              <p>Người xử lý: {o.handledByUsername || "—"}</p>
             </div>
             {o.prescriptionId && (
               <DetailLink
@@ -261,6 +299,7 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
             )}
           </Card>
           <ReasonActions
+            collapsed
             busy={action.busy}
             errorFields={action.fields}
             onAction={transition}

@@ -405,39 +405,45 @@ export function ReasonActions({
   busy,
   errorFields,
   onAction,
+  collapsed = false,
 }: {
   actions: { key: string; label: string }[];
   busy: boolean;
   errorFields: Record<string, string[]>;
   onAction: (key: string, reason: string) => void;
+  collapsed?: boolean;
 }) {
   const [reason, setReason] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
   if (!actions.length) return null;
   return (
     <Card>
-      <Field
+      {(!collapsed || selected) && <Field
         label="Lý do (bắt buộc)"
         name="reason"
         errors={errorFields}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         required
-      />
+        disabled={busy}
+      />}
       <div className="flex flex-wrap gap-2">
         {actions.map((action) => (
           <ActionButton busy={busy}
             key={action.key}
             className={buttonClass}
-            disabled={busy || !reason.trim()}
+            disabled={busy || ((!collapsed || selected === action.key) && !reason.trim())}
             onClick={() => {
+              if (collapsed && selected !== action.key) { setSelected(action.key); return; }
               if (window.confirm(`${action.label}?`))
                 onAction(action.key, reason.trim());
             }}
           >
-            {action.label}
+            {collapsed && selected === action.key ? `Xác nhận ${action.label.toLowerCase()}` : action.label}
           </ActionButton>
         ))}
-      </div>
+        </div>
+        {collapsed && selected && <button type="button" className={buttonClass} disabled={busy} onClick={() => setSelected(null)}>Đóng</button>}
     </Card>
   );
 }

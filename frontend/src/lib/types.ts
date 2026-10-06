@@ -440,9 +440,9 @@ export type PaymentRow = {
 };
 
 export type PaymentReviewInput = {
-  bankReference: string;
-  receivedAmount: number;
-  receivedAt: string;
+  bankReference?: string;
+  receivedAmount?: number;
+  receivedAt?: string;
   note?: string;
 };
 

@@ -1,1 +1,5 @@
-export { PrescriptionDetail as default } from '@/components/backoffice/Prescriptions';
+import { redirect } from 'next/navigation';
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  redirect(`/staff/prescriptions/${encodeURIComponent(id)}`);
+}
