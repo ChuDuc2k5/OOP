@@ -89,12 +89,14 @@ export const staffOrdersApi = {
     ),
   action: (
     key: string,
-    action: "claim" | "ship" | "complete" | "reject" | "cancel",
+    action: "claim" | "ready" | "ship" | "complete" | "reject" | "cancel",
     reason?: string,
+    silent = false,
   ) =>
     post<OrderView>(
       `/api/staff/orders/${id(key)}/${action}`,
       reason === undefined ? undefined : { reason },
+      silent,
     ),
   fulfill: (key: string, silent = false) =>
     post<FulfillResult>(`/api/staff/orders/${id(key)}/fulfill`, undefined, silent),
