@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useRequireAuth } from '@/context/AuthContext';
-import { cartApi } from '@/lib/api';
+import { ApiException, cartApi } from '@/lib/api';
 import { CartView } from '@/lib/types';
 import { formatVND } from '@/lib/format';
 import {
@@ -39,7 +40,7 @@ export default function CartPage() {
       const data = await cartApi.getCart();
       setCart(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể tải giỏ hàng';
+      const msg = err instanceof ApiException ? err.title : 'Không thể tải giỏ hàng';
       setError(msg);
     } finally {
       setLoading(false);
@@ -63,7 +64,7 @@ export default function CartPage() {
       const updated = await cartApi.updateItem(drugId, { quantity: newQty });
       setCart(updated);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể cập nhật số lượng';
+      const msg = err instanceof ApiException ? err.title : 'Không thể cập nhật số lượng';
       alert(msg);
     } finally {
       setUpdatingDrugId(null);
@@ -76,7 +77,7 @@ export default function CartPage() {
       const updated = await cartApi.removeItem(drugId);
       setCart(updated);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể xóa sản phẩm';
+      const msg = err instanceof ApiException ? err.title : 'Không thể xóa sản phẩm';
       alert(msg);
     } finally {
       setUpdatingDrugId(null);
@@ -84,14 +85,7 @@ export default function CartPage() {
   };
 
   if (authLoading || !authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex items-center space-x-2 text-emerald-700 font-medium">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Đang kiểm tra quyền truy cập...</span>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   const hasIssues = cart.items.some((i) => !!i.issue);
@@ -126,13 +120,8 @@ export default function CartPage() {
           </Link>
         </div>
 
-        {loading ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-600">Đang tải dữ liệu giỏ hàng...</p>
-          </div>
-        ) : error ? (
-          <div className="bg-rose-50 border border-rose-200 text-rose-800 p-6 rounded-2xl text-center space-y-3">
+        {loading ? <LoadingState /> : error ? (
+          <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 space-y-3">
             <AlertTriangle className="w-8 h-8 text-rose-600 mx-auto" />
             <p className="font-semibold text-base">{error}</p>
             <button
@@ -143,7 +132,7 @@ export default function CartPage() {
             </button>
           </div>
         ) : cart.items.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
+          <div role="status" className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-600 space-y-3">
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
               <ShoppingBag className="w-8 h-8" />
             </div>

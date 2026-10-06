@@ -31,3 +31,7 @@ next-env.d.ts
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Browser checks
+test-results/
+playwright-report/

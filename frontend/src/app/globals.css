@@ -15,6 +15,27 @@ body {
   flex-direction: column;
 }
 
+/* Giữ nội dung và form trong khung; chỉ bảng/tab cuộn ngang. */
+main, section, form, fieldset, label {
+  min-width: 0;
+}
+main, [role="alert"], [role="status"] {
+  overflow-wrap: anywhere;
+}
+input, select, textarea {
+  max-width: 100%;
+  min-width: 0;
+}
+.overflow-x-auto {
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+}
+@media (max-width: 639px) {
+  .overflow-x-auto > table {
+    min-width: 600px;
+  }
+}
+
 /* Tùy chỉnh thanh cuộn cho bảng cuộn ngang (NFR-06) */
 .custom-scrollbar::-webkit-scrollbar {
   height: 6px;
