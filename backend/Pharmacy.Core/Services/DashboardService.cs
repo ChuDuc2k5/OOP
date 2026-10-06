@@ -8,7 +8,7 @@ public sealed class DashboardService(PharmacyDbContext db, InventoryReportServic
 {
     public async Task<DashboardSummary> Get(CancellationToken ct = default)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        await using var transaction = await db.Database.BeginReadSnapshotAsync(ct);
         var summary = new DashboardSummary(
             await db.Prescriptions.CountAsync(x => x.Status == PrescriptionStatus.PendingReview, ct),
             await db.Orders.CountAsync(x => x.Status == OrderStatus.AwaitingPayment, ct),

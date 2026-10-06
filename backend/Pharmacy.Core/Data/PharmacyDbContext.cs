@@ -12,8 +12,15 @@ public sealed class DailySequence
     }
 }
 
-public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> options) : DbContext(options)
+public class PharmacyDbContext : DbContext
 {
+    public PharmacyDbContext(DbContextOptions<PharmacyDbContext> options) : base(options)
+    {
+    }
+
+    protected PharmacyDbContext(DbContextOptions options) : base(options)
+    {
+    }
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
     public DbSet<Drug> Drugs => Set<Drug>();
     public DbSet<DrugBatch> DrugBatches => Set<DrugBatch>();
@@ -31,6 +38,10 @@ public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> option
     public DbSet<Invoice> Invoices => Set<Invoice>();
     protected override void OnModelCreating(ModelBuilder m)
     {
+        if (Database.IsNpgsql())
+        {
+            m.HasDefaultSchema("pharmacy");
+        }
         m.Entity<UserAccount>().HasKey(x => x.UserId);
         m.Entity<UserAccount>().HasIndex(x => x.NormalizedUsername).IsUnique();
         m.Entity<Drug>().HasKey(x => x.DrugId);
@@ -99,6 +110,12 @@ public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> option
                 {
                     m.Entity(entity.ClrType).Property(p.Name).IsConcurrencyToken();
                 }
+                if (Database.IsNpgsql() && type == typeof(DateTimeOffset))
+                {
+                    m.Entity(entity.ClrType).Property(p.Name)
+                        .HasConversion<DateTimeOffsetUtcConverter>()
+                        .HasColumnType("timestamp with time zone");
+                }
             }
             foreach (var fk in entity.GetForeignKeys())
             {
@@ -113,7 +130,7 @@ public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> option
         Check<BatchAllocation>(m, "AllocationQuantity", "Quantity > 0");
         foreach (var t in new[] { typeof(OrderItem), typeof(SaleItem) })
         {
-            m.Entity(t).ToTable(tb => tb.HasCheckConstraint("CK_" + t.Name + "_Money", "Quantity > 0 AND CAST(UnitPrice AS REAL) > 0 AND CAST(UnitPrice AS REAL) = CAST(UnitPrice AS INTEGER) AND CAST(LineTotal AS REAL) = Quantity * CAST(UnitPrice AS REAL)"));
+            m.Entity(t).ToTable(tb => tb.HasCheckConstraint("CK_" + t.Name + "_Money", ConstraintSql(m, "Quantity > 0 AND CAST(UnitPrice AS REAL) > 0 AND CAST(UnitPrice AS REAL) = CAST(UnitPrice AS INTEGER) AND CAST(LineTotal AS REAL) = Quantity * CAST(UnitPrice AS REAL)")));
         }
 
         Check<UserAccount>(m, "AccountRules", "length(Username) BETWEEN 3 AND 30 AND Username NOT GLOB '*[^A-Za-z0-9._-]*' AND length(PasswordHash) > 0 AND NormalizedUsername = upper(trim(Username)) AND Role IN ('User','Staff','Admin')");
@@ -126,7 +143,24 @@ public sealed class PharmacyDbContext(DbContextOptions<PharmacyDbContext> option
     }
     private static void UserFk<T>(EntityTypeBuilder<T> b, string field) where T : class => b.HasOne<UserAccount>().WithMany().HasForeignKey(field);
     private static void DrugFk<T>(EntityTypeBuilder<T> b) where T : class => b.HasOne<Drug>().WithMany().HasForeignKey("DrugId");
-    private static void Check<T>(ModelBuilder m, string name, string sql) where T : class => m.Entity<T>().ToTable(t => t.HasCheckConstraint("CK_" + typeof(T).Name + "_" + name, sql));
+    private static void Check<T>(ModelBuilder m, string name, string sql) where T : class
+        => m.Entity<T>().ToTable(t => t.HasCheckConstraint("CK_" + typeof(T).Name + "_" + name, ConstraintSql(m, sql)));
+
+    private static string ConstraintSql(ModelBuilder m, string sql)
+    {
+        if (m.Model.GetDefaultSchema() != "pharmacy")
+        {
+            return sql;
+        }
+        sql = System.Text.RegularExpressions.Regex.Replace(sql, @"CAST\((\w+) AS REAL\)", "$1");
+        sql = System.Text.RegularExpressions.Regex.Replace(sql, @"CAST\((\w+) AS INTEGER\)", "trunc($1)");
+        sql = sql.Replace("IsControlled = 0", "IsControlled = FALSE")
+            .Replace("RequiresPrescription = 1", "RequiresPrescription = TRUE")
+            .Replace("Username NOT GLOB '*[^A-Za-z0-9._-]*'", "Username ~ '^[A-Za-z0-9._-]+$'");
+        var names = m.Model.GetEntityTypes().SelectMany(x => x.GetProperties()).Select(x => x.Name).Distinct();
+        var pattern = @"\b(" + string.Join("|", names) + @")\b";
+        return System.Text.RegularExpressions.Regex.Replace(sql, pattern, match => "\"" + match.Value + "\"");
+    }
     private void AdvanceVersions()
     {
         ChangeTracker.DetectChanges();

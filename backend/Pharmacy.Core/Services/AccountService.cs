@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy.Core.Common;
 using Pharmacy.Core.Data;
@@ -76,7 +75,7 @@ public sealed class AccountService(PharmacyDbContext db, IdGenerator ids, IPassw
         {
             await db.SaveChangesAsync(ct);
         }
-        catch (DbUpdateException e) when (e.InnerException is SqliteException { SqliteExtendedErrorCode: 2067 })
+        catch (DbUpdateException e) when (DatabaseErrors.IsUniqueViolation(e))
         {
             db.Entry(account).State = EntityState.Detached;
             throw Duplicate();

@@ -12,6 +12,9 @@ using Pharmacy.Core.Data;
 using Pharmacy.Core.Domain;
 using Pharmacy.Core.Services;
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddInMemoryCollection(EnvironmentFile.Read(Path.Combine(builder.Environment.ContentRootPath, ".env")));
+builder.Configuration.AddEnvironmentVariables();
+builder.Configuration.AddCommandLine(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddOpenApi();
@@ -49,18 +52,7 @@ builder.Services.AddAntiforgery(o =>
     o.Cookie.HttpOnly = true;
     o.Cookie.SameSite = SameSiteMode.Lax;
 });
-if ((builder.Configuration["Database:Provider"] ?? "Sqlite") != "Sqlite")
-{
-    throw new InvalidOperationException("M1 supports Database:Provider=Sqlite only.");
-}
-
-var connection = new SqliteConnectionStringBuilder(builder.Configuration.GetConnectionString("Default") ?? "Data Source=../data/pharmacy.db");
-if (connection.DataSource != ":memory:")
-{
-    connection.DataSource = Path.GetFullPath(connection.DataSource, builder.Environment.ContentRootPath);
-    Directory.CreateDirectory(Path.GetDirectoryName(connection.DataSource)!);
-}
-builder.Services.AddDbContext<PharmacyDbContext>(o => o.UseSqlite(connection.ToString()));
+DatabaseConfiguration.Register(builder.Services, builder.Configuration, builder.Environment.ContentRootPath);
 builder.Services.AddDataProtection().SetApplicationName("Pharmacy")
     .PersistKeysToFileSystem(new DirectoryInfo(Path.GetFullPath(builder.Configuration["DataProtection:KeyPath"] ?? "../data/keys", builder.Environment.ContentRootPath)));
 builder.Services.AddSingleton<IBusinessClock>(_ => new BusinessClock(

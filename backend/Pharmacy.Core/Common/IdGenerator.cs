@@ -23,9 +23,11 @@ public sealed class IdGenerator(PharmacyDbContext db, IBusinessClock clock)
         {
             await using var command = connection.CreateCommand();
             command.Transaction = db.Database.CurrentTransaction?.GetDbTransaction();
-            command.CommandText = "INSERT INTO DailySequence (Key, Value) VALUES ($key, 1) ON CONFLICT(Key) DO UPDATE SET Value = Value + 1 WHERE Value < 9999 RETURNING Value;";
+            command.CommandText = db.Database.IsNpgsql()
+                ? "INSERT INTO pharmacy.\"DailySequence\" (\"Key\", \"Value\") VALUES (@key, 1) ON CONFLICT(\"Key\") DO UPDATE SET \"Value\" = \"DailySequence\".\"Value\" + 1 WHERE \"DailySequence\".\"Value\" < 9999 RETURNING \"Value\";"
+                : "INSERT INTO DailySequence (Key, Value) VALUES (@key, 1) ON CONFLICT(Key) DO UPDATE SET Value = Value + 1 WHERE Value < 9999 RETURNING Value;";
             var parameter = command.CreateParameter();
-            parameter.ParameterName = "$key";
+            parameter.ParameterName = "key";
             parameter.Value = key;
             command.Parameters.Add(parameter);
             var value = await command.ExecuteScalarAsync(ct);

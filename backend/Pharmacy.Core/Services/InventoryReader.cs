@@ -13,7 +13,7 @@ public sealed class InventoryReader(PharmacyDbContext db, IBusinessClock clock)
     {
         // Both queries read the same database snapshot without changing inventory.
         await using var transaction = db.Database.CurrentTransaction is null
-            ? await db.Database.BeginTransactionAsync(ct)
+            ? await db.Database.BeginReadSnapshotAsync(ct)
             : null;
         var drugs = await db.Drugs.AsNoTracking().Include(x => x.Batches).ToListAsync(ct);
         var reservations = await db.StockReservations.AsNoTracking()
