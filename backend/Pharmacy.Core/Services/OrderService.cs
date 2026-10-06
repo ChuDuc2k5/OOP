@@ -135,10 +135,6 @@ public sealed class OrderService(
         => transactions.Execute(async _ =>
         {
             var order = await Find(orderId, null, ct);
-            if (action == "fulfill")
-            {
-                throw new BusinessException("INVALID_STATE", "Chức năng xuất hóa đơn chưa được triển khai.");
-            }
             if (action == "claim")
             {
                 Guard.State(order.Status is OrderStatus.WaitingReview or OrderStatus.AwaitingPayment or OrderStatus.Preparing or OrderStatus.Delivering);

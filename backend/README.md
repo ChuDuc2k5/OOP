@@ -1,6 +1,6 @@
 # Backend — Pharmacy Management System
 
-.NET 10 / ASP.NET Core Web API / EF Core 10 / SQLite / xUnit. M1 gồm toàn bộ mô hình dữ liệu và F001–F003; M2 hoàn thành danh mục sản phẩm, nhập lô, tồn kho và báo cáo F004–F009. M3 hoàn thành đơn thuốc, giỏ và quản lý đơn hàng F010–F015; thanh toán và checkout thuộc M4.
+.NET 10 / ASP.NET Core Web API / EF Core 10 / SQLite / xUnit. M1 gồm toàn bộ mô hình dữ liệu và F001–F003; M2 hoàn thành danh mục sản phẩm, nhập lô, tồn kho và báo cáo F004–F009. M3 hoàn thành đơn thuốc, giỏ và quản lý đơn hàng F010–F015. M4 hoàn thành bán tại quầy, QR thủ công, duyệt tiền, checkout và hóa đơn F016–F020; hỗ trợ SQLite/PostgreSQL.
 
 Chạy từ gốc repository:
 
@@ -62,7 +62,7 @@ Kiểm thử dùng `WebApplicationFactory` + SQLite file riêng trong temp, cloc
 | TC-08 | `TC08_NonAdmin_CannotListOrCreateAccounts`, `TC08_Guest_CannotListOrCreateAccounts` |
 | TC-55 | `TC55_Restart_PreservesAllDomainData_AndDoesNotReseed` |
 
-Test bổ sung: token thiếu/sai/cũ và tự cấp mới, OpenAPI/health, seed trống/một phần, đóng gói/đa hình, magic bytes/MIME/extension/size/path traversal, unique/partial index/FK/CHECK, concurrency token, cấp mã đồng thời/persist, ProblemDetails không lộ stack trace. Chưa tuyên bố TC-56 checkout pass: test đa hình ở M1 chỉ kiểm tra `Sale.Validate`; CheckoutService thuộc M4.
+Test bổ sung: token thiếu/sai/cũ và tự cấp mới, OpenAPI/health, seed trống/một phần, đóng gói/đa hình, magic bytes/MIME/extension/size/path traversal, unique/partial index/FK/CHECK, concurrency token, cấp mã đồng thời/persist, ProblemDetails không lộ stack trace. TC-56 được kiểm chứng qua CheckoutService trong bộ test M4 bên dưới.
 
 ```powershell
 dotnet test Pharmacy.sln --filter "FullyQualifiedName~TC55"
@@ -129,7 +129,7 @@ API M3 theo contract §6, §7.1–7.3 và §9:
 
 Giỏ chỉ dành cho role User, cộng dồn cùng thuốc và báo issue khi tắt bán/thiếu khả dụng, không giữ kho. Đặt hàng chốt giá hiện tại, so `expectedTotal`, trả `PRICE_CHANGED` với CartView mới nếu khác; không dùng userId/giá từ client. Đặt thành công xóa dòng đã đặt trong cùng transaction. Đơn PendingReview chưa được thanh toán/giữ hàng; mở thanh toán và giữ hàng thuộc M4.
 
-Hủy/từ chối đơn dùng `InventoryService.Execute`: đổi trạng thái, giải phóng tồn/hạn mức và đóng Payment PendingReview trong một transaction. Không hủy đơn đã xác nhận thanh toán. Staff giao/hoàn tất cần Payment Confirmed và hóa đơn từ Sale Completed; cập nhật giao hàng không trừ kho. `canCancel`/`canPay` được tính trên server. `/fulfill` hiện trả 409 `INVALID_STATE` theo phạm vi M3; sẽ nối CheckoutService ở M4.
+Hủy/từ chối đơn dùng `InventoryService.Execute`: đổi trạng thái, giải phóng tồn/hạn mức và đóng Payment PendingReview trong một transaction. Không hủy đơn đã xác nhận thanh toán. Staff giao/hoàn tất cần Payment Confirmed và hóa đơn từ Sale Completed; cập nhật giao hàng không trừ kho. `canCancel`/`canPay` được tính trên server. `/fulfill` đã nối CheckoutService ở M4; chỉ xuất khi Preparing, Payment Confirmed và chưa có hóa đơn.
 
 Migration `PrescriptionCreatedAt` bổ sung thời điểm tạo đơn thuốc. Bản ghi mới/seed dùng IBusinessClock.Now; bản ghi từ DB M1 dùng `1970-01-01T00:00:00+00:00` để biểu thị thời điểm cũ chưa được lưu, không suy đoán ngày tạo. Test nâng cấp từ migration M1 xác nhận bảo toàn dữ liệu và không seed đè.
 
@@ -197,3 +197,60 @@ dotnet test Pharmacy.sln
 ```
 
 Môi trường hiện tại chưa có PostgreSQL thật: kiểm chứng offline 132 pass, 1 skip (smoke PostgreSQL), build 0 warning/0 error. SQL script đã sinh; chưa kiểm chứng kết nối SSL/Session pooler, apply migration, seed và thao tác thực tế trên Supabase. Máy phát triển gặp lỗi TLS NuGet; lần kiểm chứng dùng `RestoreSources` trỏ cache gói cục bộ đã tải từ NuGet chính thức, không thay đổi cấu hình nguồn của repository.
+
+
+M4: bán tại quầy, thanh toán thủ công và hóa đơn (F016–F020)
+
+| Quyền | Endpoint |
+|---|---|
+| Staff/Admin, chỉ giao dịch tại quầy của mình | `POST/GET /api/staff/sales`, `GET/PUT /api/staff/sales/{id}`, `POST .../{id}/cancel`, `POST .../{id}/checkout` |
+| User chủ đơn | `POST /api/orders/{id}/payment` (lần đầu 201, mở lại 200 cùng Payment) |
+| User chủ đơn hoặc Staff/Admin | `GET /api/orders/{id}/payment` |
+| User/Staff/Admin | `GET /api/files/qr/{fileName}` |
+| Admin | `GET/PUT /api/admin/payment-settings`, `POST /api/admin/payment-settings/qr-image` (multipart `file`) |
+| Staff/Admin | `GET /api/staff/payments`, `POST .../{id}/review`, `POST .../{id}/note`, `POST /api/staff/orders/{id}/fulfill` |
+| User/Staff/Admin theo phạm vi hóa đơn | `GET /api/invoices`, `GET /api/invoices/{id}` |
+
+Nháp tại quầy không giữ hàng/hạn mức. `Sale.Validate` được gọi qua kiểu Sale để tính issues/canCheckout và kiểm tra lại trong checkout; OTC không được đổi loại qua payload. Nháp người khác trả 404 kể cả Admin. Khi checkout tại quầy, chốt giá hiện tại và bắt buộc `cashReceived: true`; hóa đơn ghi Cash. Online dùng subtype theo Order.SaleKind, giá/tên/đơn vị đã chốt trên OrderItem và ManualQR.
+
+Mở QR lần đầu dùng InventoryService.Execute để kiểm tra, giữ tồn/hạn mức và tạo Payment PendingReview trong cùng transaction; lưu bản chụp ngân hàng/ảnh QR. Mở lại không giữ lặp. Thiếu cấu hình hoặc file QR trả PAYMENT_NOT_CONFIGURED. Thay cấu hình không thay Payment đã mở; ảnh cũ vẫn đọc được khi Payment tham chiếu. Ảnh dùng IFileStorage, kiểm tra PNG/JPG qua nội dung/MIME/đuôi và tối đa 5 MB. Không seed ngân hàng/QR thật. Cảnh báo thiếu/thừa theo contract §8.1 thuộc giao diện; API trả đúng số tiền và nội dung chuyển khoản.
+
+Review đủ/thừa tiền ghi Confirmed và Order Preparing, không trừ kho; thiếu tiền trả HTTP 200 với approved:false và ghi Chuyển thiếu, giữ PendingReview. Mã ngân hàng đã xác nhận không dùng lại. Các thao tác mở QR, hủy, review và checkout được khóa + transaction; hai scope/DbContext duyệt cùng Payment chỉ một thành công. Đơn hủy không duyệt được.
+
+Checkout dùng chung Validate đa hình → FEFO → DrugBatch.Deduct → Consume reservation → PrescriptionItem.RecordDispense → Sale Completed → Invoice trong một transaction; lỗi ghi hóa đơn rollback cả kho/hạn mức/reservation/Sale/sequence, Payment Confirmed giữ nguyên. Khi lô hết hạn, phân bổ lại lô còn hạn; thiếu hàng thì dừng, đơn online vẫn Preparing và có note. Fulfill lặp bị chặn. Hóa đơn lưu allocations và giá bất biến; User xem của mình, Staff xem mình lập hoặc đơn mình xử lý, Admin xem tất cả, ngoài phạm vi trả 404.
+
+Không thay đổi schema M4: test xác nhận không có pending model changes ở cả SQLite và PostgreSQL, giữ nguyên các migration. Khóa tồn vẫn dành cho một tiến trình ứng dụng theo kiến trúc; triển khai nhiều instance cần cơ chế khóa liên tiến trình.
+
+```powershell
+dotnet build Pharmacy.sln
+dotnet test Pharmacy.sln
+dotnet test Pharmacy.sln --filter FullyQualifiedName~CheckoutTests
+```
+
+| TC | Test method M4 (CheckoutTests) |
+|---|---|
+| TC-13 | `TC13_OnlinePaymentAndInvoice_KeepOrderPrice_CounterUsesCheckoutPrice` |
+| TC-20 | `TC20_TwoUsersOpenQr_OnlyLastAvailableStockIsReserved` |
+| TC-35 | `TC35_CancelVersusReview_OneValidTransition_ClosedOrderCannotPayOrReview` |
+| TC-38 | `TC38_CounterOtcCheckout_DeductsFefo_CreatesInvoice_AndCannotRepeat`, `TC38_DraftCancelAndCashValidation_DoNotDeductOrCreateInvoice`, `TC38_CheckoutWithPreviouslyLoadedDraft_UsesLatestSavedLines` |
+| TC-39 | `TC39_OtcPrescriptionOrControlledDrug_IsBlocked_KindCannotChange` |
+| TC-40 | `TC40_PartialPrescriptionDispense_ThenRemaining_CannotExceedQuota`, `TC40_OnlinePrescriptionReservation_ProtectsCounterQuota_ThenDispensesOnFulfill` |
+| TC-41 | `TC41_OtherDraftOwner_IsHiddenForGetUpdateCancelAndCheckout` |
+| TC-42 | `TC42_OpenQr_ReturnsExpectedAmountOrderContentAndPrivateImage`, `TC42_MissingPaymentConfigurationOrQrFile_DoesNotReserve`, `TC42_PaymentGetAndOpen_HideOtherOwners_RequireExistingPayment`, `TC42_QrUpload_InvalidContentOrOversize_DoesNotChangeConfiguration` |
+| TC-43 | `TC43_OpeningQrOrWritingNote_DoesNotConfirmOrDeductStock` |
+| TC-44 | `TC44_RepeatedQrOpening_KeepsSnapshotAndReservation_AfterSettingsChange`, `TC44_ConcurrentOpeningWithTwoScopes_CreatesOnePaymentAndReservation` |
+| TC-45 | `TC45_StaffAndAdminReviewEnoughMoney_RecordAuditAndPrepareWithoutDeduction`, `TC45_InvalidReviewFields_DoNotWritePaymentOrOrder` |
+| TC-46 | `TC46_Underpayment_Returns200PendingAndShortfallNote` |
+| TC-47 | `TC47_Overpayment_ConfirmsExpectedTotal_PreservesReceivedAmount` |
+| TC-48 | `TC48_ConcurrentReview_WithTwoScopes_OnlyOneConfirmation`, `TC48_ConcurrentFulfillWithTwoScopes_CreatesOneInvoiceAndConsumesOnce` |
+| TC-49 | `TC49_DuplicateConfirmedBankReference_IsRejectedWithoutPartialWrite` |
+| TC-50 | `TC50_GuestAndUserCannotReviewOrConfigurePayments` |
+| TC-51 | `TC51_InvoiceWriteFailure_RollsBackStockQuotaSaleAndReservations_KeepsConfirmedPayment`, `TC51_MultiLineShortage_DoesNotDeductAnyLineOrCompleteDraft` |
+| TC-52 | `TC52_ReservedStockExpires_ReallocatesOrStopsWithoutLosingPayment` |
+| TC-53 | `TC53_OnlineAndCounterInvoices_KeepAllocationsAndPricesImmutable` |
+| TC-54 | `TC54_Invoices_RespectUserStaffCreatorHandlerAndAdminScopes` |
+| TC-56 | `TC56_SameCheckoutServiceCall_WithSaleTypedSubtypes_ValidatesPolymorphically` |
+
+Smoke HTTP dùng SQLite/storage/key riêng trong temp: user đặt OTC → mở QR → staff review đủ tiền → fulfill → complete → xem hóa đơn; staff lập nháp OTC tại quầy → checkout → xem hóa đơn. Cả hai luồng pass, API đã tắt và dữ liệu smoke đã xóa. Chưa chạy luồng M4 trên PostgreSQL thật trong lần kiểm chứng này; bộ opt-in PostgreSQL chỉ chạy khi có PHARMACY_TEST_POSTGRES. Báo cáo 132 pass/1 skip ở phần M3.5 phía trên là kết quả lịch sử; PO đã kiểm chứng M3.5 trên Supabase thật.
+
+Kiểm chứng M4: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Pharmacy.sln 170 pass/0 fail/1 skip (PostgreSQL opt-in). CheckoutTests có 38 trường hợp, 31 method, phủ 21 mã TC yêu cầu. Các test SQLite chạy không cần mạng.
