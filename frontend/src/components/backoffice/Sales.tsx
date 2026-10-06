@@ -2,9 +2,8 @@
 import { ActionButton } from '@/components/ActionButton';
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { staffSalesApi } from "@/lib/backoffice-api";
-import type { SaleKind, UpdateSaleInput } from "@/lib/types";
+import type { UpdateSaleInput } from "@/lib/types";
 import {
   formatDate,
   formatDateTime,
@@ -21,13 +20,13 @@ import {
   LoadState,
   Page,
   RecordList,
-  Select,
   Table,
   useAction,
   useBasePath,
   useResource,
 } from "./shared";
 import DrugLines from "./DrugLines";
+import CounterSale from './CounterSale';
 
 export function SaleList() {
   const base = useBasePath();
@@ -72,83 +71,7 @@ export function SaleList() {
     />
   );
 }
-export function SaleNew() {
-  const base = useBasePath();
-  const router = useRouter();
-  const action = useAction();
-  const [kind, setKind] = useState<SaleKind>("OTC");
-  const [prescriptionId, setPrescriptionId] = useState("");
-  const [patientId, setPatientId] = useState("");
-  return (
-    <Page
-      title="Tạo giao dịch bán tại quầy"
-      actions={
-        <Link href={`${base}/sales`} className={buttonClass}>
-          Danh sách
-        </Link>
-      }
-    >
-      <Card>
-        <Feedback {...action} />
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void action.run(
-              () =>
-                staffSalesApi.create({
-                  kind,
-                  ...(kind === "Prescription"
-                    ? {
-                        prescriptionId: prescriptionId.trim(),
-                        patientId: patientId.trim(),
-                      }
-                    : {}),
-                }),
-              (s) =>
-                router.push(`${base}/sales/${encodeURIComponent(s.saleId)}`),
-            );
-          }}
-        >
-          <Select
-            label="Loại giao dịch"
-            name="kind"
-            errors={action.fields}
-            options={SALE_KIND_LABELS}
-            value={kind}
-            onChange={(v) => setKind(v as SaleKind)}
-          />
-          <p className="text-sm text-slate-600">
-            Loại giao dịch được cố định sau khi tạo nháp.
-          </p>
-          {kind === "Prescription" && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field
-                label="Mã đơn thuốc"
-                name="prescriptionId"
-                value={prescriptionId}
-                onChange={(e) => setPrescriptionId(e.target.value)}
-                errors={action.fields}
-                required
-              />
-              <Field
-                label="Mã người bệnh"
-                name="patientId"
-                value={patientId}
-                onChange={(e) => setPatientId(e.target.value)}
-                errors={action.fields}
-                required
-              />
-            </div>
-          )}
-          <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
-            Tạo nháp
-          </ActionButton>
-        </form>
-      </Card>
-    </Page>
-  );
-}
+export function SaleNew() { return <CounterSale />; }
 export function SaleDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const base = useBasePath();

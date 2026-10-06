@@ -139,6 +139,8 @@ Toast dùng chung cho thao tác ghi, tự đóng sau khoảng 4 giây và có n�
 
 Theo D6–D9, chi tiết đơn tự làm mới mỗi 15 giây, giữ nút xem lại QR khi chờ xác nhận. Đơn Pickup đã thanh toán hiện lời mời đến quầy và mã đơn lớn; Delivery hiện đang chuẩn bị/đang giao. Form **Xác nhận đã nhận tiền** dùng chung cho Staff/Admin ở danh sách thanh toán và chi tiết đơn: review đủ tiền → fulfill ngay; lỗi xuất kho giữ thanh toán và nút **Thử xuất kho lại**. Pickup có **Khách đã nhận thuốc**, Delivery có **Bắt đầu giao** rồi **Đã giao xong**. Thuốc hết hàng vẫn được hiển thị nhưng khóa thêm giỏ; số lượng vượt tồn bị backend từ chối bằng lỗi 409 và toast.
 
+D10: đăng ký tự lấy phiên đăng nhập và chuyển tới `next` an toàn hoặc trang chủ. Checkout tự chọn loại đơn theo giỏ; giỏ có thuốc kê đơn/kiểm soát có thể chọn đơn đã gửi hoặc tải PNG/JPG tối đa 5 MB ngay tại checkout. Thông tin người nhận được nhớ trong localStorage theo userId sau khi tạo đơn thành công. Form duyệt tiền điền sẵn số tiền cần nhận và giờ hiện tại; đơn thuốc có nút **Lưu & chấp nhận**. Bán tại quầy dùng một màn hình chọn thuốc/sửa dòng/xem tổng và **Thu tiền mặt & hoàn tất**, tự tạo đúng loại nháp rồi lưu dòng và checkout. Lỗi giữ dữ liệu và liên kết nháp, thử lại dùng cùng nháp. Form thêm thuốc Admin hỗ trợ ảnh và lô đầu tiên tùy chọn; nếu bước sau lỗi, giữ thuốc đã tạo và liên kết chi tiết.
+
 ## Kiểm thử giao diện M4/M5 với backend thật
 
 Yêu cầu Node.js 20+, .NET SDK phù hợp với backend và cổng 3017/5017 trống. Chạy từ thư mục gốc:
@@ -164,7 +166,8 @@ Hai project chạy tuần tự ở 1366×900 và 390×844:
 - User: thêm giỏ từ chi tiết/thẻ sản phẩm, toast và liên kết xem giỏ; badge sau thêm/đổi/xóa; khóa bấm lặp, giữ giỏ khi lỗi mạng, tự đóng toast. Kiểm tra banner đặt hàng, hộp bước tiếp theo khi chờ duyệt, ghi chú chuyển thiếu và QR tự cập nhật khi Staff duyệt đủ. Gửi ảnh đơn thuốc và kiểm tra banner chờ dược sĩ.
 - Staff: xác nhận chuyển thiếu/đủ → tự xuất kho/lập hóa đơn → khách nhận tại quầy hoặc bắt đầu giao/giao xong. Ngắt request fulfill để kiểm tra thanh toán vẫn Confirmed và thử xuất kho lại thành công. Thuốc hết hàng bị khóa; thêm quá tồn trả 409 INSUFFICIENT_STOCK thật từ backend.
 - User: hóa đơn có allocations lô xuất; bị chuyển về trang chủ khi vào `/staff`.
-- Staff: tạo nháp OTC, lưu dòng, xác nhận nhận tiền mặt và checkout theo `canCheckout`.
+- Đăng ký: 201 → GET me → phiên User và `next` an toàn. Checkout: loại OTC tự động, tải ảnh đơn thuốc tại chỗ, giỏ hỗn hợp OTC/kê đơn chờ kiểm tra.
+- Staff: duyệt tiền với số tiền/giờ điền sẵn; lưu/chấp nhận đơn thuốc một nút; bán OTC tại quầy một màn hình, checkout lỗi giữ nháp rồi thử lại không tạo nháp mới. Admin: thêm thuốc kèm ảnh và lô đầu tiên.
 - Admin: lỗi theo trường giữ dữ liệu; lưu tài khoản, chọn ảnh PNG, xem trước và tải QR.
 - Rà các route khách/Staff/Admin: loading, rỗng, lỗi mạng, chiều rộng trang, bảng cuộn trong khung và sidebar mobile. Lỗi mạng được tạo bằng cách ngắt request, không thay response backend bằng mock.
 

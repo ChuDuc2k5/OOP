@@ -64,6 +64,22 @@ async function api(request: APIRequestContext, path: string, method = 'GET', dat
   return response.status() === 204 ? null : response.json();
 }
 
+test('TC01-F001: đăng ký tự đăng nhập và chuyển tới next an toàn', async ({ page }, info) => {
+  await visit(page, '/register?next=/cart'); await ready(page);
+  await page.getByLabel('Tên đăng nhập', { exact: true }).fill(`tc01_${info.project.name}`);
+  await page.getByLabel('Mật khẩu', { exact: true }).fill('User@12345');
+  await page.getByLabel('Xác nhận mật khẩu', { exact: true }).fill('User@12345');
+  const registered = page.waitForResponse(r => r.url().endsWith('/api/auth/register') && r.request().method() === 'POST');
+  const refreshed = page.waitForResponse(r => r.url().endsWith('/api/auth/me') && r.request().method() === 'GET');
+  await page.getByRole('button', { name: 'Đăng ký tài khoản', exact: true }).click();
+  expect((await registered).status()).toBe(201);
+  expect((await refreshed).ok()).toBeTruthy();
+  await expect(page).toHaveURL(/\/cart$/); await ready(page);
+  await expect(page.getByTestId('toast')).toContainText('Đăng ký thành công');
+  const me = await api(page.request, '/auth/me'); expect(me.username).toBe(`tc01_${info.project.name}`); expect(me.role).toBe('User');
+  await shot(page, 'TC01-F001-registered-session', info);
+});
+
 test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: luồng khách và nhân viên', async ({ page }, info) => {
   page.on('dialog', dialog => dialog.accept());
   await visit(page, '/'); await ready(page);
@@ -86,6 +102,7 @@ test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: lu�
   await expect(page.getByTestId('cart-badge').filter({ visible: true })).toHaveText('1');
   await shot(page, 'TC29-F012-add-toast', info);
   await visit(page, '/checkout'); await ready(page);
+  await expect(page.locator('input[name="saleKind"]')).toHaveCount(0);
   await page.getByLabel('Họ và tên người nhận').fill('Khách kiểm thử giao diện');
   await page.getByLabel('Số điện thoại liên hệ').fill('0901234567');
   await page.getByRole('radio', { name: /Nhận tại quầy nhà thuốc/ }).check();
@@ -94,6 +111,7 @@ test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: lu�
   const opened = page.waitForResponse(r => /\/api\/orders\/[^/]+\/payment$/.test(r.url()) && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Đặt hàng & thanh toán', exact: true }).click();
   const order = await (await placed).json();
+  expect(order.saleKind).toBe('OTC');
   await expect(page).toHaveURL(new RegExp(`/orders/${order.orderId}/payment\\?created=1$`));
   await expect(page.locator('main')).toContainText(`Đặt hàng thành công – Mã đơn ${order.orderId}`);
   await expect(page.getByTestId('cart-badge').filter({ visible: true })).toHaveText('0');
@@ -232,7 +250,9 @@ test('TC32/TC42/TC45/TC37: giao hàng và thử xuất kho lại sau xác nhận
   const staff = await staffContext.newPage(); staff.on('dialog', dialog => dialog.accept());
   await login(staff, 'staff'); await visit(staff, `/staff/orders/${order.orderId}`); await ready(staff);
   await staff.getByLabel('Mã giao dịch ngân hàng').fill(`DELIVERY-${info.project.name}-${order.orderId}`);
-  await staff.getByLabel('Số tiền thực nhận (VND)').fill(String(order.totalAmount));
+  await expect(staff.getByLabel('Số tiền thực nhận (VND)')).toHaveValue(String(order.totalAmount));
+  await expect(staff.getByLabel('Thời điểm nhận tiền')).toHaveValue(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
+  await shot(staff, 'TC45-F018-prefilled-review', info);
   await staff.route(`**/api/staff/orders/${order.orderId}/fulfill`, route => route.abort('failed'), { times: 1 });
   await staff.getByRole('button', { name: 'Xác nhận đã nhận tiền', exact: true }).click();
   await expect(staff.locator('main')).toContainText('Đã xác nhận tiền nhưng chưa xuất kho được: Không thể kết nối đến máy chủ.');
@@ -298,15 +318,22 @@ test('TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt 
   await page.getByRole('link', { name: 'Mở thanh toán QR', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/orders/${order.orderId}/payment$`)); await ready(page);
   await api(page.request, `/orders/${order.orderId}/cancel`, 'POST');
-  const pending = (await api(page.request, '/prescriptions/usable')).find((p: {status: string}) => p.status === 'PendingReview');
-  expect(pending).toBeTruthy();
   await api(page.request, '/cart/items', 'POST', { drugId: 'PARA500', quantity: 1 });
+  await api(page.request, '/cart/items', 'POST', { drugId: 'DEMO07', quantity: 1 });
   await visit(page, '/checkout'); await ready(page);
   await page.getByLabel('Họ và tên người nhận').fill('Khách chờ duyệt');
   await page.getByLabel('Số điện thoại liên hệ').fill('0901234567');
   await page.getByRole('radio', { name: /Nhận tại quầy nhà thuốc/ }).check();
-  await page.getByRole('radio', { name: /Theo đơn/ }).check();
-  await page.locator('select').selectOption(pending.prescriptionId);
+  await expect(page.locator('input[name="saleKind"]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Tải ảnh đơn thuốc mới', exact: true }).click();
+  await page.getByLabel('Tên người bệnh', { exact: true }).fill('Người bệnh tại checkout');
+  await page.getByLabel('Mã người bệnh (CCCD/BHYT)', { exact: true }).fill(`CHECKOUT-${info.project.name}`);
+  await page.getByLabel('Ảnh đơn thuốc (PNG/JPG, tối đa 5 MB)').setInputFiles({ name: 'prescription.png', mimeType: 'image/png', buffer: await readFile(resolve(process.cwd(), '../backend/Pharmacy.Core/Data/Assets/demo-qr.png')) });
+  const prescriptionResponse = page.waitForResponse(r => r.url().endsWith('/api/prescriptions') && r.request().method() === 'POST');
+  await page.getByRole('button', { name: 'Gửi ảnh đơn thuốc', exact: true }).click();
+  const prescription = await (await prescriptionResponse).json();
+  await expect(page.getByLabel('Chọn đơn thuốc của bạn', { exact: true })).toHaveValue(prescription.prescriptionId);
+  await shot(page, 'TC33-F013-inline-prescription', info);
   const waiting = page.waitForResponse(r => r.url().endsWith('/api/orders') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Đặt hàng & thanh toán', exact: true }).click();
   const waitingOrder = await (await waiting).json(); expect(waitingOrder.status).toBe('WaitingReview');
@@ -319,21 +346,55 @@ test('TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt 
 test('TC38-F016/F019: bán OTC tại quầy bằng form', async ({ page }, info) => {
   page.on('dialog', dialog => dialog.accept());
   await login(page, 'staff'); await visit(page, '/staff/sales/new');
-  await page.getByLabel('Loại giao dịch').selectOption('OTC');
-  await page.getByRole('button', { name: 'Tạo nháp' }).click();
-  await expect(page).toHaveURL(/\/staff\/sales\/BH/); await ready(page);
-  await expect(page.getByRole('button', { name: 'Đã nhận tiền mặt – Hoàn tất' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Thêm dòng' }).click();
-  await page.getByLabel('Mã thuốc dòng 1').fill('PARA500');
+  await page.getByLabel('Tìm thuốc theo mã/tên').fill('PARA500');
+  await page.getByRole('button', { name: 'Tra cứu thuốc', exact: true }).click();
+  await page.getByRole('button', { name: /Paracetamol 500mg \(PARA500\)/ }).click();
   await page.getByLabel('Số lượng dòng 1').fill('1');
-  await page.getByRole('button', { name: 'Lưu dòng thuốc & kiểm tra' }).click();
-  await expect(page.getByText('Đã lưu nháp và kiểm tra điều kiện bán.')).toBeVisible();
-  await shot(page, 'TC38-F016-counter-draft', info);
-  await page.getByLabel(/Tôi xác nhận đã nhận đủ/).check();
-  await page.getByRole('button', { name: 'Đã nhận tiền mặt – Hoàn tất' }).click();
-  await expect(page.getByText('Đã hoàn tất.', { exact: false }).first()).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Hủy nháp' })).toHaveCount(0);
+  await expect(page.getByLabel('Mã đơn thuốc', { exact: true })).toHaveCount(0);
+  await shot(page, 'TC38-F016-counter-one-screen', info);
+  let created = 0;
+  page.on('request', r => { if (r.url().endsWith('/api/staff/sales') && r.method() === 'POST') ++created; });
+  await page.route('**/api/staff/sales/*/checkout', route => route.abort('failed'), { times: 1 });
+  await page.getByRole('button', { name: 'Thu tiền mặt & hoàn tất', exact: true }).click();
+  await expect(page.locator('main')).toContainText('Không thể kết nối đến máy chủ.');
+  await expect(page.getByRole('link', { name: 'Mở nháp để tiếp tục', exact: true })).toBeVisible();
+  await shot(page, 'TC38-F016-counter-retry', info);
+  await page.getByRole('button', { name: 'Thu tiền mặt & hoàn tất', exact: true }).click();
+  await expect(page).toHaveURL(/\/staff\/invoices\/HD/); await ready(page);
+  expect(created).toBe(1);
   await shot(page, 'TC38-F019-counter-checkout', info);
+});
+
+test('TC26-F011: lưu chi tiết và chấp nhận một nút', async ({ page }, info) => {
+  await login(page, 'staff');
+  const prescription = await api(page.request, '/prescriptions/counter', 'POST', { prescriptionId: `ONE-${info.project.name}`, patientId: 'PATIENT-ONE', patientName: 'Người bệnh một bước', prescriberName: 'Bác sĩ kiểm thử', issueDate: '2026-10-06', validUntil: '2026-11-06', items: [{ drugId: 'PARA500', quantity: 1 }] });
+  await visit(page, `/staff/prescriptions/${prescription.prescriptionId}`); await ready(page);
+  await expect(page.getByRole('button', { name: 'Chấp nhận đơn thuốc', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Lưu & chấp nhận', exact: true }).click();
+  await expect(page.locator('main')).toContainText('Đã chấp nhận');
+  expect((await api(page.request, `/prescriptions/${prescription.prescriptionId}`)).status).toBe('Approved');
+  await shot(page, 'TC26-F011-save-approve', info);
+});
+
+test('TC11-F005, TC14-F006: tạo thuốc kèm ảnh và lô đầu', async ({ page }, info) => {
+  await login(page, 'admin'); await visit(page, '/admin/drugs/new'); await ready(page);
+  const drugId = `FIRST-${info.project.name}`;
+  await page.getByLabel('Mã thuốc', { exact: true }).fill(drugId);
+  await page.getByLabel('Tên thuốc', { exact: true }).fill('Thuốc kiểm thử một bước');
+  await page.getByLabel('Đơn vị bán', { exact: true }).fill('Viên');
+  await page.getByLabel('Giá bán (VND)', { exact: true }).fill('2000');
+  await page.getByLabel('Ảnh thuốc (tùy chọn, PNG/JPG tối đa 5 MB)').setInputFiles({ name: 'drug.png', mimeType: 'image/png', buffer: await readFile(resolve(process.cwd(), '../backend/Pharmacy.Core/Data/Assets/demo-qr.png')) });
+  await page.getByLabel('Nhập lô đầu tiên', { exact: true }).check();
+  await page.getByLabel('Số lô đầu tiên', { exact: true }).fill('FIRST-LOT');
+  await page.getByLabel('Hạn dùng lô đầu tiên', { exact: true }).fill('2027-10-06');
+  await page.getByLabel('Số lượng lô đầu tiên', { exact: true }).fill('10');
+  await shot(page, 'TC11-F005-create-image-batch', info);
+  await page.getByRole('button', { name: 'Thêm thuốc', exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/admin/drugs/${drugId}$`)); await ready(page);
+  const drug = await api(page.request, `/admin/drugs/${drugId}`); expect(drug.imageUrl).toBeTruthy();
+  const inventory = await api(page.request, `/inventory/${drugId}`);
+  expect(inventory.availableQuantity).toBe(10); expect(inventory.batches[0].batchNumber).toBe('FIRST-LOT');
+  await shot(page, 'TC14-F006-first-batch', info);
 });
 
 test('F017: Admin cấu hình QR và lỗi theo trường giữ dữ liệu', async ({ page }, info) => {

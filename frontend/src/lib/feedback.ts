@@ -37,7 +37,7 @@ export function mutationFeedback(endpoint: string, options: RequestInit, result:
   if (endpoint.startsWith('/api/cart/items/')) message = method === 'DELETE' ? 'Đã xóa thuốc khỏi giỏ hàng.' : 'Đã cập nhật số lượng trong giỏ hàng.';
   else if (endpoint === '/api/auth/login') message = 'Đăng nhập thành công.';
   else if (endpoint === '/api/auth/logout') message = 'Đã đăng xuất.';
-  else if (endpoint === '/api/auth/register') message = 'Đăng ký thành công. Bạn có thể đăng nhập ngay.';
+  else if (endpoint === '/api/auth/register') message = 'Đăng ký thành công';
   else if (endpoint === '/api/orders') message = `Đặt hàng thành công – Mã đơn ${data.orderId}.`;
   else if (/\/orders\/[^/]+\/payment$/.test(endpoint)) { message = 'Đã mở thanh toán QR. Chuyển khoản đúng số tiền và nội dung, sau đó chờ nhà thuốc đối chiếu.'; kind = 'info'; }
   else if (/\/payments\/[^/]+\/review$/.test(endpoint)) {

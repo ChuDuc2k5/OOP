@@ -1,8 +1,10 @@
 # Bằng chứng kiểm thử giao diện M4/M5
 
-77 ảnh PNG từ Playwright Chromium ở 1366×900 và 390×844, chạy frontend production qua `/api` ở cổng 3017 với backend thật cổng 5017, SQLite riêng và seed. Lần chạy cuối D6–D9: 16/16 ca pass (2,4 phút), đối chiếu đủ 49 route ở mỗi viewport. Đợt này thêm 24 ảnh và cập nhật ảnh luồng hiện có. Mã trong tên ảnh tương ứng luồng TC/F; menu mobile chỉ có ảnh 390 px.
+93 ảnh PNG từ Playwright Chromium ở 1366×900 và 390×844, chạy frontend production qua `/api` ở cổng 3017 với backend thật cổng 5017, SQLite riêng và seed. Lần chạy cuối D10: 22/22 ca pass (2,6 phút), đối chiếu đủ 49 route ở mỗi viewport. D10 thêm 16 ảnh và cập nhật ảnh luồng hiện có. Mã trong tên ảnh tương ứng luồng TC/F; menu mobile chỉ có ảnh 390 px.
 
 M5 ban đầu bổ sung 12 ảnh phản hồi thao tác. D6–D9 bổ sung ảnh Pickup/Delivery, thử xuất kho lại, hết hàng/409, lỗi mở QR và đơn thuốc chờ duyệt ở hai viewport; banner đặt hàng hiện trên ảnh QR `TC42-F017-qr-*`. `TC32-F014-order-before-qr-*` là ảnh lưu của luồng trước D6, được giữ để đối chiếu lịch sử. Toast dành chỗ ở đầu trang để không che nút chính trên mobile.
+
+D10 thêm 16 ảnh: đăng ký tự đăng nhập, tải đơn thuốc tại checkout, form tiền điền sẵn, bán tại quầy một màn hình và lỗi giữ nháp, lưu/chấp nhận đơn thuốc, tạo thuốc kèm ảnh/lô đầu. `TC38-F016-counter-draft-*` là ảnh lịch sử trước màn hình bán mới; `TC38-F019-counter-checkout-*` hiện chụp hóa đơn sau nút thu tiền mặt.
 
 Các nhóm: Guest không thấy giá; checkout/đơn trước QR; mở QR; duyệt thiếu/đủ; xuất kho/hoàn tất; hóa đơn của User; chặn User vào Staff; bán OTC tại quầy; lỗi theo trường; Admin cấu hình QR; loading/rỗng/lỗi mạng; kho, thuốc/nhập lô và sidebar.
 
@@ -51,3 +53,11 @@ Chạy lại: `npm run test:e2e --workspace frontend`. Hướng dẫn cài đặ
 | TC31-F012-insufficient-stock | [TC31-F012-insufficient-stock-1366.png](TC31-F012-insufficient-stock-1366.png) | [TC31-F012-insufficient-stock-390.png](TC31-F012-insufficient-stock-390.png) |
 | TC32-F013-payment-open-error | [TC32-F013-payment-open-error-1366.png](TC32-F013-payment-open-error-1366.png) | [TC32-F013-payment-open-error-390.png](TC32-F013-payment-open-error-390.png) |
 | TC33-F013-waiting-prescription | [TC33-F013-waiting-prescription-1366.png](TC33-F013-waiting-prescription-1366.png) | [TC33-F013-waiting-prescription-390.png](TC33-F013-waiting-prescription-390.png) |
+| TC01-F001-registered-session | [TC01-F001-registered-session-1366.png](TC01-F001-registered-session-1366.png) | [TC01-F001-registered-session-390.png](TC01-F001-registered-session-390.png) |
+| TC33-F013-inline-prescription | [TC33-F013-inline-prescription-1366.png](TC33-F013-inline-prescription-1366.png) | [TC33-F013-inline-prescription-390.png](TC33-F013-inline-prescription-390.png) |
+| TC45-F018-prefilled-review | [TC45-F018-prefilled-review-1366.png](TC45-F018-prefilled-review-1366.png) | [TC45-F018-prefilled-review-390.png](TC45-F018-prefilled-review-390.png) |
+| TC38-F016-counter-one-screen | [TC38-F016-counter-one-screen-1366.png](TC38-F016-counter-one-screen-1366.png) | [TC38-F016-counter-one-screen-390.png](TC38-F016-counter-one-screen-390.png) |
+| TC38-F016-counter-retry | [TC38-F016-counter-retry-1366.png](TC38-F016-counter-retry-1366.png) | [TC38-F016-counter-retry-390.png](TC38-F016-counter-retry-390.png) |
+| TC26-F011-save-approve | [TC26-F011-save-approve-1366.png](TC26-F011-save-approve-1366.png) | [TC26-F011-save-approve-390.png](TC26-F011-save-approve-390.png) |
+| TC11-F005-create-image-batch | [TC11-F005-create-image-batch-1366.png](TC11-F005-create-image-batch-1366.png) | [TC11-F005-create-image-batch-390.png](TC11-F005-create-image-batch-390.png) |
+| TC14-F006-first-batch | [TC14-F006-first-batch-1366.png](TC14-F006-first-batch-1366.png) | [TC14-F006-first-batch-390.png](TC14-F006-first-batch-390.png) |
