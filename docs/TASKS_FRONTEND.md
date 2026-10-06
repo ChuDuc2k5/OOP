@@ -146,6 +146,13 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
 
   - Kiểm chứng cuối D12: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` 24/24 ca pass (2,6 phút), backend SQLite thật, mock tắt, 1366/390 px và đủ 49 route mỗi viewport. Đã xem ảnh mới ở cả hai kích thước; số lượng đối chiếu thấy ngay trên mobile. Thêm 6 ảnh, tổng 99 ảnh trong danh mục. Kiểm tra UTF-8/phạm vi sửa và diff sạch; server thử nghiệm 3017/5017 đã dừng, không commit hoặc đổi nhánh.
 
+- **M7 — `fe/m7-live-status`**:
+  - Khách xem chi tiết đơn: GET mỗi 10 giây khi chưa kết thúc, dừng ở Completed/Cancelled/Rejected; tab ẩn tạm dừng, quay lại làm mới ngay. Hook polling dùng chung không khởi động lại bộ đếm sau mỗi phản hồi, khóa request trùng và bỏ phản hồi cũ khi đổi trang. Có chỉ báo Tự cập nhật/nút Làm mới; tải nền giữ dữ liệu, lỗi title hiển thị an toàn.
+  - Phát hiện WaitingReview → AwaitingPayment với canPay: toast đơn thuốc đã duyệt, POST payment một lần và chuyển tới QR theo D6. Lỗi giữ trang đơn và nút mở QR, không tự POST lặp; khi phát hiện payment đã tạo thì bỏ lỗi cũ. Toast cho thanh toán xác nhận, mời nhận tại quầy, giao, hoàn tất, từ chối/hủy kèm lý do; stepper cập nhật ngay từ phản hồi backend.
+  - Danh sách đơn cập nhật mỗi 15 giây khi trang đang xem còn đơn chưa kết thúc, cùng chính sách visibility và chỉ báo/nút làm mới. E2e cập nhật luồng D12 để khách tự tới QR, thêm duyệt qua API với polling thật ≤15 giây, kiểm tra đúng một POST và lỗi giữ đơn/thử lại thủ công. Thêm hai ảnh TC33-F017-auto-qr ở 1366/390 px.
+
+  - Kiểm chứng cuối M7: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` 26/26 ca pass (3,0 phút), backend SQLite thật trên cổng riêng 3017/5017, đủ 49 route mỗi viewport. Kiểm tra polling thật ≤15 giây, lỗi/thử lại, visibility và dừng ở trạng thái kết thúc. Đã xem hai ảnh mới TC33-F017-auto-qr ở 1366/390 px; tổng 101 ảnh. Server thử nghiệm đã dừng; không commit hoặc đổi nhánh.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 

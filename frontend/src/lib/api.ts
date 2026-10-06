@@ -789,9 +789,10 @@ export const ordersApi = {
 };
 
 export const paymentApi = {
-  openOrGetPayment: (orderId: string) =>
+  openOrGetPayment: (orderId: string, silent = false) =>
     apiFetch<PaymentView>(`/api/orders/${encodeURIComponent(orderId)}/payment`, {
       method: 'POST',
+      silent,
     }),
   getPayment: (orderId: string) =>
     apiFetch<PaymentView>(`/api/orders/${encodeURIComponent(orderId)}/payment`, {

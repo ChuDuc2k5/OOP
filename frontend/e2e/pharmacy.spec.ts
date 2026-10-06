@@ -446,13 +446,97 @@ test('TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt 
     expect((await api(staff.request, `/staff/orders/${secondOrder.orderId}`)).status).toBe('AwaitingPayment');
     await shot(staff, 'TC26-F011-online-approved', info);
   } finally { await staffContext.close(); }
-  await page.reload(); await ready(page);
+  await expect(page).toHaveURL(new RegExp(`/orders/${waitingOrder.orderId}/payment$`), { timeout: 15_000 }); await ready(page);
+  expect((await api(page.request, `/orders/${waitingOrder.orderId}`)).payment.status).toBe('PendingReview');
+  await visit(page, `/orders/${waitingOrder.orderId}`); await ready(page);
   await expect(page.locator('[aria-current="step"]')).toContainText('Chờ thanh toán');
   await expect(page.locator('main')).not.toContainText('Đơn hàng đang chờ nhân viên kiểm tra đơn thuốc');
   await shot(page, 'TC33-F014-prescription-approved', info);
-  await page.getByRole('link', { name: 'Mở thanh toán QR', exact: true }).click();
+  await page.getByRole('link', { name: 'Xem lại mã QR', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/orders/${waitingOrder.orderId}/payment$`)); await ready(page);
   expect((await api(page.request, `/orders/${waitingOrder.orderId}`)).payment.status).toBe('PendingReview');
+});
+
+test('TC33-F017: duyệt qua API tự mở QR trong 15 giây và lỗi giữ đơn', async ({ page }, info) => {
+  await login(page, 'chuduc');
+  const staff = await page.context().browser()!.newContext({ baseURL: new URL(page.url()).origin });
+  try {
+    await api(staff.request, '/auth/login', 'POST', { username: 'staff', password: 'Staff@12345' });
+    const createWaiting = async (suffix: string) => {
+      const cart = await api(page.request, '/cart');
+      for (const item of cart.items) await api(page.request, `/cart/items/${item.drugId}`, 'DELETE');
+      await page.request.get('/api/auth/csrf');
+      const token = (await page.context().cookies()).find(c => c.name === 'XSRF-TOKEN')!.value;
+      const uploaded = await page.request.post('/api/prescriptions', {
+        headers: { 'X-XSRF-TOKEN': decodeURIComponent(token) },
+        multipart: { patientName: 'Khách chờ tự cập nhật', patientId: `LIVE-${info.project.name}-${suffix}`, image: { name: 'prescription.png', mimeType: 'image/png', buffer: await readFile(resolve(process.cwd(), 'e2e/fixtures/payment-qr.png')) } },
+      });
+      expect(uploaded.status()).toBe(201); const rx = await uploaded.json();
+      await api(page.request, '/cart/items', 'POST', { drugId: 'AMOX500', quantity: 1 });
+      const current = await api(page.request, '/cart');
+      const order = await api(page.request, '/orders', 'POST', { saleKind: 'Prescription', prescriptionId: rx.prescriptionId, receiverName: 'Khách tự cập nhật', phone: '0901234567', receiveMethod: 'Pickup', expectedTotal: current.subtotal });
+      await visit(page, `/orders/${order.orderId}`); await ready(page);
+      await expect(page.locator('[aria-current="step"]')).toContainText('Chờ kiểm tra đơn thuốc');
+      await expect(page.locator('main')).toContainText('Tự cập nhật mỗi 10 giây');
+      await api(staff.request, `/prescriptions/${rx.prescriptionId}/details`, 'PUT', { patientName: rx.patientName, patientId: rx.patientId, prescriberName: 'Bác sĩ kiểm thử tự cập nhật', issueDate: '2026-10-06', validUntil: '2026-11-05', items: [{ drugId: 'AMOX500', quantity: 1 }] });
+      return { order, rx };
+    };
+    const first = await createWaiting('OK');
+    let posts = 0;
+    page.on('request', r => { if (r.url().endsWith(`/api/orders/${first.order.orderId}/payment`) && r.method() === 'POST') posts++; });
+    const started = Date.now();
+    await api(staff.request, `/prescriptions/${first.rx.prescriptionId}/approve`, 'POST');
+    await expect(page).toHaveURL(new RegExp(`/orders/${first.order.orderId}/payment$`), { timeout: 15_000 }); await ready(page);
+    expect(Date.now() - started).toBeLessThanOrEqual(15_000);
+    expect(posts).toBe(1);
+    expect((await api(page.request, `/orders/${first.order.orderId}`)).payment.status).toBe('PendingReview');
+    await shot(page, 'TC33-F017-auto-qr', info);
+    await page.clock.install({ time: new Date('2026-10-06T08:00:00Z') });
+    const second = await createWaiting('RETRY');
+    let detailReads = 0;
+    page.on('request', r => { if (r.url().endsWith(`/api/orders/${second.order.orderId}`) && r.method() === 'GET') detailReads++; });
+    const visibility = async (shown: boolean) => page.evaluate(shown => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, value: shown ? 'visible' : 'hidden' });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, shown);
+    await visibility(false);
+    await page.clock.runFor(11_000);
+    expect(detailReads).toBe(0);
+    await page.route(`**/api/orders/${second.order.orderId}/payment`, route => route.fulfill({ status: 409, contentType: 'application/problem+json', json: { status: 409, code: 'INSUFFICIENT_STOCK', title: 'Không đủ hàng để mở thanh toán.' } }), { times: 1 });
+    let failedPosts = 0;
+    page.on('request', r => { if (r.url().endsWith(`/api/orders/${second.order.orderId}/payment`) && r.method() === 'POST') failedPosts++; });
+    await api(staff.request, `/prescriptions/${second.rx.prescriptionId}/approve`, 'POST');
+    expect(failedPosts).toBe(0);
+    await visibility(true);
+    await expect(page.locator('main').getByRole('alert')).toContainText('Không đủ hàng để mở thanh toán.', { timeout: 15_000 });
+    await expect(page).toHaveURL(new RegExp(`/orders/${second.order.orderId}$`));
+    await expect(page.getByRole('link', { name: 'Mở thanh toán QR', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Làm mới', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Làm mới', exact: true })).toBeEnabled();
+    expect(failedPosts).toBe(1);
+    await page.getByRole('link', { name: 'Mở thanh toán QR', exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/orders/${second.order.orderId}/payment$`)); await ready(page);
+    expect(failedPosts).toBe(2);
+    await api(page.request, `/orders/${second.order.orderId}/cancel`, 'POST');
+    await visit(page, `/orders/${second.order.orderId}`); await ready(page);
+    detailReads = 0;
+    await page.clock.runFor(20_000);
+    expect(detailReads).toBe(0);
+    await visit(page, '/orders'); await ready(page);
+    let listReads = 0;
+    page.on('request', r => { if (r.url().includes('/api/orders/mine') && r.method() === 'GET') listReads++; });
+    await page.clock.runFor(16_000);
+    await expect.poll(() => listReads).toBe(1);
+    await expect(page.getByRole('button', { name: 'Làm mới', exact: true })).toBeEnabled();
+    await visibility(false); await page.clock.runFor(20_000);
+    expect(listReads).toBe(1);
+    await visibility(true);
+    await expect.poll(() => listReads).toBe(2);
+    await visit(page, '/orders?status=Completed'); await ready(page);
+    listReads = 0;
+    await page.clock.runFor(20_000);
+    expect(listReads).toBe(0);
+  } finally { await staff.close(); }
 });
 
 test('TC38-F016/F019: bán OTC tại quầy bằng form', async ({ page }, info) => {
