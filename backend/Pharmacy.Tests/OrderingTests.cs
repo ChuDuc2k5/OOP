@@ -536,12 +536,121 @@ public sealed class OrderingTests : IDisposable
     }
 
     [Theory]
+    [InlineData("DEMO02", 0, 1, false, "Thuốc tạm hết hàng.")]
+    [InlineData("DEMO02", 2, 1, false, "Thuốc tạm hết hàng.")]
+    [InlineData("PARA500", 0, 81, false, "Không đủ hàng, chỉ còn 80 Viên.")]
+    [InlineData("PARA500", 2, 79, false, "Không đủ hàng, chỉ còn 80 Viên.")]
+    [InlineData("PARA500", 2, 81, true, "Không đủ hàng, chỉ còn 80 Viên.")]
+    [InlineData("DEMO02", 2, 3, true, "Thuốc tạm hết hàng.")]
+    public async Task TC29_D9_CartStockGuard_RejectsWithoutWriting(
+        string drugId, int existingQuantity, int requestedQuantity, bool update, string title)
+    {
+        using var user = await Login();
+        if (existingQuantity > 0)
+        {
+            await factory.WithDb(async db =>
+            {
+                db.CartItems.Add(new("UDEMO0003", drugId, existingQuantity));
+                await db.SaveChangesAsync();
+            });
+        }
+        var before = await factory.WithDb(PersistenceFixture.Snapshot);
+        var response = update
+            ? await user.PutAsJsonAsync("/api/cart/items/" + drugId, new { quantity = requestedQuantity })
+            : await user.PostAsJsonAsync("/api/cart/items", new { drugId, quantity = requestedQuantity });
+        await response.Error(409, "INSUFFICIENT_STOCK");
+        Assert.Equal(title, (await response.Json()).GetProperty("title").GetString());
+        Assert.Equal(before, await factory.WithDb(PersistenceFixture.Snapshot));
+    }
+
+    [Fact]
+    public async Task TC29_D9_OutOfStockOldLine_CanDecreaseKeepOrDelete_StillShowsIssue()
+    {
+        using var user = await Login();
+        await factory.WithDb(async db =>
+        {
+            db.CartItems.Add(new("UDEMO0003", "DEMO02", 3));
+            await db.SaveChangesAsync();
+        });
+        var cart = await Ok(await user.GetAsync("/api/cart"));
+        Assert.Equal("INSUFFICIENT_STOCK", cart.GetProperty("items")[0].GetProperty("issue").GetString());
+        using var guest = factory.Client();
+        var product = await Ok(await guest.GetAsync("/api/products/DEMO02"));
+        Assert.False(product.GetProperty("inStock").GetBoolean());
+        foreach (var quantity in new[] { 3, 2, 1 })
+        {
+            var changed = await Ok(await user.PutAsJsonAsync("/api/cart/items/DEMO02", new { quantity }));
+            Assert.Equal(quantity, changed.GetProperty("items")[0].GetProperty("quantity").GetInt32());
+            Assert.Equal("INSUFFICIENT_STOCK", changed.GetProperty("items")[0].GetProperty("issue").GetString());
+        }
+        var empty = await Ok(await user.DeleteAsync("/api/cart/items/DEMO02"));
+        Assert.Empty(empty.GetProperty("items").EnumerateArray());
+    }
+
+    [Fact]
+    public async Task TC29_D9_CartStockGuard_UsesAvailableAfterReservations_AllowsExactBoundary()
+    {
+        using var user = await Login();
+        var id = await Order(user);
+        await Ok(await user.PostAsync("/api/orders/" + id + "/payment", null), 201);
+        var before = await factory.WithDb(PersistenceFixture.Snapshot);
+        var response = await user.PostAsJsonAsync("/api/cart/items", new { drugId = "PARA500", quantity = 79 });
+        await response.Error(409, "INSUFFICIENT_STOCK");
+        Assert.Equal("Không đủ hàng, chỉ còn 78 Viên.", (await response.Json()).GetProperty("title").GetString());
+        Assert.Equal(before, await factory.WithDb(PersistenceFixture.Snapshot));
+        await Add(user, quantity: 78);
+        Assert.Equal(2, await factory.WithDb(db => db.StockReservations.Where(x => x.Status == ReservationStatus.Active).SumAsync(x => x.Quantity)));
+    }
+
+    [Theory]
+    [InlineData("Pickup")]
+    [InlineData("Delivery")]
+    public async Task TC37_D8_ReviewFulfillAndComplete_WithoutClaim_PreservesFirstHandler(string receive)
+    {
+        using var user = await Login();
+        using var staff = await Login("staff");
+        using var admin = await Login("admin");
+        var id = await Order(user, receive);
+        var before = await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity));
+        var payment = await Ok(await user.PostAsync("/api/orders/" + id + "/payment", null), 201);
+        var review = await Ok(await staff.PostAsJsonAsync("/api/staff/payments/" + payment.GetProperty("paymentId").GetString() + "/review", new
+        {
+            bankReference = "D8-" + receive,
+            receivedAmount = 2000,
+            receivedAt = "2026-10-06T09:30:00+07:00",
+            note = "Đã đối chiếu"
+        }));
+        Assert.True(review.GetProperty("approved").GetBoolean());
+        var preparing = await Ok(await staff.GetAsync("/api/staff/orders/" + id));
+        Assert.Equal("Preparing", preparing.GetProperty("status").GetString());
+        Assert.Equal("staff", preparing.GetProperty("handledByUsername").GetString());
+        Assert.Equal(before, await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity)));
+        var invoice = await Ok(await staff.PostAsync("/api/staff/orders/" + id + "/fulfill", null));
+        Assert.Equal(before - 2, await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity)));
+        if (receive == "Delivery")
+        {
+            var shipped = await Ok(await admin.PostAsync("/api/staff/orders/" + id + "/ship", null));
+            Assert.Equal("Delivering", shipped.GetProperty("status").GetString());
+        }
+        var completed = await Ok(await admin.PostAsync("/api/staff/orders/" + id + "/complete", null));
+        Assert.Equal("Completed", completed.GetProperty("status").GetString());
+        Assert.Equal("staff", completed.GetProperty("handledByUsername").GetString());
+        Assert.Equal(before - 2, await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity)));
+        await Ok(await user.GetAsync("/api/invoices/" + invoice.GetProperty("invoiceId").GetString()));
+    }
+
+    [Theory]
     [InlineData("DEMO12", "NOT_FOR_SALE")]
     [InlineData("DEMO02", "INSUFFICIENT_STOCK")]
     public async Task TC31_CartIssues_BlockInvalidOrder_KeepCartUnchanged(string drugId, string code)
     {
         using var user = await Login();
-        await Add(user, drugId, 1);
+        await factory.WithDb(async db =>
+        {
+            // A previously saved line remains visible after stock or sale status changes.
+            db.CartItems.Add(new("UDEMO0003", drugId, 1));
+            await db.SaveChangesAsync();
+        });
         var cart = await Ok(await user.GetAsync("/api/cart"));
         Assert.Equal(code, cart.GetProperty("items")[0].GetProperty("issue").GetString());
         var before = await factory.WithDb(PersistenceFixture.Snapshot);
@@ -699,15 +808,16 @@ public sealed class OrderingTests : IDisposable
         var id = await Order(user, receive);
         await Confirm(id, true);
         var physical = await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity));
-        var claimed = await Ok(await staff.PostAsync("/api/staff/orders/" + id + "/claim", null));
-        Assert.Equal("staff", claimed.GetProperty("handledByUsername").GetString());
-        Assert.Equal("user", claimed.GetProperty("customerUsername").GetString());
-        Assert.False(claimed.GetProperty("canCancel").GetBoolean());
+        var unclaimed = await Ok(await staff.GetAsync("/api/staff/orders/" + id));
+        Assert.Equal(JsonValueKind.Null, unclaimed.GetProperty("handledByUsername").ValueKind);
+        Assert.Equal("user", unclaimed.GetProperty("customerUsername").GetString());
+        Assert.False(unclaimed.GetProperty("canCancel").GetBoolean());
         if (receive == "Delivery")
         {
             await (await staff.PostAsync("/api/staff/orders/" + id + "/complete", null)).Error(409, "INVALID_STATE");
             var shipping = await Ok(await staff.PostAsync("/api/staff/orders/" + id + "/ship", null));
             Assert.Equal("Delivering", shipping.GetProperty("status").GetString());
+            Assert.Equal("staff", shipping.GetProperty("handledByUsername").GetString());
         }
         else
         {
@@ -715,6 +825,7 @@ public sealed class OrderingTests : IDisposable
         }
         var completed = await Ok(await staff.PostAsync("/api/staff/orders/" + id + "/complete", null));
         Assert.Equal("Completed", completed.GetProperty("status").GetString());
+        Assert.Equal("staff", completed.GetProperty("handledByUsername").GetString());
         await (await staff.PostAsync("/api/staff/orders/" + id + "/complete", null)).Error(409, "INVALID_STATE");
         Assert.Equal(physical, await factory.WithDb(db => db.DrugBatches.SumAsync(x => x.Quantity)));
         Assert.Equal(1, await factory.WithDb(db => db.Invoices.CountAsync()));
