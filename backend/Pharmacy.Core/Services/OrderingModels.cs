@@ -30,7 +30,12 @@ public sealed record PrescriptionView(
     string CreatedByUsername, string PatientId, string PatientName, string? PrescriberName,
     DateOnly? IssueDate, DateOnly? ValidUntil, bool HasImage, string? ImageUrl,
     string? ReviewedByUsername, DateTimeOffset? ReviewedAt, string? ReviewNote,
-    DateTimeOffset CreatedAt, IReadOnlyList<PrescriptionItemView> Items);
+    DateTimeOffset CreatedAt, IReadOnlyList<PrescriptionItemView> Items,
+    IReadOnlyList<LinkedPrescriptionOrderView> LinkedOrders);
+public sealed record LinkedPrescriptionOrderView(
+    string OrderId, OrderStatus Status, IReadOnlyList<LinkedPrescriptionOrderItemView> Items);
+public sealed record LinkedPrescriptionOrderItemView(
+    string DrugId, string DrugName, string Unit, int Quantity);
 public sealed record CartLine(
     string DrugId, string Name, string SaleUnit, string? ImageUrl, decimal UnitPrice,
     int Quantity, decimal LineTotal, bool RequiresPrescription, bool IsControlled,
