@@ -635,7 +635,7 @@ export function PaymentSettings() {
             >
               {r.data.isConfigured
                 ? "Đã cấu hình đầy đủ."
-                : "Chưa đủ thông tin tài khoản hoặc ảnh QR."}
+                : "Chưa cấu hình. Vui lòng nhập tài khoản nhận tiền và tải ảnh QR."}
             </p>
             <p className="text-sm text-slate-600">
               Thay đổi áp dụng cho lần mở thanh toán mới. Thanh toán đã mở giữ

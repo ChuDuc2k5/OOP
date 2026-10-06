@@ -132,6 +132,12 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
 
   - Kiểm chứng cuối D10: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` 22/22 ca pass (2,6 phút), backend SQLite thật và mock tắt, đủ 49 route mỗi viewport. Thêm 16 ảnh, tổng 93 ảnh; server thử nghiệm 3017/5017 đã dừng.
 
+  - D11: bỏ HealthBadge/trạng thái API, gợi ý tài khoản đăng nhập và mọi dấu hiệu chế độ phát triển trên giao diện; placeholder tên đăng nhập thống nhất. Mock giữ cho phát triển với tên tài khoản chuduc/nguyenvana và nội dung không lộ chế độ; e2e dùng mã thuốc có nghĩa VITC500/AMOX500 và các mã mới của backend.
+  - QR chưa cấu hình: tạo đơn vẫn thành công, giữ nút mở QR tại chi tiết; PAYMENT_NOT_CONFIGURED được đổi thành thông báo tiếng Việt, không lộ mã lỗi. Admin hiển thị rõ “Chưa cấu hình”. E2e chuẩn bị tài khoản nhận tiền và tải QR qua API Admin, dùng fixture riêng trong frontend thay cho ảnh đã bỏ khỏi seed backend.
+  - CSRF: mutation nhận 400 ANTIFORGERY_INVALID tự lấy token mới bằng GET auth/csrf rồi gửi lại đúng một lần, giữ nguyên body kể cả FormData; lỗi lần hai được ném và hiển thị như bình thường. E2e đăng ký với cookie XSRF-TOKEN rác kiểm tra 400 rồi 201, phiên đăng nhập và next an toàn; thêm ca lỗi liên tiếp chỉ gửi hai request và gửi lại ảnh đơn thuốc với token cũ.
+
+  - Kiểm chứng cuối D11: `npm run lint` sạch, `npm run build --workspace frontend` pass, `npm run test:e2e --workspace frontend` 24/24 ca pass (2,5 phút), Chromium ở 1366/390 px với backend SQLite thật, đủ 49 route mỗi viewport. Rà nguồn không còn demo/mock mode hoặc gợi ý tài khoản hiển thị; chụp lại ảnh liên quan và cập nhật danh mục. Server thử nghiệm 3017/5017 đã dừng.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 

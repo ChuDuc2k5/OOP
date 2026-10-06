@@ -21,7 +21,7 @@ import {
   Role,
 } from './types';
 
-// Danh sách tài khoản demo theo SRS §8
+// Tài khoản nội bộ dùng khi phát triển
 export const MOCK_ACCOUNTS: Record<string, { user: Me; password: string }> = {
   admin: {
     user: {
@@ -41,19 +41,19 @@ export const MOCK_ACCOUNTS: Record<string, { user: Me; password: string }> = {
     },
     password: 'Staff@12345',
   },
-  user: {
+  chuduc: {
     user: {
       userId: 'U00000003',
-      username: 'user',
+      username: 'chuduc',
       role: 'User',
       homePath: '/',
     },
     password: 'User@12345',
   },
-  user2: {
+  nguyenvana: {
     user: {
       userId: 'U00000004',
-      username: 'user2',
+      username: 'nguyenvana',
       role: 'User',
       homePath: '/',
     },
@@ -245,14 +245,14 @@ export const MOCK_DASHBOARD_SUMMARY: DashboardSummary = {
   expiringCount: 1,
 };
 
-// Cấu hình thanh toán QR demo (SRS §8)
+// Cấu hình thanh toán QR nội bộ
 export const MOCK_PAYMENT_SETTING = {
   bankName: 'Ngân hàng Quân Đội (MB Bank)',
   accountNumber: '0000000000',
-  accountName: 'NHA THUOC DEMO GPP',
+  accountName: 'NHA THUOC GPP',
   // SVG Data URI QR Code minh họa chuẩn
   qrImageUrl:
-    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="%23ffffff"/><rect x="25" y="25" width="70" height="70" fill="%230f172a"/><rect x="40" y="40" width="40" height="40" fill="%23ffffff"/><rect x="50" y="50" width="20" height="20" fill="%230f172a"/><rect x="205" y="25" width="70" height="70" fill="%230f172a"/><rect x="220" y="40" width="40" height="40" fill="%23ffffff"/><rect x="230" y="50" width="20" height="20" fill="%230f172a"/><rect x="25" y="205" width="70" height="70" fill="%230f172a"/><rect x="40" y="220" width="40" height="40" fill="%23ffffff"/><rect x="50" y="230" width="20" height="20" fill="%230f172a"/><rect x="120" y="30" width="20" height="30" fill="%230f172a"/><rect x="150" y="40" width="30" height="20" fill="%230f172a"/><rect x="110" y="80" width="80" height="20" fill="%230f172a"/><rect x="40" y="120" width="30" height="40" fill="%230f172a"/><rect x="90" y="120" width="40" height="30" fill="%230f172a"/><rect x="150" y="120" width="40" height="40" fill="%23059669"/><rect x="210" y="120" width="50" height="30" fill="%230f172a"/><rect x="120" y="180" width="30" height="40" fill="%230f172a"/><rect x="170" y="180" width="40" height="30" fill="%230f172a"/><rect x="230" y="170" width="40" height="50" fill="%230f172a"/><rect x="120" y="240" width="50" height="30" fill="%230f172a"/><rect x="190" y="240" width="60" height="25" fill="%230f172a"/><text x="150" y="290" font-family="sans-serif" font-size="12" text-anchor="middle" fill="%23059669" font-weight="bold">MA QR DEMO</text></svg>',
+    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="%23ffffff"/><rect x="25" y="25" width="70" height="70" fill="%230f172a"/><rect x="40" y="40" width="40" height="40" fill="%23ffffff"/><rect x="50" y="50" width="20" height="20" fill="%230f172a"/><rect x="205" y="25" width="70" height="70" fill="%230f172a"/><rect x="220" y="40" width="40" height="40" fill="%23ffffff"/><rect x="230" y="50" width="20" height="20" fill="%230f172a"/><rect x="25" y="205" width="70" height="70" fill="%230f172a"/><rect x="40" y="220" width="40" height="40" fill="%23ffffff"/><rect x="50" y="230" width="20" height="20" fill="%230f172a"/><rect x="120" y="30" width="20" height="30" fill="%230f172a"/><rect x="150" y="40" width="30" height="20" fill="%230f172a"/><rect x="110" y="80" width="80" height="20" fill="%230f172a"/><rect x="40" y="120" width="30" height="40" fill="%230f172a"/><rect x="90" y="120" width="40" height="30" fill="%230f172a"/><rect x="150" y="120" width="40" height="40" fill="%23059669"/><rect x="210" y="120" width="50" height="30" fill="%230f172a"/><rect x="120" y="180" width="30" height="40" fill="%230f172a"/><rect x="170" y="180" width="40" height="30" fill="%230f172a"/><rect x="230" y="170" width="40" height="50" fill="%230f172a"/><rect x="120" y="240" width="50" height="30" fill="%230f172a"/><rect x="190" y="240" width="60" height="25" fill="%230f172a"/><text x="150" y="290" font-family="sans-serif" font-size="12" text-anchor="middle" fill="%23059669" font-weight="bold">MA QR</text></svg>',
   isConfigured: true,
 };
 
@@ -461,8 +461,8 @@ const DEFAULT_PRESCRIPTIONS: PrescriptionView[] = [
     prescriptionId: 'DT2610060001',
     status: 'Approved',
     ownerUserId: 'U00000003',
-    ownerUsername: 'user',
-    createdByUsername: 'user',
+    ownerUsername: 'chuduc',
+    createdByUsername: 'chuduc',
     patientId: '079201000123',
     patientName: 'Nguyễn Văn A',
     prescriberName: 'BS. Lê Minh Hoàng (Bệnh viện Thống Nhất)',
@@ -502,8 +502,8 @@ const DEFAULT_PRESCRIPTIONS: PrescriptionView[] = [
     prescriptionId: 'DT2610060002',
     status: 'PendingReview',
     ownerUserId: 'U00000003',
-    ownerUsername: 'user',
-    createdByUsername: 'user',
+    ownerUsername: 'chuduc',
+    createdByUsername: 'chuduc',
     patientId: '079201000123',
     patientName: 'Nguyễn Văn A',
     hasImage: true,
@@ -516,8 +516,8 @@ const DEFAULT_PRESCRIPTIONS: PrescriptionView[] = [
     prescriptionId: 'DT2609010001',
     status: 'Cancelled',
     ownerUserId: 'U00000003',
-    ownerUsername: 'user',
-    createdByUsername: 'user',
+    ownerUsername: 'chuduc',
+    createdByUsername: 'chuduc',
     patientId: '079201000123',
     patientName: 'Nguyễn Văn A',
     issueDate: '2026-08-01',
@@ -666,7 +666,7 @@ const DEFAULT_INVOICES: InvoiceView[] = [
     kind: 'OTC',
     channel: 'Online',
     paymentMethod: 'ManualQR',
-    customerUsername: 'user',
+    customerUsername: 'chuduc',
     receiverName: 'Nguyễn Văn A',
     createdByUsername: 'staff',
     orderId: 'DH2610040003',

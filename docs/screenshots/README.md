@@ -1,12 +1,14 @@
 # Bằng chứng kiểm thử giao diện M4/M5
 
-93 ảnh PNG từ Playwright Chromium ở 1366×900 và 390×844, chạy frontend production qua `/api` ở cổng 3017 với backend thật cổng 5017, SQLite riêng và seed. Lần chạy cuối D10: 22/22 ca pass (2,6 phút), đối chiếu đủ 49 route ở mỗi viewport. D10 thêm 16 ảnh và cập nhật ảnh luồng hiện có. Mã trong tên ảnh tương ứng luồng TC/F; menu mobile chỉ có ảnh 390 px.
+93 ảnh PNG từ Playwright Chromium ở 1366×900 và 390×844, chạy frontend production qua `/api` ở cổng 3017 với backend thật cổng 5017, SQLite riêng và seed. Lần chạy cuối D11: 24/24 ca pass (2,5 phút), đối chiếu đủ 49 route ở mỗi viewport. D11 chụp lại ảnh các luồng hiện có; D10 trước đó thêm 16 ảnh. Mã trong tên ảnh tương ứng luồng TC/F; menu mobile chỉ có ảnh 390 px.
 
 M5 ban đầu bổ sung 12 ảnh phản hồi thao tác. D6–D9 bổ sung ảnh Pickup/Delivery, thử xuất kho lại, hết hàng/409, lỗi mở QR và đơn thuốc chờ duyệt ở hai viewport; banner đặt hàng hiện trên ảnh QR `TC42-F017-qr-*`. `TC32-F014-order-before-qr-*` là ảnh lưu của luồng trước D6, được giữ để đối chiếu lịch sử. Toast dành chỗ ở đầu trang để không che nút chính trên mobile.
 
 D10 thêm 16 ảnh: đăng ký tự đăng nhập, tải đơn thuốc tại checkout, form tiền điền sẵn, bán tại quầy một màn hình và lỗi giữ nháp, lưu/chấp nhận đơn thuốc, tạo thuốc kèm ảnh/lô đầu. `TC38-F016-counter-draft-*` là ảnh lịch sử trước màn hình bán mới; `TC38-F019-counter-checkout-*` hiện chụp hóa đơn sau nút thu tiền mặt.
 
 Các nhóm: Guest không thấy giá; checkout/đơn trước QR; mở QR; duyệt thiếu/đủ; xuất kho/hoàn tất; hóa đơn của User; chặn User vào Staff; bán OTC tại quầy; lỗi theo trường; Admin cấu hình QR; loading/rỗng/lỗi mạng; kho, thuốc/nhập lô và sidebar.
+
+D11 cập nhật ảnh đang dùng với tài khoản `chuduc` (Chu Đức), `nguyenvana` và mã thuốc VITC500/NACL09/ORESOL/CETI10/ZINC10/AMOX500/CEFI200/METF500/AMLO5/DIAZ5/HYDRO1. Trang chủ không còn ô trạng thái API; đăng nhập không còn gợi ý tài khoản. Bộ thử tự cấu hình QR qua API Admin vì DB mới không có tài khoản nhận tiền. `TC32-F013-payment-open-error-*` kiểm tra thông báo chưa cấu hình QR và giữ đơn; `TC01-F001-registered-session-*` chụp sau đăng ký thành công dù ban đầu có cookie XSRF-TOKEN cũ. Kiểm thử thêm CSRF lỗi liên tiếp chỉ thử lại một lần và gửi lại ảnh FormData thành công. Các ảnh được ghi rõ là lịch sử ở trên không đại diện giao diện hiện tại.
 
 `M4-route-audit-1366.json` và `M4-route-audit-390.json` ghi danh sách route đã rà và kích thước viewport. Ca audit đối chiếu toàn bộ `src/app/**/page.tsx`, kiểm tra trang không tràn ngang và bảng dài có khung cuộn riêng. Ảnh toàn trang đưa về đầu trước khi chụp để thanh menu sticky nằm đúng vị trí.
 

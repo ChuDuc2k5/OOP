@@ -17,7 +17,7 @@ async function ready(page: Page) {
 }
 async function layout(page: Page) {
   const width = page.viewportSize()!.width;
-  await expect(page.locator('body')).not.toContainText(/\bVAT\b|\bSRS\b|phí ship/i);
+  await expect(page.locator('body')).not.toContainText(/\bVAT\b|\bSRS\b|phí ship|demo|mock mode|dữ liệu mẫu|tài khoản mẫu|Trạng thái API/i);
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   for (const table of await page.locator('table').all()) {
     const contained = await table.evaluate(element => {
@@ -41,7 +41,7 @@ async function shot(page: Page, code: string, info: TestInfo) {
   await page.screenshot({ path, fullPage: true, animations: 'disabled' });
   await info.attach(code, { path, contentType: 'image/png' });
 }
-async function login(page: Page, username: 'user' | 'staff' | 'admin') {
+async function login(page: Page, username: 'chuduc' | 'staff' | 'admin') {
   await page.context().clearCookies();
   await visit(page, '/login');
   await expect(page.getByRole('button', { name: 'Đăng nhập', exact: true })).toBeVisible();
@@ -49,7 +49,7 @@ async function login(page: Page, username: 'user' | 'staff' | 'admin') {
   await page.getByLabel('Tên đăng nhập', { exact: true }).fill(username);
   await page.getByLabel('Mật khẩu', { exact: true }).fill(username === 'admin' ? 'Admin@12345' : username === 'staff' ? 'Staff@12345' : 'User@12345');
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  await expect(page).toHaveURL(username === 'user' ? /\/$/ : new RegExp(`/${username}$`));
+  await expect(page).toHaveURL(username === 'chuduc' ? /\/$/ : new RegExp(`/${username}$`));
   await ready(page);
 }
 async function api(request: APIRequestContext, path: string, method = 'GET', data?: unknown) {
@@ -64,20 +64,61 @@ async function api(request: APIRequestContext, path: string, method = 'GET', dat
   return response.status() === 204 ? null : response.json();
 }
 
+test.beforeAll(async ({ browser }) => {
+  const context = await browser.newContext({ baseURL: 'http://localhost:3017' });
+  try {
+    await api(context.request, '/auth/login', 'POST', { username: 'admin', password: 'Admin@12345' });
+    await api(context.request, '/admin/payment-settings', 'PUT', {
+      bankName: 'Ngân hàng kiểm thử', accountNumber: '0000000000', accountName: 'NHA THUOC KIEM THU',
+    });
+    await context.request.get('/api/auth/csrf');
+    const token = (await context.cookies()).find(c => c.name === 'XSRF-TOKEN')!.value;
+    const uploaded = await context.request.post('/api/admin/payment-settings/qr-image', {
+      headers: { 'X-XSRF-TOKEN': decodeURIComponent(token) },
+      multipart: { file: { name: 'payment-qr.png', mimeType: 'image/png', buffer: await readFile(resolve(process.cwd(), 'e2e/fixtures/payment-qr.png')) } },
+    });
+    expect(uploaded.ok(), await uploaded.text()).toBeTruthy();
+    expect((await api(context.request, '/admin/payment-settings')).isConfigured).toBe(true);
+  } finally { await context.close(); }
+});
+
 test('TC01-F001: đăng ký tự đăng nhập và chuyển tới next an toàn', async ({ page }, info) => {
   await visit(page, '/register?next=/cart'); await ready(page);
   await page.getByLabel('Tên đăng nhập', { exact: true }).fill(`tc01_${info.project.name}`);
   await page.getByLabel('Mật khẩu', { exact: true }).fill('User@12345');
   await page.getByLabel('Xác nhận mật khẩu', { exact: true }).fill('User@12345');
-  const registered = page.waitForResponse(r => r.url().endsWith('/api/auth/register') && r.request().method() === 'POST');
+  await page.request.get('/api/auth/csrf');
+  await page.context().addCookies([{ name: 'XSRF-TOKEN', value: 'invalid-old-token', url: new URL(page.url()).origin }]);
+  const rejected = page.waitForResponse(r => r.url().endsWith('/api/auth/register') && r.status() === 400);
+  const registered = page.waitForResponse(r => r.url().endsWith('/api/auth/register') && r.status() === 201);
   const refreshed = page.waitForResponse(r => r.url().endsWith('/api/auth/me') && r.request().method() === 'GET');
   await page.getByRole('button', { name: 'Đăng ký tài khoản', exact: true }).click();
+  expect((await (await rejected).json()).code).toBe('ANTIFORGERY_INVALID');
   expect((await registered).status()).toBe(201);
   expect((await refreshed).ok()).toBeTruthy();
   await expect(page).toHaveURL(/\/cart$/); await ready(page);
   await expect(page.getByTestId('toast')).toContainText('Đăng ký thành công');
   const me = await api(page.request, '/auth/me'); expect(me.username).toBe(`tc01_${info.project.name}`); expect(me.role).toBe('User');
   await shot(page, 'TC01-F001-registered-session', info);
+});
+
+test('TC01-F001: token lỗi liên tiếp chỉ thử lại một lần', async ({ page }, info) => {
+  await visit(page, '/register'); await ready(page);
+  await page.getByLabel('Tên đăng nhập', { exact: true }).fill(`csrf_limit_${info.project.name}`);
+  await page.getByLabel('Mật khẩu', { exact: true }).fill('User@12345');
+  await page.getByLabel('Xác nhận mật khẩu', { exact: true }).fill('User@12345');
+  let requests = 0;
+  await page.route('**/api/auth/register', route => {
+    requests++;
+    return route.fulfill({ status: 400, contentType: 'application/problem+json', json: {
+      status: 400, code: 'ANTIFORGERY_INVALID', title: 'Token bảo vệ yêu cầu không hợp lệ.',
+    } });
+  });
+  await page.getByRole('button', { name: 'Đăng ký tài khoản', exact: true }).click();
+  await expect(page.getByTestId('toast')).toContainText('Token bảo vệ yêu cầu không hợp lệ.');
+  await expect(page.getByRole('button', { name: 'Đăng ký tài khoản', exact: true })).toBeEnabled();
+  expect(requests).toBe(2);
+  await expect(page.getByLabel('Tên đăng nhập', { exact: true })).toHaveValue(`csrf_limit_${info.project.name}`);
 });
 
 test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: luồng khách và nhân viên', async ({ page }, info) => {
@@ -90,7 +131,7 @@ test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: lu�
   await expect(page.locator('main')).not.toContainText('₫');
   await shot(page, 'TC09-F004-guest-detail', info);
 
-  await login(page, 'user');
+  await login(page, 'chuduc');
   const initialCart = await api(page.request, '/cart');
   for (const item of initialCart.items) await api(page.request, `/cart/items/${item.drugId}`, 'DELETE');
   await visit(page, '/products/PARA500'); await ready(page);
@@ -175,7 +216,7 @@ test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: lu�
   await shot(staff, 'TC37-F015-completed', info);
   await staffContext.close();
 
-  await login(page, 'user'); await visit(page, `/invoices/${invoiceId}`); await ready(page);
+  await login(page, 'chuduc'); await visit(page, `/invoices/${invoiceId}`); await ready(page);
   await expect(page.getByRole('heading', { name: `#${invoiceId}`, exact: true })).toBeVisible();
   await expect(page.getByText('Lô:', { exact: false }).first()).toBeVisible();
   await shot(page, 'TC53-F020-user-invoice', info);
@@ -185,7 +226,7 @@ test('TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: lu�
 });
 
 test('TC29-F012, TC24-F010: phản hồi giỏ và gửi ảnh đơn thuốc', async ({ page }, info) => {
-  await login(page, 'user');
+  await login(page, 'chuduc');
   const cart = await api(page.request, '/cart');
   for (const item of cart.items) await api(page.request, `/cart/items/${item.drugId}`, 'DELETE');
   await visit(page, '/?search=PARA500'); await ready(page);
@@ -222,7 +263,7 @@ test('TC29-F012, TC24-F010: phản hồi giỏ và gửi ảnh đơn thuốc', a
   await visit(page, '/prescriptions/new'); await ready(page);
   await page.getByLabel('Họ và tên bệnh nhân').fill('Người bệnh kiểm thử phản hồi');
   await page.getByLabel('Mã định danh bệnh nhân', { exact: false }).fill(`UI-${info.project.name}-PAT`);
-  await page.getByLabel('Ảnh đơn thuốc').setInputFiles({ name: 'prescription.png', mimeType: 'image/png', buffer: await readFile(resolve(process.cwd(), '../backend/Pharmacy.Core/Data/Assets/demo-qr.png')) });
+  await page.getByLabel('Ảnh đơn thuốc').setInputFiles({ name: 'prescription.png', mimeType: 'image/png', buffer: await readFile(resolve(process.cwd(), 'e2e/fixtures/payment-qr.png')) });
   await page.getByRole('button', { name: 'Gửi đơn thuốc', exact: true }).click();
   await expect(page).toHaveURL(/\/prescriptions\/DT[^?]+\?sent=1$/);
   await expect(page.locator('main')).toContainText('Đã gửi, chờ dược sĩ kiểm tra');
@@ -231,7 +272,7 @@ test('TC29-F012, TC24-F010: phản hồi giỏ và gửi ảnh đơn thuốc', a
 
 test('TC32/TC42/TC45/TC37: giao hàng và thử xuất kho lại sau xác nhận tiền', async ({ page }, info) => {
   page.on('dialog', dialog => dialog.accept());
-  await login(page, 'user');
+  await login(page, 'chuduc');
   const cart = await api(page.request, '/cart');
   for (const item of cart.items) await api(page.request, `/cart/items/${item.drugId}`, 'DELETE');
   await api(page.request, '/cart/items', 'POST', { drugId: 'PARA500', quantity: 1 });
@@ -277,14 +318,14 @@ test('TC32/TC42/TC45/TC37: giao hàng và thử xuất kho lại sau xác nhận
 });
 
 test('TC31-F012: hết hàng bị khóa và backend từ chối số lượng vượt tồn', async ({ page }, info) => {
-  await login(page, 'user');
+  await login(page, 'chuduc');
   const initialCart = await api(page.request, '/cart');
   for (const item of initialCart.items) await api(page.request, `/cart/items/${item.drugId}`, 'DELETE');
-  await visit(page, '/?search=DEMO02'); await ready(page);
+  await visit(page, '/?search=VITC500'); await ready(page);
   await expect(page.getByText('Hết hàng', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Tạm hết hàng', exact: true })).toBeDisabled();
   await shot(page, 'TC31-F012-out-of-stock-home', info);
-  await visit(page, '/products/DEMO02'); await ready(page);
+  await visit(page, '/products/VITC500'); await ready(page);
   await expect(page.getByRole('button', { name: 'Tạm hết hàng', exact: true })).toBeDisabled();
   await shot(page, 'TC31-F012-out-of-stock-detail', info);
   await visit(page, '/products/PARA500'); await ready(page);
@@ -299,7 +340,7 @@ test('TC31-F012: hết hàng bị khóa và backend từ chối số lượng v�
 });
 
 test('TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt chưa mở QR', async ({ page }, info) => {
-  await login(page, 'user');
+  await login(page, 'chuduc');
   const cart = await api(page.request, '/cart');
   for (const item of cart.items) await api(page.request, `/cart/items/${item.drugId}`, 'DELETE');
   await api(page.request, '/cart/items', 'POST', { drugId: 'PARA500', quantity: 1 });
@@ -307,19 +348,20 @@ test('TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt 
   await page.getByLabel('Họ và tên người nhận').fill('Khách kiểm tra lỗi');
   await page.getByLabel('Số điện thoại liên hệ').fill('0901234567');
   await page.getByRole('radio', { name: /Nhận tại quầy nhà thuốc/ }).check();
-  await page.route('**/api/orders/*/payment', route => route.abort('failed'), { times: 1 });
+  await page.route('**/api/orders/*/payment', route => route.fulfill({ status: 409, contentType: 'application/problem+json', json: { status: 409, code: 'PAYMENT_NOT_CONFIGURED', title: 'PAYMENT_NOT_CONFIGURED' } }), { times: 1 });
   const placed = page.waitForResponse(r => r.url().endsWith('/api/orders') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Đặt hàng & thanh toán', exact: true }).click();
   const order = await (await placed).json();
   await expect(page).toHaveURL(new RegExp(`/orders/${order.orderId}\\?created=1$`)); await ready(page);
-  await expect(page.locator('main')).toContainText('Không mở được thanh toán: Không thể kết nối đến máy chủ.');
+  await expect(page.locator('main')).toContainText('Nhà thuốc chưa cấu hình tài khoản nhận tiền. Vui lòng thử lại sau.');
+  await expect(page.locator('body')).not.toContainText('PAYMENT_NOT_CONFIGURED');
   await expect(page.getByRole('link', { name: 'Mở thanh toán QR', exact: true })).toBeVisible();
   await shot(page, 'TC32-F013-payment-open-error', info);
   await page.getByRole('link', { name: 'Mở thanh toán QR', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/orders/${order.orderId}/payment$`)); await ready(page);
   await api(page.request, `/orders/${order.orderId}/cancel`, 'POST');
   await api(page.request, '/cart/items', 'POST', { drugId: 'PARA500', quantity: 1 });
-  await api(page.request, '/cart/items', 'POST', { drugId: 'DEMO07', quantity: 1 });
+  await api(page.request, '/cart/items', 'POST', { drugId: 'AMOX500', quantity: 1 });
   await visit(page, '/checkout'); await ready(page);
   await page.getByLabel('Họ và tên người nhận').fill('Khách chờ duyệt');
   await page.getByLabel('Số điện thoại liên hệ').fill('0901234567');
@@ -328,10 +370,14 @@ test('TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt 
   await page.getByRole('button', { name: 'Tải ảnh đơn thuốc mới', exact: true }).click();
   await page.getByLabel('Tên người bệnh', { exact: true }).fill('Người bệnh tại checkout');
   await page.getByLabel('Mã người bệnh (CCCD/BHYT)', { exact: true }).fill(`CHECKOUT-${info.project.name}`);
-  await page.getByLabel('Ảnh đơn thuốc (PNG/JPG, tối đa 5 MB)').setInputFiles({ name: 'prescription.png', mimeType: 'image/png', buffer: await readFile(resolve(process.cwd(), '../backend/Pharmacy.Core/Data/Assets/demo-qr.png')) });
-  const prescriptionResponse = page.waitForResponse(r => r.url().endsWith('/api/prescriptions') && r.request().method() === 'POST');
+  await page.getByLabel('Ảnh đơn thuốc (PNG/JPG, tối đa 5 MB)').setInputFiles({ name: 'prescription.png', mimeType: 'image/png', buffer: await readFile(resolve(process.cwd(), 'e2e/fixtures/payment-qr.png')) });
+  await page.context().addCookies([{ name: 'XSRF-TOKEN', value: 'invalid-upload-token', url: new URL(page.url()).origin }]);
+  const rejectedUpload = page.waitForResponse(r => r.url().endsWith('/api/prescriptions') && r.status() === 400);
+  const prescriptionResponse = page.waitForResponse(r => r.url().endsWith('/api/prescriptions') && r.status() === 201);
   await page.getByRole('button', { name: 'Gửi ảnh đơn thuốc', exact: true }).click();
+  expect((await (await rejectedUpload).json()).code).toBe('ANTIFORGERY_INVALID');
   const prescription = await (await prescriptionResponse).json();
+  expect(prescription.hasImage).toBe(true);
   await expect(page.getByLabel('Chọn đơn thuốc của bạn', { exact: true })).toHaveValue(prescription.prescriptionId);
   await shot(page, 'TC33-F013-inline-prescription', info);
   const waiting = page.waitForResponse(r => r.url().endsWith('/api/orders') && r.request().method() === 'POST');
@@ -383,7 +429,7 @@ test('TC11-F005, TC14-F006: tạo thuốc kèm ảnh và lô đầu', async ({ p
   await page.getByLabel('Tên thuốc', { exact: true }).fill('Thuốc kiểm thử một bước');
   await page.getByLabel('Đơn vị bán', { exact: true }).fill('Viên');
   await page.getByLabel('Giá bán (VND)', { exact: true }).fill('2000');
-  await page.getByLabel('Ảnh thuốc (tùy chọn, PNG/JPG tối đa 5 MB)').setInputFiles({ name: 'drug.png', mimeType: 'image/png', buffer: await readFile(resolve(process.cwd(), '../backend/Pharmacy.Core/Data/Assets/demo-qr.png')) });
+  await page.getByLabel('Ảnh thuốc (tùy chọn, PNG/JPG tối đa 5 MB)').setInputFiles({ name: 'drug.png', mimeType: 'image/png', buffer: await readFile(resolve(process.cwd(), 'e2e/fixtures/payment-qr.png')) });
   await page.getByLabel('Nhập lô đầu tiên', { exact: true }).check();
   await page.getByLabel('Số lô đầu tiên', { exact: true }).fill('FIRST-LOT');
   await page.getByLabel('Hạn dùng lô đầu tiên', { exact: true }).fill('2027-10-06');
@@ -447,7 +493,7 @@ test('M4: rà tất cả route, loading/rỗng/lỗi và menu mobile', async ({ 
   await shotLoading(page, info);
   await ready(page); await page.unroute('**/api/products?*');
 
-  await login(page, 'user');
+  await login(page, 'chuduc');
   const userPrescription = await api(page.request, '/prescriptions/usable');
   for (const route of ['/cart', '/orders', '/prescriptions', '/prescriptions/new', '/invoices', ...(userPrescription.length ? [`/prescriptions/${userPrescription[0].prescriptionId}`] : [])]) {
     await visit(page, route); await ready(page); await layout(page);

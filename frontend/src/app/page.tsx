@@ -6,7 +6,6 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import HealthBadge from '@/components/HealthBadge';
 import { ApiException, productsApi } from '@/lib/api';
 import { Product, Paged } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
@@ -74,9 +73,6 @@ function HomeContent() {
       <Header />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Health Check & Status Banner */}
-        <HealthBadge />
-
         {/* Hero Section */}
         <div className="bg-gradient-to-r from-emerald-800 to-teal-700 text-white rounded-2xl p-6 sm:p-8 shadow-sm">
           <div className="max-w-2xl space-y-3">
