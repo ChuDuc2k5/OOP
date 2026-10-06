@@ -197,3 +197,9 @@ dotnet test Pharmacy.sln
 ```
 
 Môi trường hiện tại chưa có PostgreSQL thật: kiểm chứng offline 132 pass, 1 skip (smoke PostgreSQL), build 0 warning/0 error. SQL script đã sinh; chưa kiểm chứng kết nối SSL/Session pooler, apply migration, seed và thao tác thực tế trên Supabase. Máy phát triển gặp lỗi TLS NuGet; lần kiểm chứng dùng `RestoreSources` trỏ cache gói cục bộ đã tải từ NuGet chính thức, không thay đổi cấu hình nguồn của repository.
+
+## Cấu hình database bằng appsettings (khuyến nghị cho Supabase)
+
+Sao chép `backend/Pharmacy.Api/appsettings.Local.example.json` thành `backend/Pharmacy.Api/appsettings.Local.json` (file này bị Git bỏ qua) rồi điền chuỗi kết nối Session pooler.
+Thứ tự ưu tiên (sau ghi đè trước): `appsettings.json` → `appsettings.{Environment}.json` → `.env` → `appsettings.Local.json` → biến môi trường → tham số dòng lệnh.
+Không đặt mật khẩu vào `appsettings.json` hay `appsettings.Development.json` vì hai file này được commit.

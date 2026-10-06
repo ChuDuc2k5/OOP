@@ -13,6 +13,8 @@ using Pharmacy.Core.Domain;
 using Pharmacy.Core.Services;
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddInMemoryCollection(EnvironmentFile.Read(Path.Combine(builder.Environment.ContentRootPath, ".env")));
+// Local secrets (gitignored): same shape as appsettings.json, overrides it and .env.
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 builder.Configuration.AddEnvironmentVariables();
 builder.Configuration.AddCommandLine(args);
 builder.Logging.ClearProviders();

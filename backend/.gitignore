@@ -2,3 +2,6 @@
 .packages/
 smoke-*.log
 /storage/
+
+# Local appsettings with secrets
+appsettings.Local.json
