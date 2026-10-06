@@ -51,7 +51,6 @@ Chạy lại: `npm run test:e2e --workspace frontend`. Hướng dẫn cài đặ
 | TC29-F012-home-add-toast | [TC29-F012-home-add-toast-1366.png](TC29-F012-home-add-toast-1366.png) | [TC29-F012-home-add-toast-390.png](TC29-F012-home-add-toast-390.png) |
 | TC43-F014-pending-next-step | [TC43-F014-pending-next-step-1366.png](TC43-F014-pending-next-step-1366.png) | [TC43-F014-pending-next-step-390.png](TC43-F014-pending-next-step-390.png) |
 | TC46-F017-user-review-note | [TC46-F017-user-review-note-1366.png](TC46-F017-user-review-note-1366.png) | [TC46-F017-user-review-note-390.png](TC46-F017-user-review-note-390.png) |
-| TC45-F017-qr-confirmed | [TC45-F017-qr-confirmed-1366.png](TC45-F017-qr-confirmed-1366.png) | [TC45-F017-qr-confirmed-390.png](TC45-F017-qr-confirmed-390.png) |
 | TC24-F010-sent-banner | [TC24-F010-sent-banner-1366.png](TC24-F010-sent-banner-1366.png) | [TC24-F010-sent-banner-390.png](TC24-F010-sent-banner-390.png) |
 | TC32-F014-pickup-qr-closed | [TC32-F014-pickup-qr-closed-1366.png](TC32-F014-pickup-qr-closed-1366.png) | [TC32-F014-pickup-qr-closed-390.png](TC32-F014-pickup-qr-closed-390.png) |
 | TC45-F014-pickup-paid | [TC45-F014-pickup-paid-1366.png](TC45-F014-pickup-paid-1366.png) | [TC45-F014-pickup-paid-390.png](TC45-F014-pickup-paid-390.png) |
