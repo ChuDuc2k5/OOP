@@ -59,7 +59,7 @@ Kiểm thử dùng `WebApplicationFactory` + SQLite file riêng trong temp, cloc
 
 | TC | Test method |
 |---|---|
-| TC-01 | `TC01_RegisterUser_HashesPassword_ThenCanLogin` |
+| TC-01 | `TC01_RegisterUser_HashesPassword_ThenCanLogin`, `TC01_Register_AutomaticallySignsIn_AndIssuesUsableUserCsrfToken` (D10: tự đăng nhập, cấp lại XSRF sau đăng ký) |
 | TC-02 | `TC02_DuplicateUsername_IgnoresCaseAndTrim_NoPartialWrite`, `TC02_InvalidRegistration_ReturnsFieldErrors`, `TC02_LengthBoundaries_AndPasswordWhitespaceArePreserved`, `TC02_ConcurrentDuplicateRegistration_OnlyOneAccountIsCreated` |
 | TC-03 | `TC03_InjectedRole_IsIgnored_AccountRemainsUser` |
 | TC-04 | `TC04_Login_ReturnsRoleHomePath_AndSecureCookieAttributes` |
