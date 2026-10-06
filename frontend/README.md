@@ -49,7 +49,7 @@ Luồng thanh toán: đặt hàng thành công → `/orders/{id}` → người d
 
 Hệ thống hỗ trợ các tài khoản mẫu phục vụ kiểm thử và chấm đồ án:
 
-| Tên đăng nhập | Mật khẩu | QVai trò (Role) | Giao diện sau đăng nhập (`homePath`) |
+| Tên đăng nhập | Mật khẩu | Vai trò (Role) | Giao diện sau đăng nhập (`homePath`) |
 |---|---|---|---|
 | `admin` | `Admin@12345` | `Admin` | `/admin` (Bảng điều khiển Quản trị viên) |
 | `staff` | `Staff@12345` | `Staff` | `/staff` (Bảng điều khiển Nhân viên) |
@@ -132,3 +132,42 @@ node frontend/scripts/smoke-backoffice.mjs
 ```
 
 Chạy lệnh từ gốc repository với SQLite riêng dành cho kiểm thử và dữ liệu seed. Script tạo giao dịch, tài khoản/thuốc/lô thử và thay cấu hình QR trong database đó; mặc định gọi `http://localhost:3000/api`. Dùng `SMOKE_BASE_URL` nếu frontend chạy ở địa chỉ khác. Cookie/file gửi tạm được xóa sau kiểm thử, kết quả mã giao dịch được lưu trong thư mục tạm hệ điều hành. Không thực hiện chuyển tiền ngân hàng.
+
+## Kiểm thử giao diện M4 với backend thật
+
+Yêu cầu Node.js 20+, .NET SDK phù hợp với backend và cổng 3000/5017 trống. Chạy từ thư mục gốc:
+
+```bash
+npm install
+node frontend/e2e/run.mjs install chromium
+npm run lint
+npm run build --workspace frontend
+npm run test:e2e --workspace frontend
+```
+
+Playwright là devDependency của workspace frontend, dùng `package-lock.json` ở gốc. Thêm hoặc cập nhật bằng `npm install -D @playwright/test --workspace frontend`; không tạo lockfile riêng trong frontend.
+
+Lệnh e2e tự build backend và frontend với proxy backend cổng 5017, chạy frontend production ở cổng 3000 và trực tiếp chạy DLL backend trong môi trường Development với SQLite riêng trong thư mục tạm. Backend tự seed tài khoản, thuốc, lô và QR. Ngày nghiệp vụ cố định 06/10/2026 để lô seed còn hạn. Mock luôn tắt; database làm việc của dev không được dùng. Runner quản lý và dừng các tiến trình do nó khởi tạo qua IPC sau kiểm thử, tránh phụ thuộc lệnh đóng cây tiến trình của hệ điều hành.
+
+Trình duyệt mặc định nằm trong thư mục tạm `pharmacy-playwright`. Có thể đổi bằng biến môi trường `PLAYWRIGHT_BROWSERS_PATH` trước cả lệnh install và test. Nếu máy không tải được Chromium, cài trình duyệt ở môi trường có quyền truy cập mạng rồi chạy lại; không bỏ qua kiểm thử để báo pass.
+
+Hai project chạy tuần tự ở 1366×900 và 390×844:
+
+- Guest: danh sách và chi tiết thuốc không có giá.
+- User: đặt OTC → chi tiết đơn chưa mở payment → bấm mở QR; kiểm tra ảnh và số tiền trong viewport.
+- Staff: đối chiếu chuyển thiếu/đủ → nhận xử lý → xuất kho/lập hóa đơn → hoàn tất.
+- User: hóa đơn có allocations lô xuất; bị chuyển về trang chủ khi vào `/staff`.
+- Staff: tạo nháp OTC, lưu dòng, xác nhận nhận tiền mặt và checkout theo `canCheckout`.
+- Admin: lỗi theo trường giữ dữ liệu; lưu tài khoản, chọn ảnh PNG, xem trước và tải QR.
+- Rà các route khách/Staff/Admin: loading, rỗng, lỗi mạng, chiều rộng trang, bảng cuộn trong khung và sidebar mobile. Lỗi mạng được tạo bằng cách ngắt request, không thay response backend bằng mock.
+
+Ảnh có mã TC/F và hậu tố 1366/390 trong `docs/screenshots/`; danh mục ở `docs/screenshots/README.md`. Báo cáo HTML ở `frontend/playwright-report/`, trace khi lỗi ở `frontend/test-results/` (đều được gitignore).
+
+```bash
+# Chỉ chạy một viewport
+npm run test:e2e --workspace frontend -- --project=390
+# Mở báo cáo vừa chạy
+node frontend/e2e/run.mjs show-report frontend/playwright-report
+```
+
+Để chạy production với backend dev cổng 5000 sau e2e, build lại bằng cấu hình `BACKEND_URL` của môi trường đó: Next.js ghi proxy lúc build.

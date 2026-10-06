@@ -111,6 +111,8 @@ export function SaleNew() {
         >
           <Select
             label="Loại giao dịch"
+            name="kind"
+            errors={action.fields}
             options={SALE_KIND_LABELS}
             value={kind}
             onChange={(v) => setKind(v as SaleKind)}

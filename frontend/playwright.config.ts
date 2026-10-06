@@ -18,10 +18,4 @@ export default defineConfig({
     { name: '1366', use: { browserName: 'chromium', viewport: { width: 1366, height: 900 } } },
     { name: '390', use: { browserName: 'chromium', viewport: { width: 390, height: 844 } } },
   ],
-  webServer: {
-    command: 'node e2e/serve.mjs',
-    url: 'http://localhost:3000/api/health',
-    reuseExistingServer: false,
-    timeout: 180_000,
-  },
 });
