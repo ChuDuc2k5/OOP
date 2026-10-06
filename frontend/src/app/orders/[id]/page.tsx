@@ -209,27 +209,9 @@ export default function OrderDetailPage({
             </div>
 
             {/* Note banner if status WaitingReview or has note */}
-            {order.note && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 flex items-start space-x-2.5">
-                <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="font-semibold block">Ghi chú từ nhà thuốc:</strong>
-                  <span>{order.note}</span>
-                </div>
-              </div>
-            )}
 
-            {order.status === 'WaitingReview' && (
-              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 text-xs text-purple-900 flex items-start space-x-2.5">
-                <FileText className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="font-semibold block">Đơn hàng đang chờ nhân viên kiểm tra đơn thuốc:</strong>
-                  <span>
-                    Sau khi dược sĩ duyệt đơn thuốc và xác nhận đủ hạn mức, đơn hàng sẽ chuyển sang trạng thái &quot;Chờ thanh toán&quot; để bạn mở mã QR thanh toán.
-                  </span>
-                </div>
-              </div>
-            )}
+
+
 
             {/* Information Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -327,11 +309,7 @@ export default function OrderDetailPage({
                           </strong>
                         </div>
                       )}
-                      {order.payment.reviewNote && (
-                        <p className="text-slate-500 italic text-[11px] pt-1">
-                          Ghi chú đối chiếu: {order.payment.reviewNote}
-                        </p>
-                      )}
+
                     </div>
                   )}
                 </div>

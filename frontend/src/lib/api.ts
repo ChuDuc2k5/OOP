@@ -511,6 +511,7 @@ async function handleMockRequest<T>(
     }
 
     const newPrescription: PrescriptionView = {
+      linkedOrders: [],
       prescriptionId,
       status: 'PendingReview',
       ownerUserId: 'U00000003',

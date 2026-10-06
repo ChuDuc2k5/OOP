@@ -27,6 +27,13 @@ import {
   useResource,
 } from "./shared";
 
+function PrescriptionReviewLink({ orderId }: { orderId: string }) {
+  const base = useBasePath();
+  const r = useResource(useCallback(() => staffOrdersApi.get(orderId), [orderId]));
+  if (r.loading) return <span className="text-sm text-slate-500">Đang tải liên kết đơn thuốc…</span>;
+  if (r.error) return <button type="button" className="text-sm text-emerald-700 underline" onClick={r.reload}>Tải lại liên kết đơn thuốc</button>;
+  return <DetailLink href={r.data?.prescriptionId ? `${base}/prescriptions/${encodeURIComponent(r.data.prescriptionId)}` : `${base}/orders/${encodeURIComponent(orderId)}`}>Kiểm tra đơn thuốc</DetailLink>;
+}
 export function OrderList() {
   const base = useBasePath();
   return (
@@ -66,7 +73,7 @@ export function OrderList() {
           <td>{RECEIVE_METHOD_LABELS[o.receiveMethod]}</td>
           <td>{formatVND(o.totalAmount)}</td>
           <td>{o.handledByUsername || "Chưa nhận"}</td>
-          <td>{['Completed', 'Cancelled', 'Rejected'].includes(o.status) ? 'Đã kết thúc' : o.status === 'WaitingReview' ? 'Kiểm tra đơn thuốc' : o.paymentStatus === 'PendingReview' ? 'Chờ xác nhận tiền' : o.paymentStatus === 'Confirmed' ? o.receiveMethod === 'Pickup' ? 'Chờ khách đến lấy' : o.status === 'Delivering' ? 'Xác nhận giao xong' : 'Cần giao' : 'Chờ khách thanh toán'}</td>
+          <td>{['Completed', 'Cancelled', 'Rejected'].includes(o.status) ? 'Đã kết thúc' : o.status === 'WaitingReview' ? <PrescriptionReviewLink orderId={o.orderId} /> : o.paymentStatus === 'PendingReview' ? 'Chờ xác nhận tiền' : o.paymentStatus === 'Confirmed' ? o.receiveMethod === 'Pickup' ? 'Chờ khách đến lấy' : o.status === 'Delivering' ? 'Xác nhận giao xong' : 'Cần giao' : 'Chờ khách thanh toán'}</td>
         </>
       )}
     />
