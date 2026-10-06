@@ -173,8 +173,8 @@ export default function OrderPaymentPage({
               </div>
             </div>
 
-            {/* If Already Paid */}
-            {payment.status === 'Paid' && (
+            {/* If Already Paid / Confirmed */}
+            {payment.status === 'Confirmed' && (
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center space-y-3">
                 <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
                 <h3 className="text-base font-bold text-emerald-900">
@@ -182,7 +182,7 @@ export default function OrderPaymentPage({
                 </h3>
                 <p className="text-xs text-emerald-700 max-w-md mx-auto">
                   Nhà thuốc đã xác nhận nhận đủ số tiền{' '}
-                  <strong>{formatVND(payment.receivedAmount ?? payment.amount)}</strong>. Dược sĩ đang tiến hành chuẩn bị và xuất thuốc cho bạn.
+                  <strong>{formatVND(payment.receivedAmount ?? payment.expectedAmount)}</strong>. Dược sĩ đang tiến hành chuẩn bị và xuất thuốc cho bạn.
                 </p>
                 <div className="pt-2 flex justify-center gap-3">
                   <Link
@@ -226,10 +226,10 @@ export default function OrderPaymentPage({
                 </div>
 
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 inline-block shadow-inner">
-                  {payment.qrUrl ? (
+                  {payment.qrImageUrl ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
-                      src={payment.qrUrl}
+                      src={payment.qrImageUrl}
                       alt={`VietQR ${payment.orderId}`}
                       className="w-56 h-56 object-contain rounded-xl mx-auto"
                     />
@@ -312,11 +312,11 @@ export default function OrderPaymentPage({
                       </span>
                       <div className="flex items-center space-x-2">
                         <span className="font-extrabold text-base sm:text-lg text-emerald-700">
-                          {formatVND(payment.amount)}
+                          {formatVND(payment.expectedAmount)}
                         </span>
                         <button
                           type="button"
-                          onClick={() => copyToClipboard(payment.amount.toString(), 'amount')}
+                          onClick={() => copyToClipboard(payment.expectedAmount.toString(), 'amount')}
                           className="inline-flex items-center space-x-1 px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-xs font-semibold transition"
                           title="Sao chép số tiền"
                         >

@@ -230,22 +230,10 @@ export default function PrescriptionDetailPage({
                   </h3>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Bác sĩ kê đơn:</span>
+                      <span className="text-slate-500">Bác sĩ / Cơ sở kê đơn:</span>
                       <strong className="text-slate-800">
                         {prescription.prescriberName || '—'}
                       </strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Cơ sở khám bệnh:</span>
-                      <span className="text-slate-800 font-medium">
-                        {prescription.clinicName || '—'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Chẩn đoán:</span>
-                      <span className="text-slate-800 font-medium">
-                        {prescription.diagnosis || '—'}
-                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Ngày kê đơn:</span>
