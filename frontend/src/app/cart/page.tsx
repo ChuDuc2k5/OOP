@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { ActionButton } from '@/components/ActionButton';
+import { notifyError } from '@/lib/feedback';
 import { LoadingState } from '@/components/Status';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -65,7 +67,7 @@ export default function CartPage() {
       setCart(updated);
     } catch (err: unknown) {
       const msg = err instanceof ApiException ? err.title : 'Không thể cập nhật số lượng';
-      alert(msg);
+      notifyError(err);
     } finally {
       setUpdatingDrugId(null);
     }
@@ -78,7 +80,7 @@ export default function CartPage() {
       setCart(updated);
     } catch (err: unknown) {
       const msg = err instanceof ApiException ? err.title : 'Không thể xóa sản phẩm';
-      alert(msg);
+      notifyError(err);
     } finally {
       setUpdatingDrugId(null);
     }
@@ -238,25 +240,25 @@ export default function CartPage() {
                       <div className="flex items-center justify-between sm:justify-end space-x-4 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-slate-100">
                         {/* Quantity controls */}
                         <div className="flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white">
-                          <button
+                          <ActionButton busy={isUpdating} compact
                             onClick={() => handleUpdateQuantity(item.drugId, item.quantity, -1)}
                             disabled={isUpdating}
                             className="p-1.5 text-slate-600 hover:bg-slate-100 disabled:opacity-50"
                             aria-label="Giảm số lượng"
                           >
                             <Minus className="w-3.5 h-3.5" />
-                          </button>
+                          </ActionButton>
                           <span className="px-3 py-1 text-xs font-bold text-slate-800 min-w-[2rem] text-center">
                             {isUpdating ? '...' : item.quantity}
                           </span>
-                          <button
+                          <ActionButton busy={isUpdating} compact
                             onClick={() => handleUpdateQuantity(item.drugId, item.quantity, 1)}
                             disabled={isUpdating}
                             className="p-1.5 text-slate-600 hover:bg-slate-100 disabled:opacity-50"
                             aria-label="Tăng số lượng"
                           >
                             <Plus className="w-3.5 h-3.5" />
-                          </button>
+                          </ActionButton>
                         </div>
 
                         {/* Line total */}
@@ -267,14 +269,14 @@ export default function CartPage() {
                         </div>
 
                         {/* Remove button */}
-                        <button
+                        <ActionButton busy={isUpdating} compact
                           onClick={() => handleRemoveItem(item.drugId)}
                           disabled={isUpdating}
                           className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                           title="Xóa khỏi giỏ"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </ActionButton>
                       </div>
                     </div>
                   );

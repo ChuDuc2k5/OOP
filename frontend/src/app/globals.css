@@ -16,6 +16,8 @@ body {
 }
 
 /* Giữ nội dung và form trong khung; chỉ bảng/tab cuộn ngang. */
+body { padding-top: var(--toast-height, 0px); }
+header.sticky, [data-mobile-sidebar-header] { top: var(--toast-height, 0px); }
 main, section, form, fieldset, label {
   min-width: 0;
 }

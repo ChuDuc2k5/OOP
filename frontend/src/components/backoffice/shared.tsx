@@ -1,4 +1,5 @@
 "use client";
+import { ActionButton } from '@/components/ActionButton';
 
 import {
   useCallback,
@@ -11,6 +12,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ApiException } from "@/lib/api";
+import { notifyError } from '@/lib/feedback';
 import type { ListQuery } from "@/lib/backoffice-api";
 import type { Paged } from "@/lib/types";
 import { LoadingState, ErrorState, EmptyState } from '@/components/Status';
@@ -76,6 +78,7 @@ export function useAction() {
       const value = await action();
       await done?.(value);
     } catch (err) {
+      notifyError(err);
       setError(errorTitle(err));
       if (err instanceof ApiException) setFields(err.errors || {});
     } finally {
@@ -420,7 +423,7 @@ export function ReasonActions({
       />
       <div className="flex flex-wrap gap-2">
         {actions.map((action) => (
-          <button
+          <ActionButton busy={busy}
             key={action.key}
             className={buttonClass}
             disabled={busy || !reason.trim()}
@@ -430,7 +433,7 @@ export function ReasonActions({
             }}
           >
             {action.label}
-          </button>
+          </ActionButton>
         ))}
       </div>
     </Card>

@@ -1,6 +1,8 @@
-# Bằng chứng kiểm thử giao diện M4
+# Bằng chứng kiểm thử giao diện M4/M5
 
-41 ảnh PNG từ Playwright Chromium ở 1366×900 và 390×844, chạy frontend production qua `/api` với backend thật, SQLite riêng và seed. Lần chạy cuối: 8/8 ca pass (45,5 giây), đủ 49 route ở mỗi viewport. Mã trong tên ảnh tương ứng luồng TC/F; menu mobile chỉ có ảnh 390 px.
+53 ảnh PNG từ Playwright Chromium ở 1366×900 và 390×844, chạy frontend production qua `/api` ở cổng 3017 với backend thật cổng 5017, SQLite riêng và seed. Lần chạy cuối M5: 10/10 ca pass (1,5 phút), đối chiếu đủ 49 route ở mỗi viewport. Mã trong tên ảnh tương ứng luồng TC/F; menu mobile chỉ có ảnh 390 px.
+
+M5 bổ sung 12 ảnh (6 nhóm × 2 viewport) bên dưới và chụp lại các luồng hiện có, gồm banner đặt hàng trong `TC32-F014-order-before-qr-*`. Toast dành chỗ ở đầu trang để không che nút chính trên mobile. Các ảnh QR thể hiện chờ duyệt, ghi chú chuyển thiếu và xác nhận qua tự làm mới.
 
 Các nhóm: Guest không thấy giá; checkout/đơn trước QR; mở QR; duyệt thiếu/đủ; xuất kho/hoàn tất; hóa đơn của User; chặn User vào Staff; bán OTC tại quầy; lỗi theo trường; Admin cấu hình QR; loading/rỗng/lỗi mạng; kho, thuốc/nhập lô và sidebar.
 
@@ -31,3 +33,9 @@ Chạy lại: `npm run test:e2e --workspace frontend`. Hướng dẫn cài đặ
 | TC37-F019-fulfill | [TC37-F019-fulfill-1366.png](TC37-F019-fulfill-1366.png) | [TC37-F019-fulfill-390.png](TC37-F019-fulfill-390.png) |
 | TC38-F019-counter-checkout | [TC38-F019-counter-checkout-1366.png](TC38-F019-counter-checkout-1366.png) | [TC38-F019-counter-checkout-390.png](TC38-F019-counter-checkout-390.png) |
 | TC53-F020-user-invoice | [TC53-F020-user-invoice-1366.png](TC53-F020-user-invoice-1366.png) | [TC53-F020-user-invoice-390.png](TC53-F020-user-invoice-390.png) |
+| TC29-F012-add-toast | [TC29-F012-add-toast-1366.png](TC29-F012-add-toast-1366.png) | [TC29-F012-add-toast-390.png](TC29-F012-add-toast-390.png) |
+| TC29-F012-home-add-toast | [TC29-F012-home-add-toast-1366.png](TC29-F012-home-add-toast-1366.png) | [TC29-F012-home-add-toast-390.png](TC29-F012-home-add-toast-390.png) |
+| TC43-F014-pending-next-step | [TC43-F014-pending-next-step-1366.png](TC43-F014-pending-next-step-1366.png) | [TC43-F014-pending-next-step-390.png](TC43-F014-pending-next-step-390.png) |
+| TC46-F017-user-review-note | [TC46-F017-user-review-note-1366.png](TC46-F017-user-review-note-1366.png) | [TC46-F017-user-review-note-390.png](TC46-F017-user-review-note-390.png) |
+| TC45-F017-qr-confirmed | [TC45-F017-qr-confirmed-1366.png](TC45-F017-qr-confirmed-1366.png) | [TC45-F017-qr-confirmed-390.png](TC45-F017-qr-confirmed-390.png) |
+| TC24-F010-sent-banner | [TC24-F010-sent-banner-1366.png](TC24-F010-sent-banner-1366.png) | [TC24-F010-sent-banner-390.png](TC24-F010-sent-banner-390.png) |

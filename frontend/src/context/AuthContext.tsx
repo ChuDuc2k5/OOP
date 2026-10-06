@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { LoginInput, Me, RegisterInput, Role } from '@/lib/types';
 import { authApi, refreshCsrf } from '@/lib/api';
@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (input: LoginInput) => Promise<Me>;
   register: (input: RegisterInput) => Promise<Me>;
   logout: () => Promise<void>;
+  loggingOut: boolean;
   refreshUser: () => Promise<Me | null>;
   isAuthenticated: boolean;
 }
@@ -20,6 +21,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Me | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const logoutLock = useRef(false);
 
   const refreshUser = useCallback(async (): Promise<Me | null> => {
     try {
@@ -52,11 +55,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async (): Promise<void> => {
+    if (logoutLock.current) return;
+    logoutLock.current = true;
+    setLoggingOut(true);
     try {
       await authApi.logout();
-    } finally {
       setUser(null);
       await refreshCsrf();
+    } finally {
+      logoutLock.current = false;
+      setLoggingOut(false);
     }
   };
 
@@ -68,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        loggingOut,
         refreshUser,
         isAuthenticated: !!user,
       }}

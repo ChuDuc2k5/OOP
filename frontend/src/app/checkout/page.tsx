@@ -1,4 +1,5 @@
 'use client';
+import { ActionButton } from '@/components/ActionButton';
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { LoadingState } from '@/components/Status';
@@ -105,7 +106,7 @@ export default function CheckoutPage() {
   }, [authorized, user, initData]);
 
   const handleSubmitOrder = async (expectedTotalOverride?: number) => {
-    if (!cart) return;
+    if (!cart || submitting) return;
     setError(null);
     setFieldErrors({});
 
@@ -159,7 +160,7 @@ export default function CheckoutPage() {
       const createdOrder = await ordersApi.placeOrder(payload);
 
       // Đặt hàng thành công!
-      router.push(`/orders/${createdOrder.orderId}`);
+      router.push(`/orders/${createdOrder.orderId}?created=1`);
     } catch (err: unknown) {
       if (err instanceof ApiException) {
         // Xử lý mã lỗi 409 PRICE_CHANGED
@@ -536,7 +537,7 @@ export default function CheckoutPage() {
                 <p>Chuyển khoản qua mã QR tĩnh (Admin/Staff duyệt đối chiếu) hoặc nhận tiền mặt tại quầy.</p>
               </div>
 
-              <button
+              <ActionButton busy={submitting}
                 type="button"
                 onClick={() => handleSubmitOrder()}
                 disabled={submitting}
@@ -553,7 +554,7 @@ export default function CheckoutPage() {
                     <span>Xác nhận đặt hàng</span>
                   </>
                 )}
-              </button>
+              </ActionButton>
             </div>
           </div>
         )}

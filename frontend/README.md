@@ -133,9 +133,13 @@ node frontend/scripts/smoke-backoffice.mjs
 
 Chạy lệnh từ gốc repository với SQLite riêng dành cho kiểm thử và dữ liệu seed. Script tạo giao dịch, tài khoản/thuốc/lô thử và thay cấu hình QR trong database đó; mặc định gọi `http://localhost:3000/api`. Dùng `SMOKE_BASE_URL` nếu frontend chạy ở địa chỉ khác. Cookie/file gửi tạm được xóa sau kiểm thử, kết quả mã giao dịch được lưu trong thư mục tạm hệ điều hành. Không thực hiện chuyển tiền ngân hàng.
 
-## Kiểm thử giao diện M4 với backend thật
+## Phản hồi thao tác M5
 
-Yêu cầu Node.js 20+, .NET SDK phù hợp với backend và cổng 3000/5017 trống. Chạy từ thư mục gốc:
+Toast dùng chung cho thao tác ghi, tự đóng sau khoảng 4 giây và có nút đóng. Giỏ hàng đồng bộ từ backend sau thay đổi, badge chỉ hiện với khách hàng đã đăng nhập. Nút gửi có spinner và khóa khi đang xử lý. Chi tiết đơn có tiến trình, hộp “Bước tiếp theo” và banner sau đặt hàng; đơn thuốc có banner sau gửi ảnh. Trang QR tự kiểm tra trạng thái mỗi 15 giây, có nút làm mới và thông báo khi được xác nhận; không có nút xác nhận tự chuyển tiền.
+
+## Kiểm thử giao diện M4/M5 với backend thật
+
+Yêu cầu Node.js 20+, .NET SDK phù hợp với backend và cổng 3017/5017 trống. Chạy từ thư mục gốc:
 
 ```bash
 npm install
@@ -147,7 +151,7 @@ npm run test:e2e --workspace frontend
 
 Playwright là devDependency của workspace frontend, dùng `package-lock.json` ở gốc. Thêm hoặc cập nhật bằng `npm install -D @playwright/test --workspace frontend`; không tạo lockfile riêng trong frontend.
 
-Lệnh e2e tự build backend và frontend với proxy backend cổng 5017, chạy frontend production ở cổng 3000 và trực tiếp chạy DLL backend trong môi trường Development với SQLite riêng trong thư mục tạm. Backend tự seed tài khoản, thuốc, lô và QR. Ngày nghiệp vụ cố định 06/10/2026 để lô seed còn hạn. Mock luôn tắt; database làm việc của dev không được dùng. Runner quản lý và dừng các tiến trình do nó khởi tạo qua IPC sau kiểm thử, tránh phụ thuộc lệnh đóng cây tiến trình của hệ điều hành.
+Lệnh e2e tự build backend và frontend với proxy backend cổng 5017, chạy frontend production ở cổng 3017 và trực tiếp chạy DLL backend trong môi trường Development với SQLite riêng trong thư mục tạm. Build kiểm thử nằm trong `frontend/.next-e2e`, tách khỏi `.next` của môi trường làm việc. Backend tự seed tài khoản, thuốc, lô và QR. Ngày nghiệp vụ cố định 06/10/2026 để lô seed còn hạn. Mock luôn tắt; database làm việc của dev không được dùng. Runner kiểm tra cổng trước khi chạy và dừng các tiến trình do nó khởi tạo qua IPC sau kiểm thử; không đóng server của người dùng ở cổng 3000/5000.
 
 Trình duyệt mặc định nằm trong thư mục tạm `pharmacy-playwright`. Có thể đổi bằng biến môi trường `PLAYWRIGHT_BROWSERS_PATH` trước cả lệnh install và test. Nếu máy không tải được Chromium, cài trình duyệt ở môi trường có quyền truy cập mạng rồi chạy lại; không bỏ qua kiểm thử để báo pass.
 
@@ -155,6 +159,7 @@ Hai project chạy tuần tự ở 1366×900 và 390×844:
 
 - Guest: danh sách và chi tiết thuốc không có giá.
 - User: đặt OTC → chi tiết đơn chưa mở payment → bấm mở QR; kiểm tra ảnh và số tiền trong viewport.
+- User: thêm giỏ từ chi tiết/thẻ sản phẩm, toast và liên kết xem giỏ; badge sau thêm/đổi/xóa; khóa bấm lặp, giữ giỏ khi lỗi mạng, tự đóng toast. Kiểm tra banner đặt hàng, hộp bước tiếp theo khi chờ duyệt, ghi chú chuyển thiếu và QR tự cập nhật khi Staff duyệt đủ. Gửi ảnh đơn thuốc và kiểm tra banner chờ dược sĩ.
 - Staff: đối chiếu chuyển thiếu/đủ → nhận xử lý → xuất kho/lập hóa đơn → hoàn tất.
 - User: hóa đơn có allocations lô xuất; bị chuyển về trang chủ khi vào `/staff`.
 - Staff: tạo nháp OTC, lưu dòng, xác nhận nhận tiền mặt và checkout theo `canCheckout`.
@@ -170,4 +175,4 @@ npm run test:e2e --workspace frontend -- --project=390
 node frontend/e2e/run.mjs show-report frontend/playwright-report
 ```
 
-Để chạy production với backend dev cổng 5000 sau e2e, build lại bằng cấu hình `BACKEND_URL` của môi trường đó: Next.js ghi proxy lúc build.
+Build e2e không thay cấu hình proxy của build `.next` dùng cho môi trường dev/production thông thường.

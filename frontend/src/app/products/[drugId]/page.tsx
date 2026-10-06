@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, use, useRef } from 'react';
 import { LoadingState } from '@/components/Status';
 import { ErrorState } from '@/components/Status';
+import { ActionButton } from '@/components/ActionButton';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
@@ -39,7 +40,6 @@ export default function ProductDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [addedToast, setAddedToast] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,19 +62,20 @@ export default function ProductDetailPage({
   const hasPrice = typeof product?.unitPrice === 'number';
 
   const [addingToCart, setAddingToCart] = useState(false);
+  const addLock = useRef(false);
 
   const handleAddToCart = async () => {
-    if (!product) return;
+    if (!product || addLock.current) return;
+    addLock.current = true;
     setAddingToCart(true);
     setCartError(null);
     try {
       await cartApi.addItem({ drugId: product.drugId, quantity });
-      setAddedToast(true);
-      setTimeout(() => setAddedToast(false), 3000);
     } catch (err) {
       setCartError(err instanceof ApiException ? err.title : 'Không thể thêm thuốc vào giỏ. Vui lòng thử lại.');
     } finally {
       setAddingToCart(false);
+      addLock.current = false;
     }
   };
 
@@ -252,7 +253,7 @@ export default function ProductDetailPage({
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                      <button
+                      <ActionButton busy={addingToCart}
                         onClick={handleAddToCart}
                         disabled={!product.inStock}
                         className={`flex-1 flex items-center justify-center space-x-2 py-3 px-6 rounded-xl font-semibold text-sm transition shadow-sm ${
@@ -263,15 +264,9 @@ export default function ProductDetailPage({
                       >
                         <ShoppingCart className="w-4 h-4" />
                         <span>{product.inStock ? 'Thêm vào giỏ hàng' : 'Tạm hết hàng'}</span>
-                      </button>
+                      </ActionButton>
                     </div>
 
-                    {addedToast && (
-                      <div className="flex items-center space-x-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-lg animate-fadeIn">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Đã thêm {quantity} {product.saleUnit} {product.name} vào giỏ hàng!</span>
-                      </div>
-                    )}
                   </>
                 ) : (
                   <div className="space-y-3">

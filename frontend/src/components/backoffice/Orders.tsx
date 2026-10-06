@@ -1,4 +1,5 @@
 "use client";
+import { ActionButton } from '@/components/ActionButton';
 import { use, useCallback } from "react";
 import Link from "next/link";
 import { staffOrdersApi } from "@/lib/backoffice-api";
@@ -195,18 +196,18 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
           <Card>
             <div className="flex flex-wrap gap-3">
               {!["Completed", "Cancelled", "Rejected"].includes(o.status) && (
-                <button
+                <ActionButton busy={action.busy}
                   className={buttonClass}
                   disabled={action.busy}
                   onClick={() => transition("claim")}
                 >
                   Nhận xử lý
-                </button>
+                </ActionButton>
               )}
               {o.status === "Preparing" &&
                 o.payment?.status === "Confirmed" &&
                 !o.invoiceId && (
-                  <button
+                  <ActionButton busy={action.busy}
                     className={buttonClass}
                     disabled={action.busy}
                     onClick={() => {
@@ -219,19 +220,19 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
                     }}
                   >
                     Xuất kho &amp; lập hóa đơn
-                  </button>
+                  </ActionButton>
                 )}
               {o.status === "Preparing" &&
                 o.payment?.status === "Confirmed" &&
                 o.invoiceId &&
                 o.receiveMethod === "Delivery" && (
-                  <button
+                  <ActionButton busy={action.busy}
                     className={buttonClass}
                     disabled={action.busy}
                     onClick={() => transition("ship")}
                   >
                     Bắt đầu giao hàng
-                  </button>
+                  </ActionButton>
                 )}
               {o.invoiceId &&
                 o.payment?.status === "Confirmed" &&
@@ -239,7 +240,7 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
                   o.receiveMethod === "Delivery") ||
                   (o.status === "Preparing" &&
                     o.receiveMethod === "Pickup")) && (
-                  <button
+                  <ActionButton busy={action.busy}
                     className={buttonClass}
                     disabled={action.busy}
                     onClick={() => {
@@ -248,7 +249,7 @@ export function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
                     }}
                   >
                     Hoàn tất đơn hàng
-                  </button>
+                  </ActionButton>
                 )}
             </div>
             {["Completed", "Cancelled", "Rejected"].includes(o.status) && (

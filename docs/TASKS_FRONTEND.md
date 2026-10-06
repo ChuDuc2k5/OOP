@@ -107,6 +107,16 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
   - Kịch bản ở cả hai viewport: Guest không thấy giá; User đặt OTC → mở QR; Staff duyệt thiếu/đủ → xuất kho → hoàn tất; User xem hóa đơn và bị chặn `/staff`; Staff bán OTC tại quầy → checkout; Admin lưu tài khoản/tải QR; loading/rỗng/lỗi mạng và rà các route. Danh mục 41 ảnh trong `docs/screenshots/README.md`, kết quả rà route trong hai file `TC00-route-audit-*.json`.
   - Kiểm chứng cuối: ESLint CLI sạch; production build pass; Playwright Chromium 8/8 ca pass (45,5 giây), đối chiếu đủ 49 route ở mỗi viewport. Các server thử nghiệm đã dừng, cổng 3000/5017 đã đóng. Chưa mở rộng kiểm thử sang Firefox/WebKit.
 
+- **M5 — `fe/m5-feedback` (phản hồi thao tác)**:
+  - Toast success/error/info dùng chung cho mọi API ghi của khách và Staff/Admin: nhãn tiếng Việt, lỗi `ApiException.title`, tự đóng khoảng 4 giây, đóng thủ công, aria-live. Toast dành chỗ phía trên trang và header để không che thao tác trên mobile.
+  - Thêm giỏ từ chi tiết và thẻ sản phẩm: thông báo số lượng/đơn vị/tên thuốc, liên kết xem giỏ. `CartContext` lấy GET cart sau đăng nhập và mỗi thay đổi, cập nhật badge tổng số lượng ngay; badge chỉ dành cho User. Giữ dữ liệu giỏ khi cập nhật lỗi.
+  - Nút ghi có trạng thái khóa, spinner và “Đang xử lý…”; khóa gửi lặp cho thêm giỏ, đặt hàng, xác thực, gửi đơn thuốc và các thao tác nghiệp vụ. Đăng xuất thất bại giữ phiên hiện tại và báo lỗi.
+  - Đơn khách có tiến trình theo loại đơn/hình thức nhận, hộp “Bước tiếp theo”, ghi chú đối chiếu nổi bật, lý do hủy/từ chối và liên kết hóa đơn. Sau đặt hàng chuyển tới `?created=1` với banner mã đơn; danh sách hiện badge trạng thái đơn và thanh toán.
+  - QR có banner Chờ duyệt/Đã xác nhận/Đã đóng, GET làm mới mỗi 15 giây và nút thủ công; xác nhận mới phát toast thành công và liên kết chi tiết. Không có nút tự xác nhận chuyển tiền. Gửi đơn thuốc chuyển tới `?sent=1` và banner chờ kiểm tra.
+  - Playwright mở phiên User/Staff riêng để kiểm chứng chuyển thiếu, ghi chú và tự nhận trạng thái xác nhận; thêm kiểm tra toast, badge, bấm lặp, lỗi mạng giữ dữ liệu, banner đặt hàng/đơn thuốc. Chụp thêm 12 ảnh với mã TC theo SRS và cập nhật ảnh luồng cũ ở 1366/390 px; danh mục trong `docs/screenshots/README.md`.
+  - Bộ thử chạy production tại cổng 3017/5017, SQLite seed riêng và mock tắt; build `.next-e2e` tách khỏi `.next`, không dùng cổng 3000/5000 của người dùng. Hướng dẫn trong `frontend/README.md`.
+  - Kiểm chứng cuối: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` Chromium 10/10 ca pass (1,5 phút), đủ 49 route mỗi viewport. Kiểm tra UTF-8 và phạm vi file sửa đạt. Server thử nghiệm đã dừng; chưa mở rộng sang Firefox/WebKit.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 

@@ -1,14 +1,29 @@
-import React from 'react';
+'use client';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { Product } from '@/lib/types';
 import { formatVND } from '@/lib/format';
 import { Pill, AlertCircle, Lock, ShoppingCart } from 'lucide-react';
+import { cartApi } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import { ActionButton } from './ActionButton';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { user } = useAuth();
+  const [adding, setAdding] = useState(false);
+  const lock = useRef(false);
+  async function add() {
+    if (lock.current) return;
+    lock.current = true;
+    setAdding(true);
+    try { await cartApi.addItem({ drugId: product.drugId, quantity: 1 }); }
+    catch { /* Lỗi đã được hiển thị bởi toast dùng chung. */ }
+    finally { lock.current = false; setAdding(false); }
+  }
   const hasPrice = typeof product.unitPrice === 'number';
 
   return (
@@ -88,7 +103,13 @@ export default function ProductCard({ product }: ProductCardProps) {
                   {formatVND(product.unitPrice)}
                 </span>
               </div>
-              <Link
+              {user?.role === 'User' ? <ActionButton
+                busy={adding}
+                disabled={!product.inStock}
+                onClick={add}
+                className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                aria-label={`Thêm ${product.name} vào giỏ`}
+              ><ShoppingCart className="h-4 w-4" /><span>{product.inStock ? 'Thêm vào giỏ' : 'Hết hàng'}</span></ActionButton> : <Link
                 href={`/products/${product.drugId}`}
                 className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm ${
                   product.inStock
@@ -98,7 +119,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span>{product.inStock ? 'Xem & Mua' : 'Hết hàng'}</span>
-              </Link>
+              </Link>}
             </div>
           ) : (
             <div className="space-y-2">

@@ -1,4 +1,5 @@
 "use client";
+import { ActionButton } from '@/components/ActionButton';
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -140,9 +141,9 @@ export function SaleNew() {
               />
             </div>
           )}
-          <button className={buttonClass} disabled={action.busy}>
+          <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
             Tạo nháp
-          </button>
+          </ActionButton>
         </form>
       </Card>
     </Page>
@@ -326,9 +327,9 @@ export function SaleDetail({ params }: { params: Promise<{ id: string }> }) {
                   errors={action.fields}
                   disabled={action.busy}
                 />
-                <button className={buttonClass} disabled={action.busy}>
+                <ActionButton busy={action.busy} className={buttonClass} disabled={action.busy}>
                   Lưu dòng thuốc &amp; kiểm tra
-                </button>
+                </ActionButton>
               </form>
               <Card>
                 {dirty && (
@@ -348,7 +349,7 @@ export function SaleDetail({ params }: { params: Promise<{ id: string }> }) {
                       Tôi xác nhận đã nhận đủ {formatVND(sale.totalAmount)} tiền
                       mặt.
                     </label>
-                    <button
+                    <ActionButton busy={action.busy}
                       className={buttonClass}
                       disabled={action.busy || dirty || !cashReceived}
                       onClick={() => {
@@ -376,10 +377,10 @@ export function SaleDetail({ params }: { params: Promise<{ id: string }> }) {
                       }}
                     >
                       Đã nhận tiền mặt – Hoàn tất
-                    </button>
+                    </ActionButton>
                   </>
                 )}
-                <button
+                <ActionButton busy={action.busy}
                   className={buttonClass}
                   disabled={action.busy}
                   onClick={() => {
@@ -391,7 +392,7 @@ export function SaleDetail({ params }: { params: Promise<{ id: string }> }) {
                   }}
                 >
                   Hủy nháp
-                </button>
+                </ActionButton>
               </Card>
             </>
           )}

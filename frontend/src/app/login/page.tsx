@@ -1,4 +1,5 @@
 'use client';
+import { ActionButton } from '@/components/ActionButton';
 
 import React, { useState, Suspense } from 'react';
 import { LoadingState } from '@/components/Status';
@@ -27,6 +28,7 @@ function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setGeneralError(null);
     setFieldErrors({});
 
@@ -187,13 +189,13 @@ function LoginForm() {
 
             {/* Submit Button */}
             <div>
-              <button
+              <ActionButton busy={submitting}
                 type="submit"
                 disabled={submitting}
                 className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-60 transition"
               >
                 {submitting ? 'Đang xác thực...' : 'Đăng nhập'}
-              </button>
+              </ActionButton>
             </div>
           </form>
 

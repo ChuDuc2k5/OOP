@@ -1,3 +1,4 @@
+import { mutationFeedback, notifyError } from './feedback';
 import {
   ApiError,
   CartView,
@@ -607,7 +608,7 @@ async function handleMockRequest<T>(
  * Fetch wrapper chính của ứng dụng
  * Tự động gắn credentials, CSRF token, parse JSON và ánh xạ ProblemDetails ApiError
  */
-export async function apiFetch<T>(
+async function requestApi<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -689,6 +690,18 @@ export async function apiFetch<T>(
 // ==========================================
 // Các hàm gọi API tiện ích
 // ==========================================
+
+export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const writing = ['POST', 'PUT', 'PATCH', 'DELETE'].includes((options.method || 'GET').toUpperCase());
+  try {
+    const result = await requestApi<T>(endpoint, options);
+    if (writing) mutationFeedback(endpoint, options, result);
+    return result;
+  } catch (error) {
+    if (writing) notifyError(error);
+    throw error;
+  }
+}
 
 export const authApi = {
   getCsrf: () => apiFetch<void>('/api/auth/csrf'),

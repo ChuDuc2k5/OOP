@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
+import { ActionButton } from './ActionButton';
 import { ROLE_LABELS } from '@/lib/format';
 import {
   Menu,
@@ -20,7 +22,9 @@ import {
 } from 'lucide-react';
 
 export default function Header() {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, loggingOut } = useAuth();
+  const { cart, quantity } = useCart();
+  const badge = <span data-testid="cart-badge" aria-label={`${cart.items.length} dòng, tổng ${quantity} đơn vị`} className="inline-flex min-w-5 items-center justify-center rounded-full bg-emerald-700 px-1.5 text-[11px] font-bold text-white">{quantity}</span>;
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,9 +39,11 @@ export default function Header() {
   };
 
   const handleLogout = async () => {
+    try {
     await logout();
     router.push('/');
     setMobileMenuOpen(false);
+    } catch { /* Toast hiển thị lỗi, giữ phiên hiện tại nếu đăng xuất thất bại. */ }
   };
 
   return (
@@ -80,6 +86,7 @@ export default function Header() {
                 >
                   <ShoppingCart className="w-5 h-5 text-slate-600" />
                   <span>Giỏ hàng</span>
+                  {badge}
                 </Link>
                 <Link
                   href="/orders"
@@ -130,13 +137,13 @@ export default function Header() {
                     {ROLE_LABELS[user.role]}
                   </span>
                 </div>
-                <button
+                <ActionButton busy={loggingOut} compact
                   onClick={handleLogout}
                   className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                   title="Đăng xuất"
                 >
                   <LogOut className="w-5 h-5" />
-                </button>
+                </ActionButton>
               </div>
             ) : (
               <div className="flex items-center space-x-2">
@@ -159,8 +166,9 @@ export default function Header() {
           {/* Mobile hamburger button */}
           <div className="flex md:hidden items-center space-x-2">
             {isAuthenticated && user?.role === 'User' && (
-              <Link href="/cart" className="p-2 text-slate-600 hover:text-emerald-600">
+              <Link href="/cart" aria-label={`Giỏ hàng, ${quantity} đơn vị`} className="flex items-center gap-1 p-2 text-slate-600 hover:text-emerald-600">
                 <ShoppingCart className="w-5 h-5" />
+                {badge}
               </Link>
             )}
             <button
@@ -281,13 +289,13 @@ export default function Header() {
 
           {isAuthenticated && (
             <div className="pt-2 border-t border-slate-200">
-              <button
+              <ActionButton busy={loggingOut}
                 onClick={handleLogout}
                 className="flex items-center space-x-2 w-full px-3 py-2 text-rose-600 hover:bg-rose-50 rounded-md font-medium text-left"
               >
                 <LogOut className="w-5 h-5" />
                 <span>Đăng xuất</span>
-              </button>
+              </ActionButton>
             </div>
           )}
         </div>
