@@ -3,7 +3,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const child = spawn('dotnet', [
-  'run', '--project', 'backend/Pharmacy.Api', '--launch-profile', 'http',
+  // Release build: Windows Smart App Control may block the deterministic Debug DLLs.
+  'run', '--project', 'backend/Pharmacy.Api', '--launch-profile', 'http', '-c', 'Release',
   ...process.argv.slice(2),
 ], { cwd: root, stdio: 'inherit', env: process.env });
 
