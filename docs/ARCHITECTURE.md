@@ -107,5 +107,6 @@ Do server sinh, dạng chuỗi dễ đọc, unique:
 | D1 | 2026-10-06 | SQLite là DB mặc định; Supabase/Postgres là tùy chọn qua provider | SRS 2.2 ghi Supabase nhưng NFR-04/06, 6.3, 7 đều ghi SQLite; test & chạy local cần SQLite |
 | D2 | 2026-10-06 | BE là Web API, FE Next.js gọi qua rewrites cùng origin | SRS 2.2 (FE React/Next, BE API); kế hoạch tuần 1 ghi "MVC" là lỗi cũ |
 | D3 | 2026-10-06 | Xác nhận giá mới khi đặt hàng bằng `expectedTotal` + lỗi 409 `PRICE_CHANGED` | FR-013 yêu cầu hiển thị giá mới và khách xác nhận |
+| D6 | 2026-10-06 | Checkout đơn đủ điều kiện dùng một nút "Đặt hàng & thanh toán": tạo đơn rồi gọi ngay `POST /api/orders/{id}/payment` và hiện QR; nút "Đóng" chỉ điều hướng, không đổi trạng thái. Đơn chờ kiểm tra đơn thuốc chưa mở QR | Phản hồi người dùng: luồng 2 bước gây rối. Vẫn đúng FR-017 (khách chủ động bấm thanh toán, QR mở ngay, giữ hàng lần đầu, Payment PendingReview) và không có nút "Tôi đã chuyển khoản" |
 | D5 | 2026-10-06 | Merge khung `chuduc`: giữ .NET + script npm; **bỏ NestJS gateway**; frontend chuyển Vite → Next.js | SRS 2.2 và yêu cầu nhóm là Next.js; Next rewrites đã làm vai trò gateway, cookie auth không cần CORS; gateway không có trong SRS và không ai phụ trách |
 | D4 | 2026-10-06 | Đơn theo đơn thuốc ở `WaitingReview` tự chuyển `AwaitingPayment` khi đơn thuốc được Approve và đủ hạn mức | FR-013/FR-015/UC-03 |
