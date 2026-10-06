@@ -35,9 +35,13 @@ public sealed class AuthTests : IDisposable
         Assert.Equal("User", me.GetProperty("role").GetString());
         Assert.Equal("Test.user", me.GetProperty("username").GetString());
         Assert.Matches("^U[A-F0-9]{8}$", me.GetProperty("userId").GetString()!);
-        await (await client.GetAsync("/api/auth/me")).Error(401, "UNAUTHENTICATED");
+        var current = await client.GetAsync("/api/auth/me");
+        Assert.Equal(HttpStatusCode.OK, current.StatusCode);
+        Assert.Equal(me.ToString(), (await current.Json()).ToString());
         var stored = await factory.WithDb(db => db.UserAccounts.SingleAsync(x => x.NormalizedUsername == "TEST.USER"));
         Assert.NotEqual(password, stored.PasswordHash);
+        await client.Csrf();
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/logout", null)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.Login(" test.USER ", password)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
     }
@@ -54,6 +58,7 @@ public sealed class AuthTests : IDisposable
             confirmPassword = "Password1"
         })).Error(409, "DUPLICATE", "username");
         Assert.Equal(4, await factory.WithDb(db => db.UserAccounts.CountAsync()));
+        await (await client.GetAsync("/api/auth/me")).Error(401, "UNAUTHENTICATED");
     }
     [Theory]
     [InlineData("ab", "Password1", "Password1", "username")]
@@ -77,6 +82,7 @@ public sealed class AuthTests : IDisposable
             confirmPassword
         })).Error(400, "VALIDATION_FAILED", field);
         Assert.Equal(4, await factory.WithDb(db => db.UserAccounts.CountAsync()));
+        await (await client.GetAsync("/api/auth/me")).Error(401, "UNAUTHENTICATED");
     }
     [Fact]
     public async Task TC02_LengthBoundaries_AndPasswordWhitespaceArePreserved()
@@ -91,6 +97,9 @@ public sealed class AuthTests : IDisposable
             password,
             confirmPassword = password
         })).StatusCode);
+        await client.Csrf();
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/logout", null)).StatusCode);
+        await client.Csrf();
         await (await client.PostAsJsonAsync("/api/auth/register", new
         {
             username = new string('b', 31),
@@ -123,9 +132,48 @@ public sealed class AuthTests : IDisposable
         });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.Equal("User", (await response.Json()).GetProperty("role").GetString());
-        Assert.Equal(HttpStatusCode.OK, (await client.Login("injected", "Password1")).StatusCode);
+        var current = await client.GetAsync("/api/auth/me");
+        Assert.Equal(HttpStatusCode.OK, current.StatusCode);
+        Assert.Equal("User", (await current.Json()).GetProperty("role").GetString());
+        Assert.Equal(Role.User, await factory.WithDb(async db => (await db.UserAccounts.SingleAsync(x => x.NormalizedUsername == "INJECTED")).Role));
         await (await client.GetAsync("/api/admin/accounts")).Error(403, "FORBIDDEN");
     }
+    [Fact]
+    public async Task TC01_Register_AutomaticallySignsIn_AndIssuesUsableUserCsrfToken()
+    {
+        using var client = factory.Client();
+        var guestToken = await client.Csrf();
+        var response = await client.PostAsJsonAsync("/api/auth/register", new
+        {
+            username = "autologin",
+            password = "Password1",
+            confirmPassword = "Password1",
+            role = "Admin"
+        });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var cookie = response.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("pharmacy.auth="));
+        Assert.Contains("httponly", cookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("samesite=lax", cookie, StringComparison.OrdinalIgnoreCase);
+        var token = response.Headers.GetValues("Set-Cookie")
+            .Single(c => c.StartsWith("XSRF-TOKEN=")).Split(';')[0]["XSRF-TOKEN=".Length..];
+        Assert.NotEqual(guestToken, token);
+        var current = await client.GetAsync("/api/auth/me");
+        Assert.Equal(HttpStatusCode.OK, current.StatusCode);
+        Assert.Equal((await response.Json()).ToString(), (await current.Json()).ToString());
+        Assert.Equal("User", (await current.Json()).GetProperty("role").GetString());
+        await (await client.PostAsync("/api/auth/logout", null)).Error(400, "ANTIFORGERY_INVALID");
+        client.DefaultRequestHeaders.Remove("X-XSRF-TOKEN");
+        client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", token);
+        await (await client.PostAsJsonAsync("/api/auth/register", new
+        {
+            username = "blocked",
+            password = "Password1",
+            confirmPassword = "Password1"
+        })).Error(403, "FORBIDDEN");
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/logout", null)).StatusCode);
+        await (await client.GetAsync("/api/auth/me")).Error(401, "UNAUTHENTICATED");
+    }
+
     [Theory]
     [InlineData("user", "User@12345", "User", "/")]
     [InlineData("staff", "Staff@12345", "Staff", "/staff")]
