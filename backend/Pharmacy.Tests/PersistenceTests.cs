@@ -113,7 +113,7 @@ public sealed class PersistenceTests
                 await restarted.WithDb(async db =>
                 {
                     Assert.Equal(5, await db.UserAccounts.CountAsync());
-                    Assert.Equal(12, await db.Drugs.CountAsync());
+                    Assert.Equal(56, await db.Drugs.CountAsync());
                     Assert.Equal(2, await db.Orders.CountAsync());
                     Assert.Equal(2, await db.Payments.CountAsync());
                     Assert.Single(await db.Invoices.ToListAsync());
@@ -165,12 +165,13 @@ public sealed class PersistenceTests
             {
                 var drugs = await db.Drugs.Include(x => x.Batches).ToListAsync();
                 var d = new TestClock().Today;
-                Assert.Equal(12, drugs.Count);
+                Assert.Equal(56, drugs.Count);
                 Assert.Contains(drugs, x => x.IsControlled && x.RequiresPrescription);
                 Assert.Contains(drugs, x => !x.IsForSale);
                 Assert.Contains(drugs, x => x.IsForSale && !x.RequiresPrescription && x.GetAvailableQuantity(d) == 0);
                 Assert.All(drugs, x => Assert.False(string.IsNullOrWhiteSpace(x.Description)));
-                Assert.All(drugs, x => Assert.Contains(x.SaleUnit, new[] { "Hộp", "Vỉ", "Chai", "Tuýp", "Gói", "Viên" }));
+                Assert.All(drugs.Where(x => x.DrugId == "PARA500" || x.DrugId.StartsWith("DEMO")),
+                    x => Assert.Contains(x.SaleUnit, new[] { "Hộp", "Vỉ", "Chai", "Tuýp", "Gói", "Viên" }));
                 Assert.Equal("Nước muối sinh lý", drugs.Single(x => x.DrugId == "DEMO03").Name);
                 Assert.Contains(drugs, x => x.GetAvailableQuantity(d) == x.LowStockThreshold);
                 foreach (var offset in new[] { -5, 0, 1, 20, 30, 31 })

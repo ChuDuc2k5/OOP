@@ -11,12 +11,18 @@ using Pharmacy.Core.Common;
 using Pharmacy.Core.Data;
 using Pharmacy.Core.Domain;
 using Pharmacy.Core.Services;
-var builder = WebApplication.CreateBuilder(args);
+var seedDemoCatalog = args.Contains("--seed-demo-catalog", StringComparer.Ordinal);
+if (seedDemoCatalog)
+{
+    Console.OutputEncoding = System.Text.Encoding.UTF8;
+}
+var commandArgs = args.Where(x => x != "--seed-demo-catalog").ToArray();
+var builder = WebApplication.CreateBuilder(commandArgs);
 builder.Configuration.AddInMemoryCollection(EnvironmentFile.Read(Path.Combine(builder.Environment.ContentRootPath, ".env")));
 // Local secrets (gitignored): same shape as appsettings.json, overrides it and .env.
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 builder.Configuration.AddEnvironmentVariables();
-builder.Configuration.AddCommandLine(args);
+builder.Configuration.AddCommandLine(commandArgs);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 // Provider exceptions can contain data values; API errors log only type and trace ID.
@@ -82,7 +88,26 @@ builder.Services.AddScoped<SaleService>();
 builder.Services.AddScoped<ManualPaymentService>();
 builder.Services.AddScoped<InvoiceService>();
 builder.Services.AddScoped<DbSeeder>();
+builder.Services.AddScoped<DemoCatalogSeeder>();
 var app = builder.Build();
+if (seedDemoCatalog)
+{
+    using var scope = app.Services.CreateScope();
+    try
+    {
+        await scope.ServiceProvider.GetRequiredService<PharmacyDbContext>().Database.MigrateAsync();
+        var result = await scope.ServiceProvider.GetRequiredService<DemoCatalogSeeder>().SeedAsync();
+        Console.WriteLine($"Danh mục demo: thêm {result.DrugsAdded} thuốc, {result.BatchesAdded} lô, " +
+            $"gắn {result.ImagesAttached} ảnh; tạo {result.ImageFilesAdded} file ảnh mới.");
+    }
+    catch (Exception e)
+    {
+        Console.Error.WriteLine($"Nạp danh mục demo thất bại ({e.GetType().Name}).");
+        Environment.ExitCode = 1;
+    }
+    await app.DisposeAsync();
+    return;
+}
 using (var scope = app.Services.CreateScope())
 {
     await scope.ServiceProvider.GetRequiredService<PharmacyDbContext>().Database.MigrateAsync();

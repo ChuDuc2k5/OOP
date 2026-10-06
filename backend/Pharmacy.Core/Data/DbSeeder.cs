@@ -89,6 +89,7 @@ public sealed class DbSeeder(
             await source.CopyToAsync(destination, ct);
         }
         await db.SaveChangesAsync(ct);
+        await new DemoCatalogSeeder(db, clock, storage).SeedAsync(ct);
         await transaction.CommitAsync(ct);
     }
 }
