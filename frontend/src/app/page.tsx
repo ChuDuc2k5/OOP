@@ -133,7 +133,7 @@ function HomeContent() {
             {/* Quick Filter Tabs */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 custom-scrollbar text-xs">
               <span className="text-slate-400 text-xs flex items-center mr-1">
-                <Filter className="w-3.5 h-3.5 mr-1" /> Lọc:
+                <Filter className="w-3.5 h-3.5 mr-1" /> Lọc trong trang này:
               </span>
               <button
                 onClick={() => setActiveFilter('all')}
@@ -143,7 +143,7 @@ function HomeContent() {
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                Tất cả ({productsData.total})
+                Tất cả
               </button>
               <button
                 onClick={() => setActiveFilter('otc')}

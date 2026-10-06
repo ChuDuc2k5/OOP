@@ -48,7 +48,9 @@ export default function HealthBadge() {
         ) : (
           <span className="text-emerald-700 font-medium flex items-center space-x-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>{health?.status || 'OK'}</span>
+            <span>
+              {health?.service ? `${health.service}: ${health.status}` : health?.status || 'OK'}
+            </span>
           </span>
         )}
 

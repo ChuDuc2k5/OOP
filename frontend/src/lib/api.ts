@@ -37,7 +37,7 @@ export class ApiException extends Error {
  * Kiểm tra xem chế độ mock có được bật hay không
  */
 export function isMockMode(): boolean {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
     const queryParam = new URLSearchParams(window.location.search).get('mock');
     if (queryParam === 'true') return true;
     if (queryParam === 'false') return false;
@@ -261,8 +261,8 @@ async function handleMockRequest<T>(
   // 9. Health Check
   if (path === '/api/health' && method === 'GET') {
     const health: HealthCheck = {
-      status: 'Healthy (Mock)',
-      database: 'SQLite (Mock)',
+      status: 'ok',
+      service: 'Pharmacy.Api (Mock)',
       timestamp: new Date().toISOString(),
     };
     return health as unknown as T;

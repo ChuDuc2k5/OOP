@@ -498,6 +498,7 @@ export type DashboardSummary = {
 
 export type HealthCheck = {
   status: string;
+  service?: string;
   database?: string;
   timestamp?: string;
 };
