@@ -30,7 +30,7 @@ export default function StaffLayout({
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-slate-100">
-      <Sidebar role="Staff" />
+      <Sidebar role={user.role === 'Admin' ? 'Admin' : 'Staff'} />
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {children}
       </div>

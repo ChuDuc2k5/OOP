@@ -86,6 +86,18 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
   - Kiểm chứng: lint không lỗi/cảnh báo ESLint; production build pass. Kiểm tra API client với 404/501/500/lỗi mạng ở payment và invoices đều ném `ApiException`, không trả mock.
   - Smoke bằng curl qua `http://localhost:3000/api` với SQLite tạm: login → thêm PARA500 → đặt đơn AwaitingPayment 1.000 VND, payment chưa mở. Backend trong worktree hiện tại chưa có controller payment/invoice nên GET/POST payment và GET invoices trả 404; chưa kiểm chứng được PaymentView/InvoiceView thật đến cuối luồng. Thông tin fallback ở câu hỏi PO cũ đã được thay thế bởi thay đổi review này.
 
+- **M3 — `fe/m3-backoffice` (Staff/Admin)**:
+  - Dashboard `/staff`, `/admin`: gọi `GET /api/dashboard/summary`, hiển thị số liệu/lỗi thật và thẻ liên kết chức năng.
+  - Đơn thuốc: danh sách lọc trạng thái/tìm kiếm/phân trang; tiếp nhận đơn giấy tại quầy; chi tiết ảnh riêng tư, PUT details, chấp nhận/từ chối/hủy hiệu lực kèm lý do; bảng lượng kê/giữ/đã cấp/còn lại.
+  - Đơn trực tuyến: danh sách lọc/tìm/phân trang; chi tiết nhận xử lý, fulfill (xuất kho & lập hóa đơn), giao/hoàn tất, từ chối/hủy kèm lý do; nút theo trạng thái/thanh toán/hình thức nhận/hóa đơn.
+  - Duyệt thanh toán: danh sách PendingReview, nhập mã giao dịch/số tiền/thời điểm/ghi chú; kết quả `approved:false` hiện rõ chuyển thiếu và `reviewNote`; ghi chú chưa duyệt.
+  - Bán tại quầy: nháp của người đang đăng nhập, tạo OTC/Theo đơn với loại cố định; tra cứu thuốc trong kho, thêm/sửa/xóa dòng, lưu toàn bộ nháp và hiển thị `issues`; checkout chỉ khi `canCheckout`, không có thay đổi chưa lưu và đã xác nhận nhận đủ tiền mặt; hủy nháp.
+  - Kho/báo cáo: tồn thực tế/còn hạn/giữ/khả dụng, chi tiết lô/hạn/hết hạn; báo cáo tồn thấp và sắp hết hạn với số ngày mặc định 30.
+  - Admin: lọc/tìm tài khoản và tạo Staff; danh mục/thêm/sửa/bật-tắt bán/ảnh thuốc, nhập lô; lưu ngân hàng/tài khoản, tải ảnh QR và xem trước, hiển thị trạng thái cấu hình.
+  - Route nghiệp vụ `/admin/...` và `/staff/...` tái sử dụng cùng component; Sidebar theo role. Hóa đơn khách/Staff/Admin dùng cùng component danh sách/chi tiết với đúng InvoiceView và allocations. Bỏ tài khoản demo ở footer; nút in chỉ giữ `window.print()`.
+  - Các form dùng API client có kiểu dữ liệu, credentials/CSRF và ApiException thật; lỗi title/lỗi theo trường, giữ dữ liệu nhập, trạng thái tải/rỗng/lỗi, khóa gửi lặp và bảng cuộn ngang.
+  - Kiểm chứng: `npm run lint` sạch ESLint; `npm run build --workspace frontend` pass. Script `frontend/scripts/smoke-backoffice.mjs` dùng curl qua `http://localhost:3000/api`: 46 kiểm tra pass trên backend SQLite riêng, gồm duyệt thiếu/đủ → fulfill/complete, OTC → checkout, Admin cấu hình/tải QR, đơn thuốc, thuốc/ảnh/nhập lô, tài khoản, báo cáo và phân quyền. Các tiến trình tự chạy đã dừng sau kiểm thử. Chưa kiểm tra tương tác trình duyệt và kích thước 1366/390 px do không có trình duyệt được kết nối; phần này thuộc M4.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 
