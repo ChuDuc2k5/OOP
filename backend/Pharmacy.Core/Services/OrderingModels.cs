@@ -55,13 +55,13 @@ public sealed record PaymentSummary(
 public sealed record OrderRow(
     string OrderId, DateTimeOffset CreatedAt, SaleKind SaleKind, OrderStatus Status,
     decimal TotalAmount, ReceiveMethod ReceiveMethod, PaymentStatus? PaymentStatus,
-    string? CustomerUsername, string? HandledByUsername);
+    string? CustomerUsername, string? HandledByUsername, DateTimeOffset? ReadyAt);
 public sealed record OrderView(
     string OrderId, DateTimeOffset CreatedAt, SaleKind SaleKind, OrderStatus Status,
     string ReceiverName, string Phone, ReceiveMethod ReceiveMethod, string? Address,
     string? PrescriptionId, string? PatientId, decimal TotalAmount, string? Note,
     IReadOnlyList<OrderItemView> Items, PaymentSummary? Payment, string? InvoiceId,
-    string? HandledByUsername, bool CanCancel, bool CanPay, string? CustomerUsername);
+    string? HandledByUsername, bool CanCancel, bool CanPay, string? CustomerUsername, DateTimeOffset? ReadyAt);
 public sealed record DashboardSummary(
     int PendingPrescriptions, int AwaitingPaymentOrders, int PendingPayments,
     int PreparingOrders, int LowStockCount, int ExpiringCount);

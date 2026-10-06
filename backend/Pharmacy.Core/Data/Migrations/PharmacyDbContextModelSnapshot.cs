@@ -205,6 +205,9 @@ namespace Pharmacy.Core.Data.Migrations
                     b.Property<string>("PrescriptionId")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("ReadyAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ReceiveMethod")
                         .IsRequired()
                         .HasColumnType("TEXT");

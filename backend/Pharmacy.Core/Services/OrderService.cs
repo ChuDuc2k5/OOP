@@ -94,7 +94,7 @@ public sealed class OrderService(
         var items = matches.Skip((page - 1) * pageSize).Take(pageSize).Select(x => new OrderRow(
             x.OrderId, x.CreatedAt, x.SaleKind, x.Status, x.TotalAmount, x.ReceiveMethod,
             payments.GetValueOrDefault(x.OrderId)?.Status, ownerId is null ? users[x.UserId] : null,
-            x.HandledByUserId is null ? null : users[x.HandledByUserId])).ToList();
+            x.HandledByUserId is null ? null : users[x.HandledByUserId], x.ReadyAt)).ToList();
         return new(items, page, pageSize, matches.Count);
     }
 
@@ -135,9 +135,15 @@ public sealed class OrderService(
         => transactions.Execute(async _ =>
         {
             var order = await Find(orderId, null, ct);
+            await db.Entry(order).ReloadAsync(ct);
             if (action == "claim")
             {
                 Guard.State(order.Status is OrderStatus.WaitingReview or OrderStatus.AwaitingPayment or OrderStatus.Preparing or OrderStatus.Delivering);
+            }
+            else if (action == "ready")
+            {
+                var issued = await db.Invoices.AnyAsync(x => x.Sale.OrderId == orderId && x.Sale.Status == SaleStatus.Completed, ct);
+                order.MarkReady(clock.Now, issued);
             }
             else
             {
@@ -231,7 +237,7 @@ public sealed class OrderService(
             payment is null ? null : new(payment.PaymentId, payment.Status, payment.ExpectedAmount,
                 payment.ReceivedAmount, payment.ReviewNote, payment.ApprovedAt), invoiceId,
             order.HandledByUserId is null ? null : users[order.HandledByUserId], canCancel, canPay,
-            staff ? users[order.UserId] : null);
+            staff ? users[order.UserId] : null, order.ReadyAt);
     }
 
     private static OrderStatus? ParseStatus(string? value)

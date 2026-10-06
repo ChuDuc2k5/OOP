@@ -347,3 +347,17 @@ Test bổ sung:
 | TC46_D13_UnderpaymentWithoutReference_RemainsPending_QuickReviewCanConfirmLater | Thiếu tiền không mã, sau đó xác nhận nhanh đúng dự kiến |
 | TC49_DuplicateConfirmedBankReference_IsRejectedWithoutPartialWrite | Mã có giá trị vẫn bị chặn trùng |
 | DatabaseProviderTests.D13_OptionalReferenceMigration_PreservesExistingData_AndAllowsConfirmationWithoutReference | Nâng cấp SQLite bảo toàn dữ liệu và cho phép xác nhận không mã |
+
+M12: báo đã chuẩn bị xong đơn Pickup (D15)
+
+Staff/Admin gọi `POST /api/staff/orders/{orderId}/ready` sau fulfill: đơn phải là Pickup, Preparing và có hóa đơn. Trả `200 OrderView` với `readyAt`, giữ nguyên timestamp khi gọi lại và tự gán người xử lý nếu còn trống; điều kiện sai trả `409 INVALID_STATE`. User không được gọi (403). `readyAt` có trong chi tiết và danh sách đơn của khách/staff; đơn cũ hoặc chưa chuẩn bị xong nhận null. Complete Pickup vẫn cho phép giao ngay khi có hóa đơn dù chưa ready; Delivery tiếp tục dùng ship.
+
+Migration `OrderReadyAt` riêng cho SQLite/PostgreSQL được tự áp dụng khi API khởi động, bổ sung cột nullable, không đổi các trạng thái Order. PostgreSQL lưu timestamp UTC theo converter hiện có. Test bổ sung:
+
+| TC | Test method |
+|---|---|
+| TC-37 | `TC37_D15_ReadyPickup_IsIdempotent_SetsHandler_VisibleInCustomerDetailAndLists` (Staff/Admin) |
+| TC-37 | `TC37_D15_ReadyRejectsDeliveryOrMissingInvoice_WithoutWriting` |
+| TC-37 | `TC37_D15_DomainReady_PreservesFirstTime_RequiresPickupPreparingAndInvoice` |
+
+Test nâng cấp DB cũ trong DatabaseProviderTests giữ kiểm chứng dữ liệu trước/sau migration và ReadyAt null của các đơn cũ. Model/migration của cả hai provider được kiểm tra; script PostgreSQL đã sinh offline, cần PHARMACY_TEST_POSTGRES trên DB test riêng để kiểm chứng runtime.
