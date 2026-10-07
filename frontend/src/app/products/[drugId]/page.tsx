@@ -119,13 +119,13 @@ export default function ProductDetailPage({
         ) : (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-8 p-6 sm:p-10">
             {/* Left: Image */}
-            <div className="flex flex-col items-center justify-center bg-slate-50 rounded-xl p-8 border border-slate-100 min-h-[320px]">
+              <div className="flex flex-col items-center justify-center bg-white rounded-xl p-8 border border-slate-100 min-h-[320px]">
               {product.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={product.imageUrl}
                   alt={product.name}
-                  className="max-h-72 object-contain"
+                    className="h-72 w-full object-contain"
                 />
               ) : (
                 <div className="w-32 h-32 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">

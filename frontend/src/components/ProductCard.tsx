@@ -29,13 +29,13 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col h-full group">
       {/* Product Image / Placeholder */}
-      <div className="relative aspect-video bg-slate-100 flex items-center justify-center p-4 border-b border-slate-100 overflow-hidden">
+      <div className="relative aspect-video bg-white flex items-center justify-center p-4 border-b border-slate-100 overflow-hidden">
         {product.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={product.imageUrl}
             alt={product.name}
-            className="w-full h-full object-contain group-hover:scale-105 transition duration-300"
+            className="w-full h-full object-contain"
           />
         ) : (
           <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition duration-300">
