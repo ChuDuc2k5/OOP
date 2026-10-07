@@ -22,7 +22,8 @@ internal sealed class TestClock : IBusinessClock
 internal sealed class ApiFactory(
     string databasePath,
     DateOnly? today = null,
-    ILoggerProvider? logs = null) : WebApplicationFactory<Program>
+    ILoggerProvider? logs = null,
+    bool productionSeed = false) : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -37,6 +38,11 @@ internal sealed class ApiFactory(
         });
         builder.ConfigureServices(services =>
         {
+            if (!productionSeed)
+            {
+                services.RemoveAll<IDbSeeder>();
+                services.AddScoped<IDbSeeder, TestCatalogSeeder>();
+            }
             services.AddDataProtection().UseEphemeralDataProtectionProvider();
             services.RemoveAll<StorageOptions>();
             services.AddSingleton(new StorageOptions(databasePath + "-storage"));

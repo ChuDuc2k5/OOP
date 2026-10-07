@@ -152,7 +152,7 @@ public sealed class FoundationTests
         try
         {
             var storage = new LocalFileStorage(root);
-            await using var png = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.drugs.PARA500.png")!;
+            await using var png = TestImage.Open();
             var path = await storage.SaveAsync("prescriptions", png, "../../original.png", "image/png");
             Assert.Matches("^prescriptions/[a-f0-9]{32}\\.png$", path);
             using var read = storage.OpenRead("prescriptions", Path.GetFileName(path));

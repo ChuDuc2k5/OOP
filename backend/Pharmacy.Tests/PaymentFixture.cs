@@ -27,7 +27,7 @@ internal static class PaymentFixture
             return;
         }
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await using var source = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.drugs.PARA500.png")!;
+        await using var source = TestImage.Open();
         await using var destination = new FileStream(path, FileMode.CreateNew, FileAccess.Write);
         await source.CopyToAsync(destination);
     }

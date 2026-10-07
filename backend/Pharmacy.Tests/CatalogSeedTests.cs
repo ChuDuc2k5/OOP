@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy.Core.Common;
 using Pharmacy.Core.Data;
+using Pharmacy.Core.Domain;
 
 namespace Pharmacy.Tests;
 
@@ -52,23 +53,28 @@ public sealed class CatalogSeedTests
         return JsonSerializer.Deserialize<JsonElement>(stream);
     }
 
+    private static int ExpectedBatchCount(JsonElement products)
+        => products.GetArrayLength() * 2 + (products.GetArrayLength() + 2) / 3;
+
     [Fact]
-    public async Task EmptySeed_Has56EmbeddedImages_ExactCatalogFields_AndPreservesLegacyBatches()
+    public async Task EmptySeed_MatchesCatalogProductsImagesReportingStockAndPrescriptions()
     {
         var path = Path.Combine(Path.GetTempPath(), "pharmacy-catalog-empty-" + Guid.NewGuid() + ".db");
         try
         {
-            using var factory = new ApiFactory(path);
+            using var factory = new ApiFactory(path, productionSeed: true);
             using var guest = factory.Client();
-            var catalog = Catalog();
-            var resources = typeof(DbSeeder).Assembly.GetManifestResourceNames();
-            Assert.Equal(56, resources.Count(x => x.StartsWith("Pharmacy.Core.Data.Assets.drugs.") && x.EndsWith(".png")));
+            var products = Catalog().GetProperty("drugs");
+            var productCount = products.GetArrayLength();
+            Assert.Equal(productCount, typeof(DbSeeder).Assembly.GetManifestResourceNames()
+                .Count(x => x.StartsWith("Pharmacy.Core.Data.Assets.drugs.") && x.EndsWith(".png")));
             await factory.WithDb(async db =>
             {
                 var drugs = await db.Drugs.Include(x => x.Batches).ToListAsync();
-                Assert.Equal(56, drugs.Count);
-                Assert.Equal(56, drugs.Count(x => x.ImagePath == "drugs/" + x.DrugId + ".png"));
-                foreach (var entry in catalog.GetProperty("drugs").EnumerateArray())
+                var today = new TestClock().Today;
+                Assert.Equal(productCount, drugs.Count);
+                Assert.Equal(ExpectedBatchCount(products), drugs.Sum(x => x.Batches.Count));
+                foreach (var entry in products.EnumerateArray())
                 {
                     var drug = drugs.Single(x => x.DrugId == entry.GetProperty("id").GetString());
                     Assert.Equal(entry.GetProperty("name").GetString(), drug.Name);
@@ -79,48 +85,43 @@ public sealed class CatalogSeedTests
                     Assert.Equal(entry.GetProperty("controlled").GetBoolean(), drug.IsControlled);
                     Assert.Equal(entry.GetProperty("description").GetString(), drug.Description);
                     Assert.True(drug.IsForSale);
+                    Assert.Equal("drugs/" + drug.DrugId + ".png", drug.ImagePath);
                     Assert.InRange(drug.Batches.Count, 2, 3);
-                    foreach (var batch in drug.Batches)
+                    Assert.All(drug.Batches, batch =>
                     {
-                        Assert.InRange(batch.ExpiryDate.DayNumber - new TestClock().Today.DayNumber, 1, 540);
                         Assert.InRange(batch.InitialQuantity, 20, 200);
-                        Assert.InRange(batch.Quantity, 1, batch.InitialQuantity);
+                        Assert.InRange(batch.Quantity, 0, batch.InitialQuantity);
+                        var offset = batch.ExpiryDate.DayNumber - today.DayNumber;
+                        Assert.True(offset == -5 || offset is >= 1 and <= 30 || offset is >= 60 and <= 540);
                         Assert.Matches("^L26[0-9]{3}$", batch.BatchNumber);
-                        Assert.Matches("^B[A-Z0-9]{8}$", batch.BatchId);
-                    }
+                    });
                 }
-                var legacyUnits = new[] { "Viên", "Hộp", "Chai", "Gói", "Vỉ", "Hộp", "Viên", "Vỉ", "Hộp", "Viên", "Viên", "Tuýp" };
-                var legacyIds = new[] { "PARA500", "VITC500", "NACL09", "ORESOL", "CETI10", "ZINC10", "AMOX500", "CEFI200", "METF500", "AMLO5", "DIAZ5", "HYDRO1" };
-                for (var index = 0; index < 12; index++)
-                {
-                    var id = legacyIds[index];
-                    var drug = drugs.Single(x => x.DrugId == id);
-                    Assert.Equal(catalog.GetProperty("legacyImages").GetProperty(id).GetProperty("name").GetString(), drug.Name);
-                    Assert.Equal(legacyUnits[index], drug.SaleUnit);
-                    Assert.Equal(1000 * (index + 1), drug.UnitPrice);
-                    Assert.Equal(index == 9 ? 8 : 10, drug.LowStockThreshold);
-                    Assert.Equal(index >= 6, drug.RequiresPrescription);
-                    Assert.Equal(index == 10, drug.IsControlled);
-                    Assert.Equal(index != 11, drug.IsForSale);
-                    var days = new[] { -5, 0, 1, 20, 30, 31 };
-                    var hasBatches = index < 10 && index != 1;
-                    Assert.Equal(hasBatches ? 6 : 0, drug.Batches.Count);
-                    if (hasBatches)
-                    {
-                        for (var j = 0; j < days.Length; j++)
-                        {
-                            var batch = drug.Batches.Single(x => x.BatchNumber == $"LOT{j + 1:D2}");
-                            Assert.Equal($"B{index:D4}{j:D4}", batch.BatchId);
-                            Assert.Equal(new TestClock().Today.AddDays(days[j]), batch.ExpiryDate);
-                            Assert.Equal(index == 9 ? 2 : 20, batch.Quantity);
-                            Assert.Equal(batch.Quantity, batch.InitialQuantity);
-                        }
-                    }
-                }
+                Assert.Equal(products.EnumerateArray().Where(x => x.GetProperty("rx").GetBoolean())
+                    .Select(x => x.GetProperty("id").GetString()).Order().ToArray(),
+                    drugs.Where(x => x.RequiresPrescription).Select(x => x.DrugId).Order().ToArray());
+                Assert.Equal(2, drugs.Count(x => x.GetAvailableQuantity(today) > 0
+                    && x.GetAvailableQuantity(today) <= x.LowStockThreshold));
+                Assert.Single(drugs, x => x.GetAvailableQuantity(today) == 0);
+                Assert.Single(drugs.SelectMany(x => x.Batches), x => x.ExpiryDate == today.AddDays(-5));
+                Assert.Contains(drugs.SelectMany(x => x.Batches),
+                    x => x.Quantity > 0 && x.ExpiryDate > today && x.ExpiryDate <= today.AddDays(30));
+                Assert.Equal(new[] { "admin", "chuduc", "nguyenvana", "staff" },
+                    (await db.UserAccounts.Select(x => x.Username).ToListAsync()).Order().ToArray());
+                Assert.Empty(await db.PaymentSettings.ToListAsync());
+                var prescriptions = await db.Prescriptions.Include(x => x.Items).ToListAsync();
+                Assert.Equal(3, prescriptions.Count);
+                var approved = Assert.Single(prescriptions, x => x.Validate("BN001", today));
+                Assert.Equal("U0000003", approved.OwnerUserId);
+                Assert.Equal("Chu Đức", approved.PatientName);
+                Assert.Equal("BS. Nguyễn Văn Minh", approved.PrescriberName);
+                Assert.Equal(3, approved.Items.Single(x => x.DrugId == "PRUZENA").PrescribedQuantity);
+                Assert.Equal(2, approved.Items.Single(x => x.DrugId == "ATILENE").PrescribedQuantity);
+                Assert.Contains(prescriptions, x => x.ValidUntil < today);
+                Assert.Contains(prescriptions, x => x.Status == PrescriptionStatus.PendingReview);
             });
-            var imageDirectory = Path.Combine(path + "-storage", "drugs");
-            Assert.Equal(56, Directory.GetFiles(imageDirectory, "*.png").Length);
-            foreach (var file in Directory.GetFiles(imageDirectory, "*.png"))
+            var files = Directory.GetFiles(Path.Combine(path + "-storage", "drugs"), "*.png");
+            Assert.Equal(productCount, files.Length);
+            foreach (var file in files)
             {
                 using var source = typeof(DbSeeder).Assembly.GetManifestResourceStream(
                     "Pharmacy.Core.Data.Assets.drugs." + Path.GetFileName(file))!;
@@ -129,13 +130,15 @@ public sealed class CatalogSeedTests
                 Assert.Equal(expected.ToArray(), await File.ReadAllBytesAsync(file));
             }
             var list = await (await guest.GetAsync("/api/products?pageSize=100")).Json();
-            Assert.Equal(55, list.GetProperty("total").GetInt32());
+            Assert.Equal(productCount, list.GetProperty("total").GetInt32());
             foreach (var item in list.GetProperty("items").EnumerateArray())
             {
                 var url = item.GetProperty("imageUrl").GetString();
                 Assert.Equal("/api/files/drugs/" + item.GetProperty("drugId").GetString() + ".png", url);
                 Assert.Equal(200, (int)(await guest.GetAsync(url)).StatusCode);
             }
+            Assert.Contains(list.GetProperty("items").EnumerateArray(),
+                x => !x.GetProperty("inStock").GetBoolean());
         }
         finally
         {
@@ -144,7 +147,7 @@ public sealed class CatalogSeedTests
     }
 
     [Fact]
-    public async Task ExistingDatabase_ImportOnlyAddsMissingDrugsAndImages_ThenIsIdempotent()
+    public async Task ExistingDatabase_ImportOnlyAddsMissingDrugsBatchesAndImages_ThenIsIdempotent()
     {
         var path = Path.Combine(Path.GetTempPath(), "pharmacy-catalog-existing-" + Guid.NewGuid() + ".db");
         try
@@ -153,47 +156,48 @@ public sealed class CatalogSeedTests
             await factory.WithDb(async db =>
             {
                 await PersistenceFixture.AddBusinessData(db);
-                var ids = Catalog().GetProperty("drugs").EnumerateArray()
-                    .Select(x => x.GetProperty("id").GetString()!).Where(x => x != "IBU400").ToList();
-                db.DrugBatches.RemoveRange(await db.DrugBatches.Where(x => ids.Contains(x.DrugId)).ToListAsync());
-                db.Drugs.RemoveRange(await db.Drugs.Where(x => ids.Contains(x.DrugId)).ToListAsync());
-                var existing = await db.Drugs.SingleAsync(x => x.DrugId == "IBU400");
-                existing.Update("Thuốc người dùng đã sửa", "Hộp", 9999, 77, true, false, false, "Mô tả riêng");
-                existing.SetImage("drugs/custom.png");
-                db.Entry(await db.Drugs.SingleAsync(x => x.DrugId == "PARA500")).Property(x => x.ImagePath).CurrentValue = null;
+                var drug = new Drug("DECUMAR", "Thuốc người dùng đã sửa", "Hộp", 9999, 77,
+                    true, false, false, "Mô tả riêng");
+                db.Drugs.Add(drug);
                 await db.SaveChangesAsync();
             });
-            var customFile = Path.Combine(path + "-storage", "drugs", "PARA500.png");
-            await File.AppendAllTextAsync(customFile, "PRESERVE CUSTOM IMAGE");
+            var customFile = Path.Combine(path + "-storage", "drugs", "DECUMAR.png");
+            await File.WriteAllBytesAsync(customFile, TestImage.Bytes);
             var image = await File.ReadAllBytesAsync(customFile);
-            var before = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(await factory.WithDb(PersistenceFixture.Snapshot))!;
-            var existingBatchRows = before["DrugBatches"].ToList();
-            var result = await factory.WithDb(db => new CatalogSeeder(db, new TestClock(), new(path + "-storage")).SeedAsync());
-            Assert.Equal(new CatalogSeedResult(43, 100, 44, 0), result);
-            var after = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(await factory.WithDb(PersistenceFixture.Snapshot))!;
+            var before = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(
+                await factory.WithDb(PersistenceFixture.Snapshot))!;
+            var result = await factory.WithDb(db => new CatalogSeeder(db, new TestClock(),
+                new(path + "-storage")).SeedAsync());
+            var products = Catalog().GetProperty("drugs");
+            var productCount = products.GetArrayLength();
+            Assert.Equal(new CatalogSeedResult(productCount - 1, ExpectedBatchCount(products),
+                productCount, productCount - 1), result);
+            var after = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(
+                await factory.WithDb(PersistenceFixture.Snapshot))!;
             foreach (var table in before.Keys.Where(x => x is not ("Drugs" or "DrugBatches")))
             {
                 Assert.Equal(before[table], after[table]);
             }
-            Assert.All(existingBatchRows, row => Assert.Contains(row, after["DrugBatches"]));
+            Assert.All(before["DrugBatches"], row => Assert.Contains(row, after["DrugBatches"]));
+            Assert.All(before["Drugs"].Where(row => !row.Contains("DECUMAR")),
+                row => Assert.Contains(row, after["Drugs"]));
             await factory.WithDb(async db =>
             {
-                var existing = await db.Drugs.SingleAsync(x => x.DrugId == "IBU400");
-                Assert.Equal("Thuốc người dùng đã sửa", existing.Name);
-                Assert.Equal("Hộp", existing.SaleUnit);
-                Assert.Equal(9999, existing.UnitPrice);
-                Assert.Equal(77, existing.LowStockThreshold);
-                Assert.True(existing.RequiresPrescription);
-                Assert.False(existing.IsForSale);
-                Assert.Equal("Mô tả riêng", existing.Description);
-                Assert.Equal("drugs/custom.png", existing.ImagePath);
-                Assert.Equal("drugs/PARA500.png", (await db.Drugs.SingleAsync(x => x.DrugId == "PARA500")).ImagePath);
+                var drug = await db.Drugs.SingleAsync(x => x.DrugId == "DECUMAR");
+                Assert.Equal("Thuốc người dùng đã sửa", drug.Name);
+                Assert.Equal("Hộp", drug.SaleUnit);
+                Assert.Equal(9999, drug.UnitPrice);
+                Assert.Equal(77, drug.LowStockThreshold);
+                Assert.True(drug.RequiresPrescription);
+                Assert.False(drug.IsForSale);
+                Assert.Equal("Mô tả riêng", drug.Description);
+                Assert.Equal("drugs/DECUMAR.png", drug.ImagePath);
             });
             Assert.Equal(image, await File.ReadAllBytesAsync(customFile));
             var snapshot = await factory.WithDb(PersistenceFixture.Snapshot);
-            var repeated = await factory.WithDb(db => new CatalogSeeder(db,
-                new TestClock { Today = new(2027, 1, 1) }, new(path + "-storage")).SeedAsync());
-            Assert.Equal(new CatalogSeedResult(0, 0, 0, 0), repeated);
+            Assert.Equal(new CatalogSeedResult(0, 0, 0, 0), await factory.WithDb(db =>
+                new CatalogSeeder(db, new TestClock { Today = new(2027, 1, 1) },
+                    new(path + "-storage")).SeedAsync()));
             Assert.Equal(snapshot, await factory.WithDb(PersistenceFixture.Snapshot));
             Assert.Equal(image, await File.ReadAllBytesAsync(customFile));
         }
@@ -202,18 +206,17 @@ public sealed class CatalogSeedTests
             ApiFactory.Cleanup(path);
         }
     }
-
     [Fact]
     public async Task Command_ImportsAndExitsWithoutServer_SecondRunReportsZero()
     {
         var path = Path.Combine(Path.GetTempPath(), "pharmacy-catalog-command-" + Guid.NewGuid() + ".db");
         try
         {
-            using var factory = new ApiFactory(path);
+            using var factory = new ApiFactory(path, productionSeed: true);
             await factory.WithDb(async db =>
             {
-                db.DrugBatches.RemoveRange(await db.DrugBatches.Where(x => x.DrugId == "IBU400").ToListAsync());
-                db.Drugs.Remove(await db.Drugs.SingleAsync(x => x.DrugId == "IBU400"));
+                db.DrugBatches.RemoveRange(await db.DrugBatches.Where(x => x.DrugId == "DECUMAR").ToListAsync());
+                db.Drugs.Remove(await db.Drugs.SingleAsync(x => x.DrugId == "DECUMAR"));
                 await db.SaveChangesAsync();
             });
             async Task<string> Run()
@@ -270,26 +273,30 @@ public sealed class CatalogSeedTests
     }
 
     [Fact]
-    public async Task FreshSeeds_AreDeterministic_ReportsIncludeNewLowStockAndExpiringDrugs()
+    public async Task FreshSeeds_AreDeterministic_ReportsIncludeLowStockAndExpiringProducts()
     {
         var firstPath = Path.Combine(Path.GetTempPath(), "pharmacy-catalog-first-" + Guid.NewGuid() + ".db");
         var secondPath = Path.Combine(Path.GetTempPath(), "pharmacy-catalog-second-" + Guid.NewGuid() + ".db");
         try
         {
-            using var first = new ApiFactory(firstPath);
-            using var second = new ApiFactory(secondPath);
+            using var first = new ApiFactory(firstPath, productionSeed: true);
+            using var second = new ApiFactory(secondPath, productionSeed: true);
             async Task<string> Snapshot(ApiFactory factory)
                 => await factory.WithDb(async db => JsonSerializer.Serialize(
                     (await db.DrugBatches.AsNoTracking().ToListAsync()).OrderBy(x => x.BatchId)));
             Assert.Equal(await Snapshot(first), await Snapshot(second));
             using var staff = first.Client();
             Assert.Equal(200, (int)(await staff.Login("staff", "Staff@12345")).StatusCode);
-            var ids = Catalog().GetProperty("drugs").EnumerateArray()
-                .Select(x => x.GetProperty("id").GetString()!).ToHashSet();
             var low = await (await staff.GetAsync("/api/reports/low-stock")).Json();
             var expiring = await (await staff.GetAsync("/api/reports/expiring?days=30")).Json();
-            Assert.Equal(4, low.EnumerateArray().Count(x => ids.Contains(x.GetProperty("drugId").GetString()!)));
-            Assert.Equal(6, expiring.EnumerateArray().Count(x => ids.Contains(x.GetProperty("drugId").GetString()!)));
+            Assert.Equal(3, low.GetArrayLength());
+            var today = new TestClock().Today;
+            var expectedBatchIds = await first.WithDb(db => db.DrugBatches
+                .Where(x => x.Quantity > 0 && x.ExpiryDate > today && x.ExpiryDate <= today.AddDays(30))
+                .Select(x => x.BatchId).ToListAsync());
+            Assert.NotEmpty(expectedBatchIds);
+            Assert.Equal(expectedBatchIds.Order().ToArray(), expiring.EnumerateArray()
+                .Select(x => x.GetProperty("batchId").GetString()).Order().ToArray());
         }
         finally
         {
