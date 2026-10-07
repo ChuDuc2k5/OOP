@@ -321,7 +321,7 @@ public sealed class CheckoutTests : IDisposable
             accountNumber = "11111",
             accountName = "TEN KIEM THU"
         }));
-        using var stream = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.drugs.PARA500.png")!;
+        using var stream = TestImage.Open();
         using var form = new MultipartFormDataContent();
         var file = new StreamContent(stream);
         file.Headers.ContentType = new("image/png");

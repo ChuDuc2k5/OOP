@@ -47,7 +47,7 @@ public sealed class CatalogTests : IDisposable
     {
         using var client = factory.Client();
         var json = await (await client.GetAsync("/api/products")).Json();
-        Assert.Equal(55, json.GetProperty("total").GetInt32());
+        Assert.Equal(11, json.GetProperty("total").GetInt32());
         foreach (var product in json.GetProperty("items").EnumerateArray())
         {
             Assert.False(product.TryGetProperty("unitPrice", out _));
@@ -165,7 +165,7 @@ public sealed class CatalogTests : IDisposable
     public async Task TC11_DrugImage_UploadsAndServesPublicly_RejectsInvalidFiles()
     {
         using var admin = await Admin();
-        await using var source = typeof(Pharmacy.Core.Data.DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.drugs.PARA500.png")!;
+        await using var source = TestImage.Open();
         using var buffer = new MemoryStream();
         await source.CopyToAsync(buffer);
         var bytes = buffer.ToArray();

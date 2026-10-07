@@ -115,7 +115,7 @@ public sealed class PersistenceTests
                 await restarted.WithDb(async db =>
                 {
                     Assert.Equal(5, await db.UserAccounts.CountAsync());
-                    Assert.Equal(56, await db.Drugs.CountAsync());
+                    Assert.Equal(12, await db.Drugs.CountAsync());
                     Assert.Equal(2, await db.Orders.CountAsync());
                     Assert.Equal(2, await db.Payments.CountAsync());
                     Assert.Single(await db.Invoices.ToListAsync());
@@ -167,7 +167,7 @@ public sealed class PersistenceTests
             {
                 var drugs = await db.Drugs.Include(x => x.Batches).ToListAsync();
                 var d = new TestClock().Today;
-                Assert.Equal(56, drugs.Count);
+                Assert.Equal(12, drugs.Count);
                 Assert.Contains(drugs, x => x.IsControlled && x.RequiresPrescription);
                 Assert.Contains(drugs, x => !x.IsForSale);
                 Assert.Contains(drugs, x => x.IsForSale && !x.RequiresPrescription && x.GetAvailableQuantity(d) == 0);
