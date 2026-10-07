@@ -142,10 +142,17 @@ Fixture hồi quy TestCatalogSeeder được ApiFactory gọi sau migrate thông
 
 | Test bổ sung/cập nhật | Kiểm chứng | Kết quả lượt M13 |
 |---|---|---|
-| EmptySeed_Has20RealProductsImagesReportingStockAndPrescriptions | 20 sản phẩm/20 ảnh đúng catalog, 47 lô, ATILENE/PRUZENA cần đơn, tồn thấp/0/gần hết hạn/hết hạn, ba đơn thuốc, không PaymentSetting, imageUrl | Chưa chạy: Windows chặn discovery |
+| EmptySeed_MatchesCatalogProductsImagesReportingStockAndPrescriptions | 20 sản phẩm/20 ảnh đúng catalog, 47 lô, ATILENE/PRUZENA cần đơn, tồn thấp/0/gần hết hạn/hết hạn, ba đơn thuốc, không PaymentSetting, imageUrl | Chưa chạy: Windows chặn discovery |
 | ExistingDatabase_ImportOnlyAddsMissingDrugsBatchesAndImages_ThenIsIdempotent | Chỉ bổ sung thuốc/lô/ảnh thiếu; thuộc tính, lô/file cũ và dữ liệu nghiệp vụ giữ nguyên; chạy lại ngày khác không nhân đôi | Chưa chạy: Windows chặn discovery |
 | Command_ImportsAndExitsWithoutServer_SecondRunReportsZero | CLI nạp thuốc bị thiếu rồi thoát, lần hai trả 0 | Chưa chạy: Windows chặn discovery |
 | FreshSeeds_AreDeterministic_ReportsIncludeLowStockAndExpiringProducts | Hai DB có lô giống nhau, báo cáo 3 dòng tồn thấp và 4 lô gần hết hạn | Chưa chạy: Windows chặn discovery |
 
 Smoke HTTP thủ công trên SQLite/storage/key tạm riêng: health, 20 sản phẩm đang bán (1 inStock=false), 20 imageUrl và GET ảnh 200, login staff/chuduc, inventory 20 dòng, low-stock 3 dòng (2 tồn dương ≤ ngưỡng + 1 hết hàng), expiring 4 lô, đơn thuốc Approved kê PRUZENA ×3 / ATILENE ×2, đơn hết hiệu lực và PendingReview: **Pass**. CLI --seed-catalog trên DB đã seed trả 0 thuốc/lô/ảnh; xóa riêng file ảnh bản sao DECUMAR trong storage tạm rồi chạy lệnh phục hồi đúng 1 file, lần tiếp theo trả toàn bộ 0: **Pass**. API đã tắt sau smoke. Không dùng DB vận hành.
 Smoke bổ sung add-only: trên DB tạm đã có dữ liệu, sửa thuộc tính DECUMAR, giữ một thuốc ngoài catalog (PARA500), bỏ riêng một lô DECUMAR và sản phẩm REDUZE. --seed-catalog chỉ thêm 1 thuốc/3 lô/1 ảnh; thuộc tính đã sửa, thuốc ngoài catalog, tài khoản và toàn bộ đơn thuốc giữ nguyên. Lần tiếp theo trả toàn bộ 0. Kết quả: Pass.
+
+
+## Cập nhật catalog 33 sản phẩm
+
+Thời điểm chạy: 2026-10-07 09:23:25 +07:00. dotnet build Pharmacy.sln: **0 warning/0 error**. dotnet test Pharmacy.sln: **203 Pass / 0 Fail / 2 Skip / 205 trường hợp**, thời lượng 56 giây. Skip PostgreSQL vì chưa có PHARMACY_TEST_POSTGRES và performance opt-in chưa bật. Windows không chặn assembly trong lượt này.
+
+CatalogSeedTests đối chiếu số sản phẩm/ảnh và danh sách thuốc cần đơn trực tiếp với catalog, tính số lô theo quy tắc 2–3/sản phẩm; báo cáo sắp hết hạn so sánh BatchId với các lô DB có Quantity > 0 và D < ExpiryDate ≤ D+30. Seed hiện tại: 33 sản phẩm/33 ảnh, 77 lô, 10 thuốc cần đơn; 2 sản phẩm tồn dương ≤ ngưỡng, 1 hết hàng, 8 lô gần hết hạn, đúng 1 lô hết hạn D−5. Tất cả CatalogSeedTests và các TC hồi quy đều Pass, gồm seed tất định, ảnh công khai, chỉ bổ sung và CLI idempotent. Không đổi logic seeder hoặc migration.
