@@ -168,6 +168,12 @@ Kiểm tra 1366 px & 390 px (bảng cuộn ngang, QR & số tiền không bị c
 
   - Kiểm chứng cuối M10: `npm run lint` sạch; `npm run build --workspace frontend` pass; `npm run test:e2e --workspace frontend` 28/28 ca pass (3,6 phút), backend SQLite thật, mock tắt, cổng riêng 3017/5017. Đủ 49 route ở 1366/390 px. Đã sửa ca TC32/TC33: giữ route interceptor ổn định, chỉ trả lỗi cho POST đầu để không làm treo chuyển trang khi gỡ interceptor một lần; cấu hình QR độc lập. Đã xem ảnh ready/giao hàng, thêm hai ảnh và cập nhật hai ảnh yêu cầu (tổng 105 PNG). UTF-8/phạm vi sửa/diff sạch; server thử nghiệm đã dừng, không commit hoặc đổi nhánh.
 
+- **M11 — `fe/m11-real-catalog`**:
+  - E2e và smoke script dùng mã sản xuất: OTC TATANOL/PANADOLEX/KREMILS, kê đơn PRUZENA/ATILENE, hết hàng GIAOCOLAM; cập nhật tên, đơn vị Hộp và giá theo catalog. Ngày nghiệp vụ/ngày đơn thuốc lấy ngày hiện tại tại Việt Nam. Ca danh mục đối chiếu 33 mã seed, không tính thuốc do ca tạo mới thêm vào; kiểm tra DECUMAR/BLACKMEN tồn thấp, DUONGHUYET có lô hết hạn và báo cáo sắp hết hạn 30 ngày. Chưa có thuốc kiểm soát trong seed sản xuất nên không chạy ca giao diện OTC chặn thuốc kiểm soát; backend vẫn bao phủ với fixture riêng.
+  - Mock dành cho phát triển dùng chín sản phẩm thật, ảnh cục bộ, tồn khả dụng theo seed; đơn thuốc Approved kê PRUZENA ×3 và ATILENE ×2. Đổi phiên bản khóa lưu trữ để dữ liệu mã cũ không còn được đọc. Giá/tên/đơn vị dòng đơn và hóa đơn mock đồng bộ catalog.
+  - Ảnh trên thẻ, chi tiết và giỏ dùng object-contain nền trắng; bỏ phóng ảnh khi hover để tránh cắt. E2e kiểm tra ảnh tải được/giữ tỷ lệ và layout 1366/390 px; thêm 18 ảnh danh mục/chi tiết/giỏ/checkout/kho/báo cáo, chụp lại các luồng bị ảnh hưởng và cập nhật README bằng chứng.
+  - Kiểm chứng cuối M11: lint sạch, build pass, e2e 30/30 ca pass (4,3 phút) ở 1366/390 px với backend SQLite thật, mock tắt, cổng riêng 3017/5017. Đối chiếu 49 route mỗi viewport; đã xem ảnh desktop/mobile, tổng 123 PNG. Server kiểm thử đã dừng; không commit hoặc đổi nhánh.
+
 ## Câu hỏi cho PO
 - Backend M4 (`/api/orders/{id}/payment` và `/api/invoices`) hiện chưa có endpoint trên server thật: frontend đã tích hợp sẵn fallback sang mock data chuẩn hình dạng contract v1. Khi backend M4 sẵn sàng, frontend sẽ tự động gọi backend thật mà không cần thay đổi code.
 

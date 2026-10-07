@@ -38,7 +38,7 @@ launch('dotnet', [join(repo, 'backend/Pharmacy.Api/bin/Debug/net10.0/Pharmacy.Ap
   ASPNETCORE_ENVIRONMENT: 'Development',
   Database__Provider: 'Sqlite', ConnectionStrings__Default: `Data Source=${join(folder, 'pharmacy.db')}`,
   Storage__Root: join(folder, 'storage'), DataProtection__KeyPath: join(folder, 'keys'),
-  BusinessDate__Override: '2026-10-06',
+  BusinessDate__Override: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()),
 }, join(repo, 'backend/Pharmacy.Api'));
 launch(process.execPath, [require.resolve('next/dist/bin/next'), 'start', '-p', '3017'], {
   BACKEND_URL: 'http://localhost:5017', NEXT_PUBLIC_USE_MOCK: 'false', NEXT_TELEMETRY_DISABLED: '1',

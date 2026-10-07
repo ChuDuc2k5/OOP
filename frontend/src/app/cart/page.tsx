@@ -182,7 +182,7 @@ export default function CartPage() {
                     >
                       {/* Item Info */}
                       <div className="flex items-start space-x-3 flex-1 min-w-0">
-                        <div className="w-14 h-14 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                        <div className="w-14 h-14 bg-white rounded-xl border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
                           {item.imageUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
