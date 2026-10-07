@@ -89,6 +89,7 @@ builder.Services.AddScoped<SaleService>();
 builder.Services.AddScoped<ManualPaymentService>();
 builder.Services.AddScoped<InvoiceService>();
 builder.Services.AddScoped<DbSeeder>();
+builder.Services.AddScoped<IDbSeeder>(services => services.GetRequiredService<DbSeeder>());
 builder.Services.AddScoped<CatalogSeeder>();
 var app = builder.Build();
 if (seedCatalog)
@@ -112,7 +113,7 @@ if (seedCatalog)
 using (var scope = app.Services.CreateScope())
 {
     await scope.ServiceProvider.GetRequiredService<PharmacyDbContext>().Database.MigrateAsync();
-    await scope.ServiceProvider.GetRequiredService<DbSeeder>().SeedAsync();
+    await scope.ServiceProvider.GetRequiredService<IDbSeeder>().SeedAsync();
 }
 app.UseMiddleware<ApiExceptionMiddleware>();
 app.UseAuthentication();
