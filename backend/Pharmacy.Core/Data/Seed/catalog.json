@@ -220,6 +220,149 @@
       "controlled": false,
       "group": "other",
       "description": "Điều trị buồn nôn và nôn khi mang thai. Thuốc kê đơn."
+    },
+    {
+      "id": "TRAVICOL",
+      "name": "Travicol Extra Paracetamol 500mg + Cafein 65mg",
+      "unit": "Hộp",
+      "price": 65000,
+      "threshold": 10,
+      "rx": false,
+      "controlled": false,
+      "group": "pain",
+      "description": "Giảm đau, hạ sốt; không gây buồn ngủ. Hộp 10 vỉ x 12 viên."
+    },
+    {
+      "id": "DOROTYL",
+      "name": "Dorotyl Mephenesin 500mg",
+      "unit": "Hộp",
+      "price": 45000,
+      "threshold": 5,
+      "rx": true,
+      "controlled": false,
+      "group": "pain",
+      "description": "Thuốc giãn cơ, giảm co cứng cơ. Thuốc kê đơn."
+    },
+    {
+      "id": "MAICA",
+      "name": "Thuốc bôi da Maica 8ml",
+      "unit": "Lọ",
+      "price": 15000,
+      "threshold": 10,
+      "rx": false,
+      "controlled": false,
+      "group": "skin",
+      "description": "Dung dịch bôi ngoài da sát khuẩn nhẹ (acid boric, xanh methylen)."
+    },
+    {
+      "id": "BETADINEG",
+      "name": "Betadine Gargle & Mouthwash 125ml",
+      "unit": "Chai",
+      "price": 55000,
+      "threshold": 5,
+      "rx": false,
+      "controlled": false,
+      "group": "other",
+      "description": "Dung dịch súc miệng họng povidon-iod 1%, sát khuẩn khoang miệng."
+    },
+    {
+      "id": "ROHTOG40",
+      "name": "Nhỏ mắt Rohto Gold 40 Mild",
+      "unit": "Lọ",
+      "price": 280000,
+      "threshold": 3,
+      "rx": false,
+      "controlled": false,
+      "group": "eyenose",
+      "description": "Thuốc nhỏ mắt giảm mỏi mắt, khô mắt (hàng Nhật)."
+    },
+    {
+      "id": "CANVEY",
+      "name": "Canvey viên đặt âm đạo (2 vỉ x 5 viên)",
+      "unit": "Hộp",
+      "price": 120000,
+      "threshold": 5,
+      "rx": true,
+      "controlled": false,
+      "group": "other",
+      "description": "Metronidazol, cloramphenicol, nystatin, dexamethason; điều trị viêm âm đạo. Thuốc kê đơn."
+    },
+    {
+      "id": "ATENOLOL50",
+      "name": "Atenolol STADA 50mg (10 vỉ x 10 viên)",
+      "unit": "Hộp",
+      "price": 70000,
+      "threshold": 5,
+      "rx": true,
+      "controlled": false,
+      "group": "chronic",
+      "description": "Chẹn beta điều trị tăng huyết áp, đau thắt ngực. Thuốc kê đơn."
+    },
+    {
+      "id": "NITRALMYL",
+      "name": "Nitralmyl Nitroglycerin 2,6mg (30 viên nang)",
+      "unit": "Hộp",
+      "price": 90000,
+      "threshold": 5,
+      "rx": true,
+      "controlled": false,
+      "group": "chronic",
+      "description": "Phòng cơn đau thắt ngực. Thuốc kê đơn."
+    },
+    {
+      "id": "TACROLIMUS",
+      "name": "Thuốc mỡ Tacrolimus 0,1% 10g",
+      "unit": "Tuýp",
+      "price": 250000,
+      "threshold": 3,
+      "rx": true,
+      "controlled": false,
+      "group": "skin",
+      "description": "Điều trị viêm da cơ địa. Thuốc kê đơn."
+    },
+    {
+      "id": "NOSTRAVIN",
+      "name": "Nhỏ mũi Nostravin Xylometazolin 0,05% 8ml",
+      "unit": "Lọ",
+      "price": 15000,
+      "threshold": 10,
+      "rx": false,
+      "controlled": false,
+      "group": "eyenose",
+      "description": "Giảm nghẹt mũi, sổ mũi do cảm lạnh, viêm mũi."
+    },
+    {
+      "id": "MEYERTHITIC",
+      "name": "Meyerthitic 300 Acid alpha lipoic 300mg",
+      "unit": "Hộp",
+      "price": 300000,
+      "threshold": 3,
+      "rx": true,
+      "controlled": false,
+      "group": "chronic",
+      "description": "Hỗ trợ điều trị biến chứng thần kinh do đái tháo đường. Thuốc kê đơn."
+    },
+    {
+      "id": "FUROSEMID40",
+      "name": "Furosemid 40mg Traphaco",
+      "unit": "Vỉ",
+      "price": 5000,
+      "threshold": 10,
+      "rx": true,
+      "controlled": false,
+      "group": "chronic",
+      "description": "Thuốc lợi tiểu điều trị phù, tăng huyết áp. Thuốc kê đơn."
+    },
+    {
+      "id": "LEVETI500",
+      "name": "Levetiracetam ER 500mg (lọ)",
+      "unit": "Lọ",
+      "price": 350000,
+      "threshold": 3,
+      "rx": true,
+      "controlled": false,
+      "group": "chronic",
+      "description": "Thuốc chống động kinh giải phóng kéo dài. Thuốc kê đơn."
     }
   ]
 }

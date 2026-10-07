@@ -53,24 +53,28 @@ public sealed class CatalogSeedTests
         return JsonSerializer.Deserialize<JsonElement>(stream);
     }
 
+    private static int ExpectedBatchCount(JsonElement products)
+        => products.GetArrayLength() * 2 + (products.GetArrayLength() + 2) / 3;
+
     [Fact]
-    public async Task EmptySeed_Has20RealProductsImagesReportingStockAndPrescriptions()
+    public async Task EmptySeed_MatchesCatalogProductsImagesReportingStockAndPrescriptions()
     {
         var path = Path.Combine(Path.GetTempPath(), "pharmacy-catalog-empty-" + Guid.NewGuid() + ".db");
         try
         {
             using var factory = new ApiFactory(path, productionSeed: true);
             using var guest = factory.Client();
-            var catalog = Catalog();
-            Assert.Equal(20, typeof(DbSeeder).Assembly.GetManifestResourceNames()
+            var products = Catalog().GetProperty("drugs");
+            var productCount = products.GetArrayLength();
+            Assert.Equal(productCount, typeof(DbSeeder).Assembly.GetManifestResourceNames()
                 .Count(x => x.StartsWith("Pharmacy.Core.Data.Assets.drugs.") && x.EndsWith(".png")));
             await factory.WithDb(async db =>
             {
                 var drugs = await db.Drugs.Include(x => x.Batches).ToListAsync();
                 var today = new TestClock().Today;
-                Assert.Equal(20, drugs.Count);
-                Assert.Equal(47, drugs.Sum(x => x.Batches.Count));
-                foreach (var entry in catalog.GetProperty("drugs").EnumerateArray())
+                Assert.Equal(productCount, drugs.Count);
+                Assert.Equal(ExpectedBatchCount(products), drugs.Sum(x => x.Batches.Count));
+                foreach (var entry in products.EnumerateArray())
                 {
                     var drug = drugs.Single(x => x.DrugId == entry.GetProperty("id").GetString());
                     Assert.Equal(entry.GetProperty("name").GetString(), drug.Name);
@@ -92,7 +96,8 @@ public sealed class CatalogSeedTests
                         Assert.Matches("^L26[0-9]{3}$", batch.BatchNumber);
                     });
                 }
-                Assert.Equal(new[] { "ATILENE", "PRUZENA" },
+                Assert.Equal(products.EnumerateArray().Where(x => x.GetProperty("rx").GetBoolean())
+                    .Select(x => x.GetProperty("id").GetString()).Order().ToArray(),
                     drugs.Where(x => x.RequiresPrescription).Select(x => x.DrugId).Order().ToArray());
                 Assert.Equal(2, drugs.Count(x => x.GetAvailableQuantity(today) > 0
                     && x.GetAvailableQuantity(today) <= x.LowStockThreshold));
@@ -115,7 +120,7 @@ public sealed class CatalogSeedTests
                 Assert.Contains(prescriptions, x => x.Status == PrescriptionStatus.PendingReview);
             });
             var files = Directory.GetFiles(Path.Combine(path + "-storage", "drugs"), "*.png");
-            Assert.Equal(20, files.Length);
+            Assert.Equal(productCount, files.Length);
             foreach (var file in files)
             {
                 using var source = typeof(DbSeeder).Assembly.GetManifestResourceStream(
@@ -125,7 +130,7 @@ public sealed class CatalogSeedTests
                 Assert.Equal(expected.ToArray(), await File.ReadAllBytesAsync(file));
             }
             var list = await (await guest.GetAsync("/api/products?pageSize=100")).Json();
-            Assert.Equal(20, list.GetProperty("total").GetInt32());
+            Assert.Equal(productCount, list.GetProperty("total").GetInt32());
             foreach (var item in list.GetProperty("items").EnumerateArray())
             {
                 var url = item.GetProperty("imageUrl").GetString();
@@ -163,7 +168,10 @@ public sealed class CatalogSeedTests
                 await factory.WithDb(PersistenceFixture.Snapshot))!;
             var result = await factory.WithDb(db => new CatalogSeeder(db, new TestClock(),
                 new(path + "-storage")).SeedAsync());
-            Assert.Equal(new CatalogSeedResult(19, 47, 20, 19), result);
+            var products = Catalog().GetProperty("drugs");
+            var productCount = products.GetArrayLength();
+            Assert.Equal(new CatalogSeedResult(productCount - 1, ExpectedBatchCount(products),
+                productCount, productCount - 1), result);
             var after = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(
                 await factory.WithDb(PersistenceFixture.Snapshot))!;
             foreach (var table in before.Keys.Where(x => x is not ("Drugs" or "DrugBatches")))
@@ -282,7 +290,13 @@ public sealed class CatalogSeedTests
             var low = await (await staff.GetAsync("/api/reports/low-stock")).Json();
             var expiring = await (await staff.GetAsync("/api/reports/expiring?days=30")).Json();
             Assert.Equal(3, low.GetArrayLength());
-            Assert.Equal(4, expiring.GetArrayLength());
+            var today = new TestClock().Today;
+            var expectedBatchIds = await first.WithDb(db => db.DrugBatches
+                .Where(x => x.Quantity > 0 && x.ExpiryDate > today && x.ExpiryDate <= today.AddDays(30))
+                .Select(x => x.BatchId).ToListAsync());
+            Assert.NotEmpty(expectedBatchIds);
+            Assert.Equal(expectedBatchIds.Order().ToArray(), expiring.EnumerateArray()
+                .Select(x => x.GetProperty("batchId").GetString()).Order().ToArray());
         }
         finally
         {

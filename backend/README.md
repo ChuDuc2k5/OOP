@@ -42,7 +42,7 @@ Tài khoản khởi tạo:
 | chuduc | User@12345 | User |
 | nguyenvana | User@12345 | User |
 
-Seed DB trống chỉ có 20 sản phẩm thật và 20 ảnh do người dùng cung cấp; tất cả đang bán, ATILENE/PRUZENA cần đơn. Có 47 lô tất định: 2 sản phẩm tồn thấp, 1 hết hàng, 4 lô sắp hết hạn trong 30 ngày và 1 lô hết hạn D−5. Ba đơn thuốc của chuduc gồm một đơn Approved còn hiệu lực kê PRUZENA ×3 và ATILENE ×2, một đơn hết hiệu lực và một PendingReview. Không seed cấu hình thanh toán hoặc ảnh QR. Admin cấu hình qua PUT /api/admin/payment-settings và POST /api/admin/payment-settings/qr-image (PNG/JPG ≤5 MB); trước khi cấu hình đầy đủ, mở QR trả 409 PAYMENT_NOT_CONFIGURED.
+Seed DB trống có toàn bộ sản phẩm trong catalog (hiện tại 33 sản phẩm/33 ảnh do người dùng cung cấp); tất cả đang bán, cờ cần đơn theo catalog (hiện tại 10 thuốc). Có 77 lô tất định: 2 sản phẩm tồn thấp, 1 hết hàng, 8 lô sắp hết hạn trong 30 ngày và 1 lô hết hạn D−5. Ba đơn thuốc của chuduc gồm một đơn Approved còn hiệu lực kê PRUZENA ×3 và ATILENE ×2, một đơn hết hiệu lực và một PendingReview. Không seed cấu hình thanh toán hoặc ảnh QR. Admin cấu hình qua PUT /api/admin/payment-settings và POST /api/admin/payment-settings/qr-image (PNG/JPG ≤5 MB); trước khi cấu hình đầy đủ, mở QR trả 409 PAYMENT_NOT_CONFIGURED.
 
 Luồng gọi API:
 
@@ -297,9 +297,9 @@ Với `dotnet run`, thứ tự cấu hình ở mục appsettings đúng như mô
 
 ## M13: danh mục sản phẩm và ảnh thật
 
-Pharmacy.Core/Data/Seed/catalog.json và Data/Assets/drugs/*.png được nhúng vào assembly bằng wildcard. DB trống chỉ tạo 20 sản phẩm trong catalog, với đúng tên, đơn vị, giá, ngưỡng, cờ cần đơn/kiểm soát và mô tả; ảnh giữ nguyên nội dung file người dùng cung cấp. Không tạo các thuốc nền cũ.
+Pharmacy.Core/Data/Seed/catalog.json và Data/Assets/drugs/*.png được nhúng vào assembly bằng wildcard. DB trống chỉ tạo sản phẩm trong catalog (hiện tại 33 mục), với đúng tên, đơn vị, giá, ngưỡng, cờ cần đơn/kiểm soát và mô tả; ảnh giữ nguyên nội dung file người dùng cung cấp. Không tạo các thuốc nền cũ.
 
-Mỗi sản phẩm có 2–3 lô, tổng 47 lô, số lô L<yy><nnn>, lượng nhập 20–200 và hạn thông thường D+60..D+540. DECUMAR/BLACKMEN có tồn dương ≤ ngưỡng; GIAOCOLAM vẫn đang bán nhưng tồn khả dụng 0. HEMONK/CEBRATON/SILOXOGENE/REDUZE có lô còn hạn trong 30 ngày; DUONGHUYET có một lô D−5. Lượng còn lại thấp/0 được tạo qua DrugBatch.Deduct, giữ nguyên InitialQuantity. Dữ liệu tất định theo thứ tự catalog và ngày nghiệp vụ.
+Mỗi sản phẩm có 2–3 lô, tổng số lô theo số mục catalog (hiện tại 77), số lô L<yy><nnn>, lượng nhập 20–200 và hạn thông thường D+60..D+540. DECUMAR/BLACKMEN có tồn dương ≤ ngưỡng; GIAOCOLAM vẫn đang bán nhưng tồn khả dụng 0. Các mục ở vị trí 5, 9, 13… trong catalog có lô còn hạn trong 30 ngày (hiện tại 8 lô); DUONGHUYET có một lô D−5. Lượng còn lại thấp/0 được tạo qua DrugBatch.Deduct, giữ nguyên InitialQuantity. Dữ liệu tất định theo thứ tự catalog và ngày nghiệp vụ.
 
 Để **bổ sung** danh mục cho DB hiện có (SQLite hoặc PostgreSQL), cấu hình provider/connection/storage như trên, rồi chạy từ gốc repository:
 
@@ -307,7 +307,7 @@ Mỗi sản phẩm có 2–3 lô, tổng 47 lô, số lô L<yy><nnn>, lượng n
 
 Lệnh migrate bằng provider đã cấu hình, thêm DrugId chưa có, bổ sung lô seed chưa có theo BatchId/số lô và gắn ảnh còn thiếu. Không xóa danh mục cũ của DB đang dùng, không sửa thuộc tính thuốc hay lô đã có, không tạo lại tài khoản/đơn thuốc/đơn hàng/giỏ/thanh toán/hóa đơn. BatchId seed ổn định khi đổi ngày/năm; lô đã tồn tại không được nạp lại. Không đổi ảnh tùy chỉnh đã gắn hoặc ghi đè file PNG có sẵn. Nếu ảnh chuẩn đã gắn nhưng file bị mất, lệnh phục hồi file từ resource.
 
-Ảnh ở Storage:Root/drugs/<drugId>.png (mặc định backend/storage/drugs). Copy qua file tạm rồi đổi tên không ghi đè. Thay đổi DB trong một transaction; file copy có thể còn nếu DB rollback và được tái sử dụng ở lần chạy sau. Lệnh thoát sau khi nạp, không mở web server, in số thuốc/lô/ảnh đã thêm và số file mới. DB trống nạp lần đầu bằng lệnh: 20 thuốc, 47 lô, 20 ảnh/file; chạy lại: 0/0/0/0. Muốn có tài khoản và đơn thuốc khởi tạo, khởi động API bình thường trên DB trống thay vì chạy lệnh nạp trước.
+Ảnh ở Storage:Root/drugs/<drugId>.png (mặc định backend/storage/drugs). Copy qua file tạm rồi đổi tên không ghi đè. Thay đổi DB trong một transaction; file copy có thể còn nếu DB rollback và được tái sử dụng ở lần chạy sau. Lệnh thoát sau khi nạp, không mở web server, in số thuốc/lô/ảnh đã thêm và số file mới. DB trống nạp lần đầu bằng lệnh hiện tại: 33 thuốc, 77 lô, 33 ảnh/file; chạy lại: 0/0/0/0. Muốn có tài khoản và đơn thuốc khởi tạo, khởi động API bình thường trên DB trống thay vì chạy lệnh nạp trước.
 
 Các TC hồi quy dùng TestCatalogSeeder qua ApiFactory sau migrate, với 12 thuốc biên riêng (PARA500, VITC500, AMOX500, DIAZ5, HYDRO1, AMLO5…), lô D−5/D/D+1/D+20/D+30/D+31 và đơn thuốc kiểm thử. Fixture không đọc catalog hoặc ảnh sản xuất; ảnh PNG kiểm thử nằm trong TestImage. PaymentFixture tự cấu hình thanh toán khi TC cần QR.
 
@@ -317,13 +317,15 @@ Các TC hồi quy dùng TestCatalogSeeder qua ApiFactory sau migrate, với 12 t
 
 | Test | Kiểm chứng |
 |---|---|
-| EmptySeed_Has20RealProductsImagesReportingStockAndPrescriptions | Đúng 20 sản phẩm/ảnh và thuộc tính catalog, 47 lô, cờ cần đơn, tồn thấp/0/hết hạn, đơn thuốc và imageUrl công khai |
+| EmptySeed_MatchesCatalogProductsImagesReportingStockAndPrescriptions | Đúng số sản phẩm/ảnh, thuộc tính và cờ cần đơn theo catalog; lô theo quy tắc 2–3/sản phẩm, tồn thấp/0/hết hạn, đơn thuốc và imageUrl công khai |
 | ExistingDatabase_ImportOnlyAddsMissingDrugsBatchesAndImages_ThenIsIdempotent | Thuốc đã sửa/ảnh/file/lô cũ và bảng nghiệp vụ giữ nguyên; chạy lại ngày khác không nhân đôi |
 | Command_ImportsAndExitsWithoutServer_SecondRunReportsZero | Chạy --seed-catalog trong process riêng, thoát 0, không mở server, nạp lại báo 0 |
-| FreshSeeds_AreDeterministic_ReportsIncludeLowStockAndExpiringProducts | Hai DB mới có lô giống nhau; báo cáo 3 dòng tồn thấp (gồm hết hàng), 4 lô gần hết hạn |
+| FreshSeeds_AreDeterministic_ReportsIncludeLowStockAndExpiringProducts | Hai DB mới có lô giống nhau; báo cáo 3 dòng tồn thấp (gồm hết hàng), danh sách lô gần hết hạn đối chiếu trực tiếp DB |
 | TC42_FreshSeed_HasNoPaymentSettings_OpeningQrRequiresAdminConfiguration | Fixture không có cấu hình QR; PAYMENT_NOT_CONFIGURED và DB không đổi |
 
-Kiểm chứng M13 (2026-10-07): build 0 warning/0 error. Smoke HTTP trên SQLite/storage riêng trong temp xác nhận 20 sản phẩm/ảnh, đăng nhập staff/chuduc, inventory, báo cáo 3 dòng tồn thấp/4 lô sắp hết hạn và đơn thuốc PRUZENA ×3 / ATILENE ×2. Lệnh nạp lại trả 0; file ảnh chuẩn bị mất được phục hồi, lần tiếp theo trả 0. Suite xUnit bị Windows Application Control chặn Pharmacy.Tests.dll (0x800711C7) trước discovery; retry cùng binary --no-build --no-restore vẫn bị chặn. PO cần chạy test ở worktree được phép thực thi. PostgreSQL runtime chưa chạy trong lượt này; có nhóm opt-in PHARMACY_TEST_POSTGRES cho DB test riêng.
+Cập nhật catalog 33 sản phẩm (2026-10-07 09:23:25 +07:00): seeder hiện có tự duyệt toàn bộ catalog, tạo 77 lô/33 ảnh, đúng 10 thuốc cần đơn, giữ 2 sản phẩm tồn thấp, 1 hết hàng, 8 lô sắp hết hạn và 1 lô D−5. CatalogSeedTests lấy số sản phẩm/ảnh, tổng lô và danh sách thuốc cần đơn từ catalog; danh sách lô sắp hết hạn đối chiếu DB. Build 0 warning/0 error; toàn bộ test 203 pass/0 fail/2 skip (PostgreSQL và performance opt-in). Windows không chặn assembly trong lượt này.
+
+Kiểm chứng M13 ban đầu với catalog 20 sản phẩm (2026-10-07): build 0 warning/0 error. Smoke HTTP trên SQLite/storage riêng trong temp xác nhận 20 sản phẩm/ảnh, đăng nhập staff/chuduc, inventory, báo cáo 3 dòng tồn thấp/4 lô sắp hết hạn và đơn thuốc PRUZENA ×3 / ATILENE ×2. Lệnh nạp lại trả 0; file ảnh chuẩn bị mất được phục hồi, lần tiếp theo trả 0. Suite xUnit bị Windows Application Control chặn Pharmacy.Tests.dll (0x800711C7) trước discovery; retry cùng binary --no-build --no-restore vẫn bị chặn. PO cần chạy test ở worktree được phép thực thi. PostgreSQL runtime chưa chạy trong lượt này; có nhóm opt-in PHARMACY_TEST_POSTGRES cho DB test riêng.
 
 `POST /api/staff/payments/{id}/review` chấp nhận `{}` để xác nhận đúng số tiền dự kiến tại thời điểm hiện tại. `bankReference` tùy chọn: null/rỗng/trắng lưu null; nếu có mã thì trim và vẫn duy nhất giữa các thanh toán Confirmed. `receivedAmount` thiếu/null mặc định ExpectedAmount, `receivedAt` thiếu/null mặc định IBusinessClock.Now; số tiền thực nhận nhỏ hơn dự kiến vẫn PendingReview với ghi chú thiếu tiền, HTTP 200/approved=false. Duyệt không trừ kho; fulfill vẫn riêng theo D8.
 
