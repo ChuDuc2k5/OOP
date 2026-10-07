@@ -131,7 +131,7 @@ try {
   );
 
   const cart = request(user, "POST", "/cart/items", {
-    drugId: "PARA500",
+    drugId: "TATANOL",
     quantity: 1,
   });
   check(cart.status === 200, "user adds OTC cart item");
@@ -244,7 +244,7 @@ try {
   );
   const saleId = draft.data.saleId;
   const updated = request(staff, "PUT", `/staff/sales/${saleId}`, {
-    items: [{ drugId: "PARA500", quantity: 1 }],
+    items: [{ drugId: "TATANOL", quantity: 1 }],
   });
   check(
     updated.status === 200 &&
@@ -296,7 +296,7 @@ try {
     prescriberName: "Bac si kiem thu",
     issueDate: date,
     validUntil: future,
-    items: [{ drugId: "PARA500", quantity: 2 }],
+    items: [{ drugId: "TATANOL", quantity: 2 }],
   });
   check(
     paper.status === 201 && paper.data.status === "PendingReview",
@@ -308,7 +308,7 @@ try {
     prescriberName: "Bac si kiem thu",
     issueDate: date,
     validUntil: future,
-    items: [{ drugId: "PARA500", quantity: 3 }],
+    items: [{ drugId: "TATANOL", quantity: 3 }],
   });
   check(
     details.status === 200 && details.data.items[0].prescribedQuantity === 3,
