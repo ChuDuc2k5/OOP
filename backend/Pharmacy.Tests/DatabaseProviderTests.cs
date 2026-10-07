@@ -27,7 +27,7 @@ public sealed class DatabaseProviderTests
             await using var legacy = new LegacyOrderContext(new DbContextOptionsBuilder<LegacyOrderContext>()
                 .UseSqlite("Data Source=" + path + ";Pooling=False").Options);
             var clock = new TestClock();
-            await new DbSeeder(legacy, clock, new PasswordHasher<UserAccount>(), new IdGenerator(legacy, clock), new(path + "-storage")).SeedAsync();
+            await new TestCatalogSeeder(legacy, clock, new PasswordHasher<UserAccount>(), new IdGenerator(legacy, clock), new(path + "-storage")).SeedAsync();
             await PersistenceFixture.AddBusinessData(legacy);
             var before = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(await PersistenceFixture.Snapshot(legacy))!;
             var paymentsBefore = JsonSerializer.Serialize(await legacy.Payments.AsNoTracking().OrderBy(x => x.PaymentId).ToListAsync());

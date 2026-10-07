@@ -83,7 +83,7 @@ public sealed class OrderingTests : IDisposable
 
     private static byte[] Png()
     {
-        using var stream = typeof(DbSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data.Assets.drugs.PARA500.png")!;
+        using var stream = TestImage.Open();
         using var bytes = new MemoryStream();
         stream.CopyTo(bytes);
         return bytes.ToArray();

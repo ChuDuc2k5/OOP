@@ -20,47 +20,57 @@ public sealed class CatalogSeeder(
             ?? throw new InvalidOperationException("Catalog is empty.");
         await using var transaction = db.Database.CurrentTransaction is null
             ? await db.Database.BeginTransactionAsync(ct) : null;
-        var ids = catalog.Drugs.Select(x => x.Id).Concat(catalog.LegacyImages.Keys).ToList();
-        var existing = await db.Drugs.Where(x => ids.Contains(x.DrugId)).ToDictionaryAsync(x => x.DrugId, ct);
+        var ids = catalog.Drugs.Select(x => x.Id).ToList();
+        var existing = await db.Drugs.Include(x => x.Batches).Where(x => ids.Contains(x.DrugId)).ToDictionaryAsync(x => x.DrugId, ct);
         var drugsAdded = 0;
         var batchesAdded = 0;
         for (var index = 0; index < catalog.Drugs.Count; index++)
         {
             var entry = catalog.Drugs[index];
-            if (existing.ContainsKey(entry.Id))
+            if (!existing.TryGetValue(entry.Id, out var drug))
             {
-                continue;
+                drug = new Drug(entry.Id, entry.Name, entry.Unit, entry.Price, entry.Threshold,
+                    entry.Rx, entry.Controlled, true, entry.Description);
+                db.Drugs.Add(drug);
+                existing.Add(entry.Id, drug);
+                drugsAdded++;
             }
-            var drug = new Drug(entry.Id, entry.Name, entry.Unit, entry.Price, entry.Threshold,
-                entry.Rx, entry.Controlled, true, entry.Description);
             var count = index % 3 == 0 ? 3 : 2;
             for (var batchIndex = 0; batchIndex < count; batchIndex++)
             {
+                var batchId = $"BR{index:D6}{batchIndex}";
+                var batchNumber = $"L{clock.Today:yy}{batchIndex + 1:D3}";
+                if (drug.Batches.Any(x => x.BatchId == batchId || x.BatchNumber == batchNumber))
+                {
+                    continue;
+                }
                 var days = 60 + (index * 37 + batchIndex * 139) % 481;
-                if (index % 8 == 0 && batchIndex == 0)
+                if (index > 2 && index % 4 == 0 && batchIndex == 0)
                 {
                     days = 7 + index % 23;
                 }
-                var quantity = 20 + (index * 17 + batchIndex * 29) % 181;
-                var batch = new DrugBatch($"BC{index:D6}{batchIndex}", entry.Id,
-                    $"L{clock.Today:yy}{batchIndex + 1:D3}", clock.Today.AddDays(days), quantity);
-                // A few batches have already been used: keep received quantity, show low remaining stock.
-                if (index % 11 == 0)
+                if (index == 3 && batchIndex == 0)
                 {
-                    batch.Deduct(quantity - Math.Max(1, entry.Threshold / count), clock.Today);
+                    days = -5;
+                }
+                var quantity = 20 + (index * 17 + batchIndex * 29) % 181;
+                var batch = new DrugBatch(batchId, entry.Id,
+                    batchNumber, clock.Today.AddDays(days), quantity);
+                // A few batches have already been used: keep received quantity, show low remaining stock.
+                if (index < 3)
+                {
+                    batch.Deduct(quantity - (index == 2 ? 0 : Math.Max(1, entry.Threshold / count)), clock.Today);
                 }
                 drug.AddBatch(batch);
                 batchesAdded++;
             }
-            db.Drugs.Add(drug);
-            existing.Add(entry.Id, drug);
-            drugsAdded++;
         }
         var imagesAttached = 0;
         var filesAdded = 0;
         foreach (var drug in existing.Values)
         {
-            if (!string.IsNullOrWhiteSpace(drug.ImagePath))
+            var imagePath = "drugs/" + drug.DrugId + ".png";
+            if (!string.IsNullOrWhiteSpace(drug.ImagePath) && drug.ImagePath != imagePath)
             {
                 continue;
             }
@@ -75,8 +85,11 @@ public sealed class CatalogSeeder(
                     filesAdded++;
                 }
             }
-            drug.SetImage("drugs/" + fileName);
-            imagesAttached++;
+            if (string.IsNullOrWhiteSpace(drug.ImagePath))
+            {
+                drug.SetImage(imagePath);
+                imagesAttached++;
+            }
         }
         await db.SaveChangesAsync(ct);
         if (transaction is not null)
@@ -116,7 +129,7 @@ public sealed class CatalogSeeder(
         => typeof(CatalogSeeder).Assembly.GetManifestResourceStream("Pharmacy.Core.Data." + name)
             ?? throw new InvalidOperationException("Missing embedded catalog resource: " + name);
 
-    private sealed record Catalog(Dictionary<string, JsonElement> LegacyImages, List<CatalogDrug> Drugs);
+    private sealed record Catalog(List<CatalogDrug> Drugs);
     private sealed record CatalogDrug(string Id, string Name, string Unit, decimal Price,
         int Threshold, bool Rx, bool Controlled, string Description);
 }
