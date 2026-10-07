@@ -61,179 +61,127 @@ export const MOCK_ACCOUNTS: Record<string, { user: Me; password: string }> = {
   },
 };
 
-// ≥ 12 thuốc mẫu theo SRS §8
 export const MOCK_DRUGS: DrugAdmin[] = [
   {
-    drugId: 'PARA500',
-    name: 'Paracetamol 500mg',
-    description: 'Thuốc giảm đau, hạ sốt thông thường dùng trong các trường hợp cảm cúm, nhức đầu.',
-    saleUnit: 'Hộp',
-    unitPrice: 35000,
-    lowStockThreshold: 20,
-    requiresPrescription: false,
-    isControlled: false,
-    isForSale: true,
+    "drugId": "DECUMAR",
+    "name": "Gel ngừa mụn Decumar Advanced 20g",
+    "description": "Gel nano curcumin hỗ trợ giảm mụn, làm dịu và mờ thâm da mụn.",
+    "saleUnit": "Tuýp",
+    "unitPrice": 65000,
+    "lowStockThreshold": 10,
+    "requiresPrescription": false,
+    "isControlled": false,
+    "isForSale": true,
+    "imageUrl": "/products/DECUMAR.png"
   },
   {
-    drugId: 'AMOX500',
-    name: 'Amoxicillin 500mg',
-    description: 'Kháng sinh nhóm penicillin điều trị nhiễm khuẩn hô hấp, tiết niệu, tai mũi họng.',
-    saleUnit: 'Vỉ',
-    unitPrice: 45000,
-    lowStockThreshold: 15,
-    requiresPrescription: true,
-    isControlled: false,
-    isForSale: true,
+    "drugId": "BLACKMEN",
+    "name": "Blackmores Multivitamin for Men (50 viên)",
+    "description": "Thực phẩm bổ sung vitamin và khoáng chất tổng hợp cho nam giới.",
+    "saleUnit": "Lọ",
+    "unitPrice": 450000,
+    "lowStockThreshold": 5,
+    "requiresPrescription": false,
+    "isControlled": false,
+    "isForSale": true,
+    "imageUrl": "/products/BLACKMEN.png"
   },
   {
-    drugId: 'IBUP400',
-    name: 'Ibuprofen 400mg',
-    description: 'Thuốc chống viêm không steroid (NSAID), giảm đau khớp, đau răng, đau bụng kinh.',
-    saleUnit: 'Hộp',
-    unitPrice: 55000,
-    lowStockThreshold: 25,
-    requiresPrescription: false,
-    isControlled: false,
-    isForSale: true,
+    "drugId": "GIAOCOLAM",
+    "name": "Giảo cổ lam Tuệ Bảo (60 viên)",
+    "description": "Thực phẩm bảo vệ sức khỏe hỗ trợ giảm mỡ máu, ổn định huyết áp.",
+    "saleUnit": "Hộp",
+    "unitPrice": 120000,
+    "lowStockThreshold": 5,
+    "requiresPrescription": false,
+    "isControlled": false,
+    "isForSale": true,
+    "imageUrl": "/products/GIAOCOLAM.png"
   },
   {
-    drugId: 'BERB100',
-    name: 'Berberin 100mg',
-    description: 'Thuốc điều trị tiêu chảy, kiết lỵ, viêm ruột từ thảo mộc.',
-    saleUnit: 'Lọ',
-    unitPrice: 28000,
-    lowStockThreshold: 30,
-    requiresPrescription: false,
-    isControlled: false,
-    isForSale: true,
+    "drugId": "DUONGHUYET",
+    "name": "Đường Huyết Trường Sinh (30 viên)",
+    "description": "Thực phẩm bảo vệ sức khỏe hỗ trợ chuyển hóa đường, cải thiện chỉ số đường huyết.",
+    "saleUnit": "Hộp",
+    "unitPrice": 250000,
+    "lowStockThreshold": 5,
+    "requiresPrescription": false,
+    "isControlled": false,
+    "isForSale": true,
+    "imageUrl": "/products/DUONGHUYET.png"
   },
   {
-    drugId: 'MORPH10',
-    name: 'Morphin Sulfat 10mg',
-    description: 'Thuốc giảm đau mạnh thuộc nhóm opioid gây nghiện, kiểm soát đặc biệt.',
-    saleUnit: 'Ống',
-    unitPrice: 120000,
-    lowStockThreshold: 10,
-    requiresPrescription: true,
-    isControlled: true,
-    isForSale: true,
+    "drugId": "PANADOLEX",
+    "name": "Panadol Extra (180 viên)",
+    "description": "Tatanol Acetaminophen 500mg (10 vỉ x 10 viên) và caffeine 65mg, giảm đau và hạ sốt.",
+    "saleUnit": "Hộp",
+    "unitPrice": 290000,
+    "lowStockThreshold": 5,
+    "requiresPrescription": false,
+    "isControlled": false,
+    "isForSale": true,
+    "imageUrl": "/products/PANADOLEX.png"
   },
   {
-    drugId: 'DIAZ005',
-    name: 'Diazepam 5mg',
-    description: 'Thuốc hướng thần an thần, giải lo âu, kiểm soát co giật.',
-    saleUnit: 'Hộp',
-    unitPrice: 90000,
-    lowStockThreshold: 10,
-    requiresPrescription: true,
-    isControlled: true,
-    isForSale: true,
+    "drugId": "KREMILS",
+    "name": "Kremil-S (10 vỉ x 10 viên nhai)",
+    "description": "Giảm đau dạ dày, nóng rát, ợ chua, đầy hơi.",
+    "saleUnit": "Hộp",
+    "unitPrice": 80000,
+    "lowStockThreshold": 10,
+    "requiresPrescription": false,
+    "isControlled": false,
+    "isForSale": true,
+    "imageUrl": "/products/KREMILS.png"
   },
   {
-    drugId: 'PANADOL',
-    name: 'Panadol Extra Đỏ',
-    description: 'Giảm đau hạ sốt có chứa paracetamol và caffeine.',
-    saleUnit: 'Hộp',
-    unitPrice: 42000,
-    lowStockThreshold: 50,
-    requiresPrescription: false,
-    isControlled: false,
-    isForSale: true,
+    "drugId": "TATANOL",
+    "name": "Tatanol Acetaminophen 500mg (10 vỉ x 10 viên)",
+    "description": "Giảm đau, hạ sốt; viên nén dài bao phim.",
+    "saleUnit": "Hộp",
+    "unitPrice": 60000,
+    "lowStockThreshold": 10,
+    "requiresPrescription": false,
+    "isControlled": false,
+    "isForSale": true,
+    "imageUrl": "/products/TATANOL.png"
   },
   {
-    drugId: 'OMEP20',
-    name: 'Omeprazole 20mg',
-    description: 'Thuốc ức chế bơm proton điều trị trào ngược dạ dày, viêm loét dạ dày tá tràng.',
-    saleUnit: 'Hộp',
-    unitPrice: 65000,
-    lowStockThreshold: 20,
-    requiresPrescription: false,
-    isControlled: false,
-    isForSale: true,
+    "drugId": "ATILENE",
+    "name": "Atilene Alimemazin 2,5mg/5ml (chai 100ml)",
+    "description": "Dung dịch uống hương cam, điều trị dị ứng, ho khan. Cần đơn thuốc.",
+    "saleUnit": "Chai",
+    "unitPrice": 40000,
+    "lowStockThreshold": 5,
+    "requiresPrescription": true,
+    "isControlled": false,
+    "isForSale": true,
+    "imageUrl": "/products/ATILENE.png"
   },
   {
-    drugId: 'CETI10',
-    name: 'Cetirizine 10mg',
-    description: 'Thuốc kháng histamin chống dị ứng, viêm mũi dị ứng, mề đay.',
-    saleUnit: 'Hộp',
-    unitPrice: 32000,
-    lowStockThreshold: 20,
-    requiresPrescription: false,
-    isControlled: false,
-    isForSale: true,
-  },
-  {
-    drugId: 'CEFA500',
-    name: 'Cefalexin 500mg',
-    description: 'Kháng sinh cephalosporin thế hệ 1 dùng cho nhiễm khuẩn da và đường hô hấp.',
-    saleUnit: 'Hộp',
-    unitPrice: 48000,
-    lowStockThreshold: 15,
-    requiresPrescription: true,
-    isControlled: false,
-    isForSale: true,
-  },
-  {
-    drugId: 'VITC500',
-    name: 'Vitamin C 500mg C sủi',
-    description: 'Viên sủi bổ sung vitamin C, tăng cường sức đề kháng và giảm mệt mỏi.',
-    saleUnit: 'Tuýp',
-    unitPrice: 38000,
-    lowStockThreshold: 40,
-    requiresPrescription: false,
-    isControlled: false,
-    isForSale: true,
-  },
-  {
-    drugId: 'AZITH500',
-    name: 'Azithromycin 500mg',
-    description: 'Kháng sinh nhóm macrolide điều trị viêm phổi, viêm họng, nhiễm khuẩn sinh dục.',
-    saleUnit: 'Hộp',
-    unitPrice: 110000,
-    lowStockThreshold: 10,
-    requiresPrescription: true,
-    isControlled: false,
-    isForSale: true,
-  },
-  {
-    drugId: 'DISC001',
-    name: 'Thuốc Mẫu Tắt Bán',
-    description: 'Sản phẩm đã ngừng kinh doanh để kiểm thử điều kiện isForSale=false.',
-    saleUnit: 'Hộp',
-    unitPrice: 50000,
-    lowStockThreshold: 5,
-    requiresPrescription: false,
-    isControlled: false,
-    isForSale: false,
-  },
-  {
-    drugId: 'OUT001',
-    name: 'Siro Ho Trẻ Em (Tạm hết hàng)',
-    description: 'Siro trị ho long đờm cho trẻ nhỏ - minh họa sản phẩm hết hàng tồn kho.',
-    saleUnit: 'Chai',
-    unitPrice: 40000,
-    lowStockThreshold: 10,
-    requiresPrescription: false,
-    isControlled: false,
-    isForSale: true,
-  },
+    "drugId": "PRUZENA",
+    "name": "Pruzena Doxylamin 10mg + Pyridoxin 10mg",
+    "description": "Điều trị buồn nôn và nôn khi mang thai. Thuốc kê đơn.",
+    "saleUnit": "Hộp",
+    "unitPrice": 180000,
+    "lowStockThreshold": 5,
+    "requiresPrescription": true,
+    "isControlled": false,
+    "isForSale": true,
+    "imageUrl": "/products/PRUZENA.png"
+  }
 ];
 
 export const MOCK_STOCK: Record<string, number> = {
-  PARA500: 150,
-  AMOX500: 45,
-  IBUP400: 80,
-  BERB100: 200,
-  MORPH10: 12,
-  DIAZ005: 18,
-  PANADOL: 300,
-  OMEP20: 60,
-  CETI10: 95,
-  CEFA500: 30,
-  VITC500: 180,
-  AZITH500: 25,
-  DISC001: 50,
-  OUT001: 0,
+  "DECUMAR": 9,
+  "BLACKMEN": 4,
+  "GIAOCOLAM": 0,
+  "DUONGHUYET": 229,
+  "PANADOLEX": 453,
+  "KREMILS": 307,
+  "TATANOL": 285,
+  "ATILENE": 341,
+  "PRUZENA": 353
 };
 
 export const MOCK_DASHBOARD_SUMMARY: DashboardSummary = {
@@ -296,6 +244,7 @@ export function mapDrugToProduct(drug: DrugAdmin, isAuthenticated: boolean): Pro
     requiresPrescription: drug.requiresPrescription,
     isControlled: drug.isControlled,
     inStock,
+    availableQuantity: stock,
   };
 
   if (isAuthenticated) {
@@ -352,8 +301,8 @@ export function getMockProductById(
 const DEFAULT_CART: CartView = {
   items: [
     {
-      drugId: 'PARA500',
-      name: 'Paracetamol 500mg',
+      drugId: 'TATANOL',
+      name: 'Tatanol Acetaminophen 500mg (10 vỉ x 10 viên)',
       saleUnit: 'Hộp',
       unitPrice: 35000,
       quantity: 2,
@@ -363,8 +312,8 @@ const DEFAULT_CART: CartView = {
       availableQuantity: 150,
     },
     {
-      drugId: 'VITC500',
-      name: 'Vitamin C 500mg C sủi',
+      drugId: 'PANADOLEX',
+      name: 'Panadol Extra (180 viên) C sủi',
       saleUnit: 'Tuýp',
       unitPrice: 38000,
       quantity: 1,
@@ -378,11 +327,11 @@ const DEFAULT_CART: CartView = {
 };
 
 export function getMockCart(): CartView {
-  return readStorage<CartView>('pharmacy_mock_cart', DEFAULT_CART);
+  return readStorage<CartView>('pharmacy_mock_cart_catalog33', DEFAULT_CART);
 }
 
 export function saveMockCart(cart: CartView): void {
-  writeStorage('pharmacy_mock_cart', cart);
+  writeStorage('pharmacy_mock_cart_catalog33', cart);
 }
 
 export function addMockCartItem(drugId: string, quantity: number): CartView {
@@ -471,7 +420,7 @@ const DEFAULT_PRESCRIPTIONS: PrescriptionView[] = [
     validUntil: '2026-10-31',
     hasImage: true,
     imageUrl:
-      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="400" height="500" fill="%23f8fafc" stroke="%23cbd5e1" stroke-width="2"/><text x="200" y="40" font-family="sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="%230f172a">DON THUOC MAU</text><text x="30" y="80" font-family="sans-serif" font-size="12" fill="%23334155">Benh vien Thong Nhat</text><text x="30" y="110" font-family="sans-serif" font-size="12" fill="%23334155">Benh nhan: Nguyen Van A - Nam</text><text x="30" y="130" font-family="sans-serif" font-size="12" fill="%23334155">Chan doan: Viem hong cap</text><line x1="30" y1="150" x2="370" y2="150" stroke="%23cbd5e1"/><text x="30" y="180" font-family="sans-serif" font-size="13" font-weight="bold" fill="%23047857">1. Amoxicillin 500mg (SL: 20 vi)</text><text x="50" y="200" font-family="sans-serif" font-size="11" fill="%2364748b">Ngay uong 2 vien chia 2 lan</text><text x="30" y="230" font-family="sans-serif" font-size="13" font-weight="bold" fill="%23047857">2. Paracetamol 500mg (SL: 10 hop)</text><text x="50" y="250" font-family="sans-serif" font-size="11" fill="%2364748b">Uong khi sot tren 38.5 do</text><text x="250" y="420" font-family="sans-serif" font-size="12" text-anchor="middle" fill="%230f172a">Bac si dieu tri</text><text x="250" y="460" font-family="sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="%23047857">BS. Le Minh Hoang</text></svg>',
+      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="400" height="500" fill="%23f8fafc" stroke="%23cbd5e1" stroke-width="2"/><text x="200" y="40" font-family="sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="%230f172a">DON THUOC</text><text x="30" y="80" font-family="sans-serif" font-size="12" fill="%23334155">Benh vien Thong Nhat</text><text x="30" y="110" font-family="sans-serif" font-size="12" fill="%23334155">Benh nhan: Nguyen Van A - Nam</text><text x="30" y="130" font-family="sans-serif" font-size="12" fill="%23334155">Don thuoc</text><line x1="30" y1="150" x2="370" y2="150" stroke="%23cbd5e1"/><text x="30" y="180" font-family="sans-serif" font-size="13" font-weight="bold" fill="%23047857">1. PRUZENA (SL: 3 hop)</text><text x="50" y="200" font-family="sans-serif" font-size="11" fill="%2364748b">Doi chieu theo don bac si</text><text x="30" y="230" font-family="sans-serif" font-size="13" font-weight="bold" fill="%23047857">2. ATILENE (SL: 2 chai)</text><text x="50" y="250" font-family="sans-serif" font-size="11" fill="%2364748b">Doi chieu theo don bac si</text><text x="250" y="420" font-family="sans-serif" font-size="12" text-anchor="middle" fill="%230f172a">Bac si dieu tri</text><text x="250" y="460" font-family="sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="%23047857">BS. Le Minh Hoang</text></svg>',
     reviewedByUsername: 'staff',
     reviewedAt: '2026-10-02T10:00:00+07:00',
     reviewNote: 'Đơn thuốc hợp lệ, chữ ký và chẩn đoán đầy đủ',
@@ -479,23 +428,23 @@ const DEFAULT_PRESCRIPTIONS: PrescriptionView[] = [
     items: [
       {
         itemId: 'ITEM001',
-        drugId: 'AMOX500',
-        drugName: 'Amoxicillin 500mg',
-        saleUnit: 'Vỉ',
-        prescribedQuantity: 20,
+        drugId: 'PRUZENA',
+        drugName: 'Pruzena Doxylamin 10mg + Pyridoxin 10mg',
+        saleUnit: 'Hộp',
+        prescribedQuantity: 3,
         reservedQuantity: 0,
         dispensedQuantity: 0,
-        remainingQuantity: 20,
+        remainingQuantity: 3,
       },
       {
         itemId: 'ITEM002',
-        drugId: 'PARA500',
-        drugName: 'Paracetamol 500mg',
-        saleUnit: 'Hộp',
-        prescribedQuantity: 10,
+        drugId: 'ATILENE',
+        drugName: 'Atilene Alimemazin 2,5mg/5ml (chai 100ml)',
+        saleUnit: 'Chai',
+        prescribedQuantity: 2,
         reservedQuantity: 0,
         dispensedQuantity: 0,
-        remainingQuantity: 10,
+        remainingQuantity: 2,
       },
     ],
   },
@@ -535,18 +484,25 @@ const DEFAULT_PRESCRIPTIONS: PrescriptionView[] = [
 ];
 
 export function getMockPrescriptions(): PrescriptionView[] {
-  return readStorage<PrescriptionView[]>('pharmacy_mock_prescriptions', DEFAULT_PRESCRIPTIONS);
+  return readStorage<PrescriptionView[]>('pharmacy_mock_prescriptions_catalog33', DEFAULT_PRESCRIPTIONS);
 }
 
 export function saveMockPrescriptions(prescriptions: PrescriptionView[]): void {
-  writeStorage('pharmacy_mock_prescriptions', prescriptions);
+  writeStorage('pharmacy_mock_prescriptions_catalog33', prescriptions);
 }
 
 // ------------------------------------------
 // M05: ORDERS (F013, F014)
 // ------------------------------------------
 
-const DEFAULT_ORDERS: OrderView[] = [
+function catalogLines<T extends OrderItemView>(items: T[]): T[] {
+  return items.map(item => {
+    const drug = MOCK_DRUGS.find(d => d.drugId === item.drugId);
+    return drug ? { ...item, drugName: drug.name, unit: drug.saleUnit, unitPrice: drug.unitPrice, lineTotal: drug.unitPrice * item.quantity } : item;
+  });
+}
+
+const DEFAULT_ORDERS: OrderView[] = ([
   {
     orderId: 'DH2610060001',
     createdAt: '2026-10-06T09:00:00+07:00',
@@ -559,16 +515,16 @@ const DEFAULT_ORDERS: OrderView[] = [
     totalAmount: 108000,
     items: [
       {
-        drugId: 'PARA500',
-        drugName: 'Paracetamol 500mg',
+        drugId: 'TATANOL',
+        drugName: 'Tatanol Acetaminophen 500mg (10 vỉ x 10 viên)',
         unit: 'Hộp',
         quantity: 2,
         unitPrice: 35000,
         lineTotal: 70000,
       },
       {
-        drugId: 'VITC500',
-        drugName: 'Vitamin C 500mg C sủi',
+        drugId: 'PANADOLEX',
+        drugName: 'Panadol Extra (180 viên)',
         unit: 'Tuýp',
         quantity: 1,
         unitPrice: 38000,
@@ -596,9 +552,9 @@ const DEFAULT_ORDERS: OrderView[] = [
     totalAmount: 90000,
     items: [
       {
-        drugId: 'AMOX500',
-        drugName: 'Amoxicillin 500mg',
-        unit: 'Vỉ',
+        drugId: 'PRUZENA',
+        drugName: 'Pruzena Doxylamin 10mg + Pyridoxin 10mg',
+        unit: 'Hộp',
         quantity: 2,
         unitPrice: 45000,
         lineTotal: 90000,
@@ -627,8 +583,8 @@ const DEFAULT_ORDERS: OrderView[] = [
     totalAmount: 70000,
     items: [
       {
-        drugId: 'PARA500',
-        drugName: 'Paracetamol 500mg',
+        drugId: 'TATANOL',
+        drugName: 'Tatanol Acetaminophen 500mg (10 vỉ x 10 viên)',
         unit: 'Hộp',
         quantity: 2,
         unitPrice: 35000,
@@ -647,21 +603,25 @@ const DEFAULT_ORDERS: OrderView[] = [
     canCancel: false,
     canPay: false,
   },
-];
+] satisfies OrderView[]).map(order => {
+  const items = catalogLines(order.items);
+  const totalAmount = items.reduce((sum, item) => sum + item.lineTotal, 0);
+  return { ...order, items, totalAmount, payment: order.payment ? { ...order.payment, expectedAmount: totalAmount, receivedAmount: order.payment.receivedAmount == null ? undefined : totalAmount } : undefined };
+});
 
 export function getMockOrders(): OrderView[] {
-  return readStorage<OrderView[]>('pharmacy_mock_orders', DEFAULT_ORDERS);
+  return readStorage<OrderView[]>('pharmacy_mock_orders_catalog33', DEFAULT_ORDERS);
 }
 
 export function saveMockOrders(orders: OrderView[]): void {
-  writeStorage('pharmacy_mock_orders', orders);
+  writeStorage('pharmacy_mock_orders_catalog33', orders);
 }
 
 // ------------------------------------------
 // M06: INVOICES (F020)
 // ------------------------------------------
 
-const DEFAULT_INVOICES: InvoiceView[] = [
+const DEFAULT_INVOICES: InvoiceView[] = ([
   {
     invoiceId: 'HD2610040001',
     issuedAt: '2026-10-04T11:00:00+07:00',
@@ -675,8 +635,8 @@ const DEFAULT_INVOICES: InvoiceView[] = [
     orderId: 'DH2610040003',
     items: [
       {
-        drugId: 'PARA500',
-        drugName: 'Paracetamol 500mg',
+        drugId: 'TATANOL',
+        drugName: 'Tatanol Acetaminophen 500mg (10 vỉ x 10 viên)',
         unit: 'Hộp',
         quantity: 2,
         unitPrice: 35000,
@@ -692,14 +652,17 @@ const DEFAULT_INVOICES: InvoiceView[] = [
     ],
     totalAmount: 70000,
   },
-];
+] satisfies InvoiceView[]).map(invoice => {
+  const items = catalogLines(invoice.items);
+  return { ...invoice, items, totalAmount: items.reduce((sum, item) => sum + item.lineTotal, 0) };
+});
 
 export function getMockInvoices(): InvoiceView[] {
-  return readStorage<InvoiceView[]>('pharmacy_mock_invoices', DEFAULT_INVOICES);
+  return readStorage<InvoiceView[]>('pharmacy_mock_invoices_catalog33', DEFAULT_INVOICES);
 }
 
 export function saveMockInvoices(invoices: InvoiceView[]): void {
-  writeStorage('pharmacy_mock_invoices', invoices);
+  writeStorage('pharmacy_mock_invoices_catalog33', invoices);
 }
 
 // ------------------------------------------

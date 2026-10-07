@@ -1,6 +1,6 @@
-# Bằng chứng kiểm thử giao diện M4–M10
+# Bằng chứng kiểm thử giao diện M4–M11
 
-105 ảnh PNG từ Playwright Chromium ở 1366×900 và 390×844, chạy frontend production qua `/api` ở cổng 3017 với backend thật cổng 5017, SQLite riêng và seed. Lần chạy cuối M10: 28/28 ca pass (3,6 phút), đối chiếu đủ 49 route ở mỗi viewport, gồm các route chuyển hướng sang Staff. M10 thêm hai ảnh sẵn sàng nhận và chụp lại giao hàng cùng các luồng liên quan. Mã trong tên ảnh tương ứng luồng TC/F; menu mobile chỉ có ảnh 390 px.
+123 ảnh PNG từ Playwright Chromium ở 1366×900 và 390×844, chạy frontend production qua `/api` ở cổng 3017 với backend thật cổng 5017, SQLite riêng và seed. Lần chạy cuối M11: 30/30 ca pass (4,3 phút), đối chiếu đủ 49 route ở mỗi viewport, gồm các route chuyển hướng sang Staff. M11 thêm 18 ảnh danh mục thật và chụp lại các luồng hiện tại. Mã trong tên ảnh tương ứng luồng TC/F; menu mobile chỉ có ảnh 390 px.
 
 M5 ban đầu bổ sung 12 ảnh phản hồi thao tác. D6–D9 bổ sung ảnh Pickup/Delivery, thử xuất kho lại, hết hàng/409, lỗi mở QR và đơn thuốc chờ duyệt ở hai viewport; banner đặt hàng hiện trên ảnh QR `TC42-F017-qr-*`. `TC32-F014-order-before-qr-*` là ảnh lưu của luồng trước D6, được giữ để đối chiếu lịch sử. Toast dành chỗ ở đầu trang để không che nút chính trên mobile.
 
@@ -16,7 +16,9 @@ M8 (D13/D14) thêm bốn ảnh `TC45-F018-one-tap-*` và `AC02-admin-dashboard-*
 
 M10 (D15) bổ sung hai ảnh `TC37-F015-ready-pickup-*` và chụp lại `TC37-F015-delivering-*`: sau thanh toán khách chỉ thấy đang chuẩn bị; sau Staff báo ready mới hiện lời mời đến quầy/mã đơn lớn/toast và bước Sẵn sàng nhận. Giao hàng dùng nút chuẩn bị xong để ship và khách tự thấy đang trên đường giao. E2e kiểm tra cập nhật thật mỗi 10 giây, badge danh sách, giờ sẵn sàng, hoàn tất sau nhận thuốc; TC32/TC33 chuẩn bị QR riêng. `TC45-F014-pickup-paid-*` nay thể hiện đang chuẩn bị sau thanh toán, không phải lời mời nhận thuốc.
 
-D11 cập nhật ảnh đang dùng với tài khoản `chuduc` (Chu Đức), `nguyenvana` và mã thuốc VITC500/NACL09/ORESOL/CETI10/ZINC10/AMOX500/CEFI200/METF500/AMLO5/DIAZ5/HYDRO1. Trang chủ không còn ô trạng thái API; đăng nhập không còn gợi ý tài khoản. Bộ thử tự cấu hình QR qua API Admin vì DB mới không có tài khoản nhận tiền. `TC32-F013-payment-open-error-*` kiểm tra thông báo chưa cấu hình QR và giữ đơn; `TC01-F001-registered-session-*` chụp sau đăng ký thành công dù ban đầu có cookie XSRF-TOKEN cũ. Kiểm thử thêm CSRF lỗi liên tiếp chỉ thử lại một lần và gửi lại ảnh FormData thành công. Các ảnh được ghi rõ là lịch sử ở trên không đại diện giao diện hiện tại.
+D11 cập nhật tài khoản `chuduc` (Chu Đức), `nguyenvana`. Trang chủ không còn ô trạng thái API; đăng nhập không còn gợi ý tài khoản. Bộ thử tự cấu hình QR qua API Admin vì DB mới không có tài khoản nhận tiền. `TC32-F013-payment-open-error-*` kiểm tra thông báo chưa cấu hình QR và giữ đơn; `TC01-F001-registered-session-*` chụp sau đăng ký thành công dù ban đầu có cookie XSRF-TOKEN cũ. Kiểm thử thêm CSRF lỗi liên tiếp chỉ thử lại một lần và gửi lại ảnh FormData thành công. Các ảnh được ghi rõ là lịch sử ở trên không đại diện giao diện hiện tại.
+
+M11 dùng danh mục sản xuất 33 sản phẩm thật: OTC `TATANOL`, `PANADOLEX`, `KREMILS`; kê đơn `PRUZENA`, `ATILENE`; hết hàng `GIAOCOLAM`; tồn thấp `DECUMAR`, `BLACKMEN`; lô hết hạn `DUONGHUYET`. Chụp lại các luồng hiện tại với giá/đơn vị/ảnh thật và bổ sung 18 ảnh danh mục, chi tiết OTC/kê đơn, giỏ ba mặt hàng, checkout, kho, lô hết hạn và báo cáo ở hai viewport. Ảnh sản phẩm giữ tỷ lệ bằng `object-contain`, nền trắng; kiểm thử xác nhận ảnh tải thành công và trang không tràn ngang. Ngày kiểm thử khớp ngày hiện tại tại Việt Nam để lô seed và đơn thuốc nhất quán. Chưa có thuốc kiểm soát trong danh mục thật nên không chạy ca giao diện “OTC chặn thuốc kiểm soát”; backend vẫn bao phủ bằng fixture riêng.
 
 `M4-route-audit-1366.json` và `M4-route-audit-390.json` ghi danh sách route đã rà và kích thước viewport. Ca audit đối chiếu toàn bộ `src/app/**/page.tsx`, kiểm tra trang không tràn ngang và bảng dài có khung cuộn riêng. Ảnh toàn trang đưa về đầu trước khi chụp để thanh menu sticky nằm đúng vị trí.
 
@@ -24,6 +26,15 @@ Chạy lại: `npm run test:e2e --workspace frontend`. Hướng dẫn cài đặ
 
 | Mã ảnh | 1366 px | 390 px |
 |---|---|---|
+| TC09-F004-real-catalog-home | [1366](TC09-F004-real-catalog-home-1366.png) | [390](TC09-F004-real-catalog-home-390.png) |
+| TC09-F004-real-catalog-detail-TATANOL | [1366](TC09-F004-real-catalog-detail-TATANOL-1366.png) | [390](TC09-F004-real-catalog-detail-TATANOL-390.png) |
+| TC09-F004-real-catalog-detail-ATILENE | [1366](TC09-F004-real-catalog-detail-ATILENE-1366.png) | [390](TC09-F004-real-catalog-detail-ATILENE-390.png) |
+| TC30-F012-real-catalog-cart | [1366](TC30-F012-real-catalog-cart-1366.png) | [390](TC30-F012-real-catalog-cart-390.png) |
+| TC32-F013-real-catalog-checkout | [1366](TC32-F013-real-catalog-checkout-1366.png) | [390](TC32-F013-real-catalog-checkout-390.png) |
+| F007-real-catalog-inventory | [1366](F007-real-catalog-inventory-1366.png) | [390](F007-real-catalog-inventory-390.png) |
+| F007-real-catalog-expired | [1366](F007-real-catalog-expired-1366.png) | [390](F007-real-catalog-expired-390.png) |
+| F009-real-catalog-low-stock | [1366](F009-real-catalog-low-stock-1366.png) | [390](F009-real-catalog-low-stock-390.png) |
+| F009-real-catalog-expiring | [1366](F009-real-catalog-expiring-1366.png) | [390](F009-real-catalog-expiring-390.png) |
 | TC33-F017-auto-qr | [TC33-F017-auto-qr-1366.png](TC33-F017-auto-qr-1366.png) | [TC33-F017-auto-qr-390.png](TC33-F017-auto-qr-390.png) |
 | TC26-F011-online-prefilled | [TC26-F011-online-prefilled-1366.png](TC26-F011-online-prefilled-1366.png) | [TC26-F011-online-prefilled-390.png](TC26-F011-online-prefilled-390.png) |
 | TC26-F011-online-approved | [TC26-F011-online-approved-1366.png](TC26-F011-online-approved-1366.png) | [TC26-F011-online-approved-390.png](TC26-F011-online-approved-390.png) |
