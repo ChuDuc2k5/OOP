@@ -203,7 +203,7 @@ dotnet test Pharmacy.sln --filter "Category=Postgres"
 dotnet test Pharmacy.sln
 ```
 
-Kết quả lịch sử M3.5 lúc triển khai: kiểm chứng offline 132 pass, 1 skip (smoke PostgreSQL), build 0 warning/0 error. Sau đó PO đã kiểm chứng Supabase thật theo docs/reviews/be-m3b-postgres.md. SQL script đã sinh; các giới hạn kiểm chứng của phiên M5 được ghi riêng trong TEST_REPORT_BE.md. Máy phát triển gặp lỗi TLS NuGet; lần kiểm chứng dùng `RestoreSources` trỏ cache gói cục bộ đã tải từ NuGet chính thức, không thay đổi cấu hình nguồn của repository.
+Kết quả lịch sử M3.5 lúc triển khai: kiểm chứng offline 132 pass, 1 skip (smoke PostgreSQL), build 0 warning/0 error. Lượt kiểm chứng PostgreSQL thực tế ngày 06/10/2026 được tổng hợp trong [TEST_STATUS.md](../docs/TEST_STATUS.md). SQL script đã sinh; các giới hạn kiểm chứng của phiên M5 được ghi riêng trong TEST_REPORT_BE.md. Máy phát triển gặp lỗi TLS NuGet; lần kiểm chứng dùng `RestoreSources` trỏ cache gói cục bộ đã tải từ NuGet chính thức, không thay đổi cấu hình nguồn của repository.
 
 
 M4: bán tại quầy, thanh toán thủ công và hóa đơn (F016–F020)
@@ -258,7 +258,7 @@ dotnet test Pharmacy.sln --filter FullyQualifiedName~CheckoutTests
 | TC-54 | `TC54_Invoices_RespectUserStaffCreatorHandlerAndAdminScopes` |
 | TC-56 | `TC56_SameCheckoutServiceCall_WithSaleTypedSubtypes_ValidatesPolymorphically` |
 
-Smoke HTTP dùng SQLite/storage/key riêng trong temp: chuduc đặt OTC → mở QR → staff review đủ tiền → fulfill → complete → xem hóa đơn; staff lập nháp OTC tại quầy → checkout → xem hóa đơn. Cả hai luồng pass, API đã tắt và dữ liệu smoke đã xóa. Chưa chạy luồng M4 trên PostgreSQL thật trong lần kiểm chứng này; bộ opt-in PostgreSQL chỉ chạy khi có PHARMACY_TEST_POSTGRES. Báo cáo 132 pass/1 skip ở phần M3.5 phía trên là kết quả lịch sử; PO đã kiểm chứng M3.5 trên Supabase thật.
+Smoke HTTP dùng SQLite/storage/key riêng trong temp: chuduc đặt OTC → mở QR → staff review đủ tiền → fulfill → complete → xem hóa đơn; staff lập nháp OTC tại quầy → checkout → xem hóa đơn. Cả hai luồng pass, API đã tắt và dữ liệu smoke đã xóa. Chưa chạy luồng M4 trên PostgreSQL thật trong lần kiểm chứng này; bộ opt-in PostgreSQL chỉ chạy khi có PHARMACY_TEST_POSTGRES. Báo cáo 132 pass/1 skip ở phần M3.5 phía trên là kết quả lịch sử; M3.5 có lượt kiểm chứng PostgreSQL thực tế ngày 06/10/2026, xem TEST_STATUS.md.
 
 Kiểm chứng M4: dotnet build Pharmacy.sln 0 warning/0 error; dotnet test Pharmacy.sln 170 pass/0 fail/1 skip (PostgreSQL opt-in). CheckoutTests có 38 trường hợp, 31 method, phủ 21 mã TC yêu cầu. Các test SQLite chạy không cần mạng.
 
@@ -325,7 +325,7 @@ Các TC hồi quy dùng TestCatalogSeeder qua ApiFactory sau migrate, với 12 t
 
 Cập nhật catalog 33 sản phẩm (2026-10-07 09:23:25 +07:00): seeder hiện có tự duyệt toàn bộ catalog, tạo 77 lô/33 ảnh, đúng 10 thuốc cần đơn, giữ 2 sản phẩm tồn thấp, 1 hết hàng, 8 lô sắp hết hạn và 1 lô D−5. CatalogSeedTests lấy số sản phẩm/ảnh, tổng lô và danh sách thuốc cần đơn từ catalog; danh sách lô sắp hết hạn đối chiếu DB. Build 0 warning/0 error; toàn bộ test 203 pass/0 fail/2 skip (PostgreSQL và performance opt-in). Windows không chặn assembly trong lượt này.
 
-Kiểm chứng M13 ban đầu với catalog 20 sản phẩm (2026-10-07): build 0 warning/0 error. Smoke HTTP trên SQLite/storage riêng trong temp xác nhận 20 sản phẩm/ảnh, đăng nhập staff/chuduc, inventory, báo cáo 3 dòng tồn thấp/4 lô sắp hết hạn và đơn thuốc PRUZENA ×3 / ATILENE ×2. Lệnh nạp lại trả 0; file ảnh chuẩn bị mất được phục hồi, lần tiếp theo trả 0. Suite xUnit bị Windows Application Control chặn Pharmacy.Tests.dll (0x800711C7) trước discovery; retry cùng binary --no-build --no-restore vẫn bị chặn. PO cần chạy test ở worktree được phép thực thi. PostgreSQL runtime chưa chạy trong lượt này; có nhóm opt-in PHARMACY_TEST_POSTGRES cho DB test riêng.
+Kiểm chứng M13 ban đầu với catalog 20 sản phẩm (2026-10-07): build 0 warning/0 error. Smoke HTTP trên SQLite/storage riêng trong temp xác nhận 20 sản phẩm/ảnh, đăng nhập staff/chuduc, inventory, báo cáo 3 dòng tồn thấp/4 lô sắp hết hạn và đơn thuốc PRUZENA ×3 / ATILENE ×2. Lệnh nạp lại trả 0; file ảnh chuẩn bị mất được phục hồi, lần tiếp theo trả 0. Suite xUnit bị Windows Application Control chặn Pharmacy.Tests.dll (0x800711C7) trước discovery; retry cùng binary --no-build --no-restore vẫn bị chặn. Kết quả chạy thành công sau đó với catalog 33 sản phẩm được tổng hợp trong TEST_STATUS.md. PostgreSQL runtime chưa chạy trong lượt này; có nhóm opt-in PHARMACY_TEST_POSTGRES cho DB test riêng.
 
 `POST /api/staff/payments/{id}/review` chấp nhận `{}` để xác nhận đúng số tiền dự kiến tại thời điểm hiện tại. `bankReference` tùy chọn: null/rỗng/trắng lưu null; nếu có mã thì trim và vẫn duy nhất giữa các thanh toán Confirmed. `receivedAmount` thiếu/null mặc định ExpectedAmount, `receivedAt` thiếu/null mặc định IBusinessClock.Now; số tiền thực nhận nhỏ hơn dự kiến vẫn PendingReview với ghi chú thiếu tiền, HTTP 200/approved=false. Duyệt không trừ kho; fulfill vẫn riêng theo D8.
 

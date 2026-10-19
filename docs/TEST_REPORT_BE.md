@@ -1,6 +1,6 @@
 # Báo cáo kiểm thử Backend M5
 
-Nguồn đối chiếu: SRS_v2.0.md §8/§11, API_CONTRACT.md và review be-m4-sale-payment-checkout.md. Phạm vi là API/domain/persistence backend; không tuyên bố giao diện frontend đã được kiểm chứng.
+Nguồn đối chiếu: SRS_v2.0.md §8/§11, API_CONTRACT.md và mã nguồn/test của mốc M4. Phạm vi là API/domain/persistence backend; không tuyên bố giao diện frontend đã được kiểm chứng.
 
 Thời điểm chạy toàn bộ suite: **2026-10-06T13:34:22.3872365+07:00 → 2026-10-06T13:35:05.9741804+07:00** (UTC+07:00). Build trước suite: 0 warning/0 error. .NET 10.0.11, Debug, Windows 10.0.26200, 16 logical processors.
 
@@ -127,7 +127,7 @@ Thời điểm ghi phép đo: **2026-10-06T13:35:05.834444+07:00**.
 
 ## Giới hạn kiểm chứng
 
-Chưa chạy M4/M5 trên PostgreSQL/Supabase thật trong phiên này vì thiếu PHARMACY_TEST_POSTGRES; M3.5 đã được PO kiểm chứng trên Supabase theo review. PostgreSQL opt-in còn skip, không được tính thành Pass. Phép đo NFR-01 chỉ SQLite/TestServer trên máy này; chưa đo trình duyệt, TCP, tải đồng thời hoặc Supabase. Khóa tồn vẫn một tiến trình theo kiến trúc. Không có chức năng M1–M4 còn stub; kiểm thử giao diện/phần cảnh báo thuộc frontend.
+Chưa chạy M4/M5 trên PostgreSQL/Supabase thật trong phiên này vì thiếu PHARMACY_TEST_POSTGRES; Lượt kiểm chứng M3.5 ngày 06/10/2026 được tổng hợp trong TEST_STATUS.md. PostgreSQL opt-in còn skip, không được tính thành Pass. Phép đo NFR-01 chỉ SQLite/TestServer trên máy này; chưa đo trình duyệt, TCP, tải đồng thời hoặc Supabase. Khóa tồn vẫn một tiến trình theo kiến trúc. Không có chức năng M1–M4 còn stub; kiểm thử giao diện/phần cảnh báo thuộc frontend.
 
 Smoke HTTP bổ sung trên cổng tạm riêng với SQLite/storage/key temp: user OTC → QR → review đủ tiền → fulfill → complete → hóa đơn; bán OTC tại quầy → checkout → hóa đơn. Cả hai pass. API smoke đã tắt, dữ liệu temp đã xóa; không dừng ứng dụng khác đang dùng cổng 5000.
 
@@ -136,7 +136,7 @@ Kiểm chứng M9 (D11), 2026-10-06 17:23 +07:00: chạy "dotnet build Pharmacy.
 
 ## Cập nhật M13: danh mục sản xuất và fixture hồi quy
 
-Thời điểm kiểm chứng: 2026-10-07 (UTC+07:00). dotnet build Pharmacy.sln: **0 warning/0 error**. dotnet test Pharmacy.sln bị Windows Application Control chặn Pharmacy.Tests.dll (FileLoadException 0x800711C7) trước discovery; retry cùng binary bằng dotnet test Pharmacy.sln --no-build --no-restore vẫn bị chặn. **Không có kết quả Pass/Fail mới cho các TC**; các bảng kết quả M5/M9 phía trên là lịch sử. PO cần chạy lại suite trong worktree được phép thực thi assembly. Không chạy runtime PostgreSQL trong lượt này.
+Thời điểm kiểm chứng: 2026-10-07 (UTC+07:00). dotnet build Pharmacy.sln: **0 warning/0 error**. dotnet test Pharmacy.sln bị Windows Application Control chặn Pharmacy.Tests.dll (FileLoadException 0x800711C7) trước discovery; retry cùng binary bằng dotnet test Pharmacy.sln --no-build --no-restore vẫn bị chặn. **Không có kết quả Pass/Fail mới cho các TC**; các bảng kết quả M5/M9 phía trên là lịch sử. Kết quả chạy thành công sau đó được ghi ở mục catalog 33 sản phẩm bên dưới. Không chạy runtime PostgreSQL trong lượt này.
 
 Fixture hồi quy TestCatalogSeeder được ApiFactory gọi sau migrate thông qua IDbSeeder; dựng 12 thuốc biên, tài khoản và đơn thuốc kiểm thử độc lập với catalog/ảnh sản xuất. TestImage cấp PNG riêng; PaymentFixture tự cấu hình QR khi cần. TC vẫn kiểm tra tồn 0, tồn = ngưỡng, thuốc ngừng bán, cần đơn/kiểm soát và lô D−5/D/D+1/D+20/D+30/D+31.
 

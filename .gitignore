@@ -97,3 +97,10 @@ dist/
 coverage/
 
 /.claude/
+
+# Local documentation build outputs and Git history backups
+/.report-work/
+/attribution-repair/
+
+# Weekly reports are kept locally for separate submission
+/docs/BAO_CAO_TUAN_*

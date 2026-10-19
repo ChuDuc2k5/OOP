@@ -13,12 +13,12 @@
 | `backend/Pharmacy.Core/` | Domain, service nghiệp vụ, EF Core DbContext |
 | `backend/Pharmacy.Tests/` | xUnit |
 | `Pharmacy.sln` | Solution backend |
-| `docs/` | SRS, kiến trúc, API contract, backlog, review |
+| `docs/` | SRS, kiến trúc, API contract, báo cáo và bằng chứng kiểm thử |
 
 ## Tài liệu
 - [SRS v2.0](docs/SRS_v2.0.md) (bản Word: `docs/SRS_OOP.docx`, diagram: `docs/diagrams/`)
 - [Kiến trúc & quyết định](docs/ARCHITECTURE.md) · [API Contract](docs/API_CONTRACT.md)
-- [Quy trình nhóm](docs/WORKFLOW.md) · [Backlog BE](docs/TASKS_BACKEND.md) · [Backlog FE](docs/TASKS_FRONTEND.md)
+- [Kết quả kiểm thử](docs/TEST_STATUS.md) · [Nhật ký sử dụng AI](docs/AI_USAGE_LOG.md)
 
 ## Yêu cầu
 Node.js 22.12+ (khuyến nghị 24), npm, .NET SDK 10.0.400+.

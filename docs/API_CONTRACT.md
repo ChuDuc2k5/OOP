@@ -1,7 +1,7 @@
 # API Contract v1 — Pharmacy Management System
 
-> Hợp đồng giữa Backend (Codex) và Frontend (Antigravity). **Nguồn sự thật duy nhất** cho URL, DTO, mã lỗi.
-> Muốn đổi: mở đề xuất cho PO, PO cập nhật file này trên `main` rồi hai bên mới sửa code.
+> Đặc tả chung giữa backend và frontend cho URL, DTO và mã lỗi.
+> Khi thay đổi API, cập nhật đặc tả cùng phần triển khai và các kiểm thử liên quan.
 > Kiểu dữ liệu viết bằng TypeScript cho dễ đọc. `?` = có thể vắng/null.
 
 ---

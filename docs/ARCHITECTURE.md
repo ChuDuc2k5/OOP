@@ -1,7 +1,7 @@
-# Kiến trúc & quyết định kỹ thuật (PO/PM chốt)
+# Kiến trúc & quyết định kỹ thuật
 
 > Nguồn yêu cầu: [SRS_v2.0.md](SRS_v2.0.md) (bản gốc: `SRS_OOP.docx`). Hợp đồng API: [API_CONTRACT.md](API_CONTRACT.md).
-> Mọi thay đổi so với tài liệu này phải được PO duyệt trước (ghi vào mục "Nhật ký quyết định").
+> Các thay đổi kiến trúc được ghi trong mục "Nhật ký quyết định" để đối chiếu với mã nguồn.
 
 ## 1. Tổng quan
 
@@ -46,7 +46,7 @@ Browser (Edge/Chrome)
 │  ├─ Pharmacy.Api/               # Program.cs, Controllers (mỏng), DTOs, ProblemDetails mapping, auth setup
 │  └─ Pharmacy.Tests/             # xUnit: unit (domain/service) + integration (WebApplicationFactory + SQLite)
 ├─ frontend/                      # Next.js app (khung ban đầu là Vite → chuyển sang Next.js ở fe/m1)
-├─ docs/                          # SRS, kiến trúc, API, task, review
+├─ docs/                          # SRS, kiến trúc, API, báo cáo và bằng chứng kiểm thử
 └─ README.md
 ```
 
@@ -112,7 +112,7 @@ Do server sinh, dạng chuỗi dễ đọc, unique:
 | D13 | 2026-10-06 | Xác nhận tiền một chạm từ danh sách đơn Staff: `bankReference` thành tùy chọn (nếu có vẫn unique), `receivedAmount` mặc định = expected, `receivedAt` mặc định = lúc bấm; nút phụ "Chưa đủ tiền" ghi số thực nhận | Người dùng: staff chỉ cần thấy tiền về đúng là bấm xác nhận. Điều chỉnh nhỏ FR-018 |
 | D12 | 2026-10-06 | Kiểm tra đơn thuốc online: `PrescriptionView.linkedOrders` trả các đơn hàng dùng đơn thuốc; trang Staff tự điền dòng thuốc từ đơn hàng `WaitingReview`, ngày kê = hôm nay, hiệu lực +30 ngày; dược sĩ chỉ đối chiếu ảnh, nhập người kê, "Lưu & chấp nhận" | Phản hồi người dùng: không bắt dược sĩ tìm lại thuốc khách đã đặt. Vẫn giữ F011 (cách A) |
 | D11 | 2026-10-06 | Bỏ mọi dấu vết "demo" cho buổi thuyết trình: mã thuốc có nghĩa (DEMO02→VITC500…), tài khoản `admin`, `staff`, `chuduc` (Chu Đức), `nguyenvana`; không seed tài khoản nhận tiền (Admin cấu hình QR thật qua F017); lệnh `--seed-catalog`; ẩn ô trạng thái API/mock và gợi ý tài khoản trên giao diện | Người dùng thuyết trình đồ án, không chạy bản demo |
-| D10 | 2026-10-06 | Giảm thao tác (PO rà UX): đăng ký xong tự đăng nhập; checkout tự xác định OTC/Theo đơn theo giỏ và cho tải ảnh đơn thuốc ngay tại checkout; tự điền người nhận theo lần đặt trước; form duyệt tiền điền sẵn số tiền/giờ; duyệt đơn thuốc một nút "Lưu & chấp nhận"; bán tại quầy một màn hình (FE tự tạo nháp đúng subtype theo dòng thuốc rồi checkout) | Phản hồi người dùng "quá rườm rà". Không đổi nghiệp vụ SRS: OTCSale/PrescriptionSale vẫn chọn khi tạo nháp, đơn thuốc vẫn qua F011 |
+| D10 | 2026-10-06 | Giảm thao tác sau rà soát UX: đăng ký xong tự đăng nhập; checkout tự xác định OTC/Theo đơn theo giỏ và cho tải ảnh đơn thuốc ngay tại checkout; tự điền người nhận theo lần đặt trước; form duyệt tiền điền sẵn số tiền/giờ; duyệt đơn thuốc một nút "Lưu & chấp nhận"; bán tại quầy một màn hình (FE tự tạo nháp đúng subtype theo dòng thuốc rồi checkout) | Phản hồi người dùng "quá rườm rà". Không đổi nghiệp vụ SRS: OTCSale/PrescriptionSale vẫn chọn khi tạo nháp, đơn thuốc vẫn qua F011 |
 | D9 | 2026-10-06 | Thuốc tồn khả dụng = 0 vẫn hiển thị ở homepage/chi tiết với nhãn "Hết hàng", nút thêm giỏ bị khóa; `POST /api/cart/items` và tăng số lượng trả `409 INSUFFICIENT_STOCK` khi thuốc hết hàng | Phản hồi người dùng; FR-004/FR-012 |
 | D8 | 2026-10-06 | Staff chỉ có MỘT bước duyệt cho đơn online: "Xác nhận đã nhận tiền" = FE gọi `review` rồi (nếu approved) gọi ngay `fulfill` (xuất kho + hóa đơn). Bỏ nút "Nhận xử lý" bắt buộc (backend tự ghi HandledBy). Pickup: "Khách đã nhận thuốc" = complete; Delivery: "Bắt đầu giao" → "Đã giao xong". Đơn thuốc (F011) vẫn cần dược sĩ duyệt | Giảm thao tác cho khách/staff/admin; dữ liệu vẫn tách Payment Confirmed và Sale/Invoice (FR-018 không trừ kho trong bước duyệt; F019 gọi riêng ngay sau), lỗi xuất kho giữ thanh toán (SRS 7.2) |
 | D7 | 2026-10-06 | Đơn Pickup: sau khi thanh toán được duyệt, trang khách hiện "Mời đến quầy nhận thuốc" + mã đơn; Staff có một nút "Khách đã nhận thuốc" (gọi fulfill rồi complete). Delivery giữ 2 bước | Phản hồi người dùng; vẫn đúng FR-015/FR-019 (xuất kho chỉ sau khi đã xác nhận tiền, không xuất lặp) |
