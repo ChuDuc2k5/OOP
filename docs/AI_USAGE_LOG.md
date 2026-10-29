@@ -9,7 +9,6 @@ Nhóm có sử dụng AI trong quá trình phát triển. Tài liệu quy trình
 | SRS, kiến trúc, API | Soạn và chỉnh tài liệu theo yêu cầu | Có tài liệu và lịch sử Git; chưa có nhật ký đầy đủ theo phiên |
 | Backend, frontend và test | Tạo, sửa mã nguồn và đề xuất cách kiểm thử | Có mã nguồn, diff và kết quả kiểm thử lịch sử; chưa có ánh xạ prompt tới từng commit |
 | Kiểm tra thay đổi | Hỗ trợ đọc diff, ghi vấn đề và tổng hợp kết quả | Hồ sơ cũ ghi nhận hoạt động hỗ trợ; không xem đây là bằng chứng sinh viên tự review toàn bộ |
-| Báo cáo tuần 2, 19/10/2026 | Codex đọc kế hoạch 4 tuần, đối chiếu mã nguồn, tổng hợp báo cáo và dọn tài liệu điều phối theo yêu cầu | Bản báo cáo và commit cập nhật tài liệu |
 
 ## Yêu cầu đã dùng cho lần cập nhật này
 
