@@ -1,0 +1,7 @@
+PASS | existing OTC: 3 units | OTCSale | valid=True | code=NONE
+PASS | new limited OTC: 2 of 2 | QuantityLimitedOTCSale | valid=True | code=NONE
+PASS | new limited OTC: 3 of 2 | QuantityLimitedOTCSale | valid=False | code=PURCHASE_LIMIT_EXCEEDED
+PASS | new limited OTC: RX rejected | QuantityLimitedOTCSale | valid=False | code=PRESCRIPTION_REQUIRED
+PASS | new limited OTC: controlled rejected | QuantityLimitedOTCSale | valid=False | code=PRESCRIPTION_REQUIRED
+PASS | existing prescription sale | PrescriptionSale | valid=True | code=NONE
+Summary: 6 passed / 0 failed; domain validation only, no database or production checkout.

@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="ef378414-0e3d-4a0b-9810-3ddfa8f22506" name="leanh@DUCLE 2026-10-29 21:07:30" runUser="DUCLE\leanh" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-29T21:07:30.2900769+07:00" queuing="2026-10-29T21:07:30.2900778+07:00" start="2026-10-29T21:07:18.8670918+07:00" finish="2026-10-29T21:07:30.6245059+07:00" />
+  <TestSettings name="default" id="b67bd1a7-7fce-4a73-9c39-8a56c80a208f">
+    <Deployment runDeploymentRoot="leanh_DUCLE_2026-10-29_21_07_30" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="41294399-8786-4d7c-8f0c-49cb49d586b7" testId="b1fbefaa-9151-745f-5845-db94c67ef698" testName="Pharmacy.Week4DemoTests.ExtensionTests.LimitMustBePositive(limit: -1)" computerName="DUCLE" duration="00:00:03.4767252" startTime="2026-10-29T21:07:26.6397304+07:00" endTime="2026-10-29T21:07:29.9940611+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="41294399-8786-4d7c-8f0c-49cb49d586b7" />
+    <UnitTestResult executionId="ea3322a3-2cc6-4449-9d92-b8f0d80e9c53" testId="6c3ccac6-86b4-98b0-a9aa-f08b82a9ddfb" testName="Pharmacy.Week4DemoTests.ExtensionTests.ExistingCallerAcceptsNewSubtypeAndLimitBoundary(quantity: 2, expected: True)" computerName="DUCLE" duration="00:00:00.0011323" startTime="2026-10-29T21:07:30.2117121+07:00" endTime="2026-10-29T21:07:30.2148163+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ea3322a3-2cc6-4449-9d92-b8f0d80e9c53" />
+    <UnitTestResult executionId="b318b548-17b3-4b40-9caa-c11ea102c1e0" testId="26f21216-421a-621c-2600-17bedb5cbaf8" testName="Pharmacy.Week4DemoTests.ExtensionTests.CompletedSaleCannotBeRevalidatedAsDraft" computerName="DUCLE" duration="00:00:00.0167457" startTime="2026-10-29T21:07:30.2244087+07:00" endTime="2026-10-29T21:07:30.2247227+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b318b548-17b3-4b40-9caa-c11ea102c1e0" />
+    <UnitTestResult executionId="8d7a9789-6f1a-4b67-8b61-9bb977f5c7c7" testId="5c758d54-ae23-1b88-1acf-50eb3d0aa20d" testName="Pharmacy.Week4DemoTests.ExtensionTests.LimitedOtcDoesNotConsumePrescriptionQuota" computerName="DUCLE" duration="00:00:00.0218958" startTime="2026-10-29T21:07:30.2206003+07:00" endTime="2026-10-29T21:07:30.2233891+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8d7a9789-6f1a-4b67-8b61-9bb977f5c7c7" />
+    <UnitTestResult executionId="e9fb57ab-fdaf-4ee7-acc8-6d0d4efe6673" testId="54cd127c-0831-be2d-e21b-25ee5251423b" testName="Pharmacy.Week4DemoTests.ExtensionTests.ExistingPrescriptionSubtypeUsesSameCaller" computerName="DUCLE" duration="00:00:00.0388493" startTime="2026-10-29T21:07:30.2193780+07:00" endTime="2026-10-29T21:07:30.2197117+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e9fb57ab-fdaf-4ee7-acc8-6d0d4efe6673" />
+    <UnitTestResult executionId="f846a1b2-6fa2-4a3a-9bf6-2b7869ce578f" testId="c4d7b7ea-44ae-b7d2-1547-bebc2f6104af" testName="Pharmacy.Week4DemoTests.ExtensionTests.ExistingCallerAcceptsNewSubtypeAndLimitBoundary(quantity: 3, expected: False)" computerName="DUCLE" duration="00:00:00.0392275" startTime="2026-10-29T21:07:30.2104119+07:00" endTime="2026-10-29T21:07:30.2108244+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f846a1b2-6fa2-4a3a-9bf6-2b7869ce578f" />
+    <UnitTestResult executionId="a9c338ba-a474-4d76-a44a-4a2d530adcff" testId="f8575024-e8cb-8914-ea19-d0883ae3a128" testName="Pharmacy.Week4DemoTests.ExtensionTests.LimitMustBePositive(limit: 0)" computerName="DUCLE" duration="00:00:00.0012407" startTime="2026-10-29T21:07:30.1849431+07:00" endTime="2026-10-29T21:07:30.1858885+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a9c338ba-a474-4d76-a44a-4a2d530adcff" />
+    <UnitTestResult executionId="a5da964f-09af-41ad-8e64-1ef2d7070e66" testId="34c72266-8b0d-d1f6-bfb9-ddcb3f3b5bfc" testName="Pharmacy.Week4DemoTests.ExtensionTests.ExtensionPreservesExistingOtcRestrictions(requiresPrescription: True, controlled: False)" computerName="DUCLE" duration="00:00:00.0028753" startTime="2026-10-29T21:07:30.2059656+07:00" endTime="2026-10-29T21:07:30.2063114+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a5da964f-09af-41ad-8e64-1ef2d7070e66" />
+    <UnitTestResult executionId="5d06e4d9-a086-4887-932a-8c17df312f65" testId="7d262bb6-594f-ec55-cab8-d0b429b38b9a" testName="Pharmacy.Week4DemoTests.ExtensionTests.ExtensionPreservesExistingOtcRestrictions(requiresPrescription: True, controlled: True)" computerName="DUCLE" duration="00:00:00.0645218" startTime="2026-10-29T21:07:30.2016641+07:00" endTime="2026-10-29T21:07:30.2020313+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5d06e4d9-a086-4887-932a-8c17df312f65" />
+    <UnitTestResult executionId="ff80ba0a-ccba-472b-8ef1-d69f8e1e18df" testId="b93b411e-6e11-e7d3-efca-bc6e10390ac5" testName="Pharmacy.Week4DemoTests.ExtensionTests.ExistingCallerAcceptsNewSubtypeAndLimitBoundary(quantity: 1, expected: True)" computerName="DUCLE" duration="00:00:00.0002172" startTime="2026-10-29T21:07:30.2157803+07:00" endTime="2026-10-29T21:07:30.2160968+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ff80ba0a-ccba-472b-8ef1-d69f8e1e18df" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Pharmacy.Week4DemoTests.ExtensionTests.LimitMustBePositive(limit: 0)" storage="c:\hocbai\oop\oop\examples\week4.extensibilitydemo.tests\bin\release\net10.0\week4.extensibilitydemo.tests.dll" id="f8575024-e8cb-8914-ea19-d0883ae3a128">
+      <Execution id="a9c338ba-a474-4d76-a44a-4a2d530adcff" />
+      <TestMethod codeBase="C:\HocBai\OOP\OOP\examples\Week4.ExtensibilityDemo.Tests\bin\Release\net10.0\Week4.ExtensibilityDemo.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Pharmacy.Week4DemoTests.ExtensionTests" name="LimitMustBePositive" />
+    </UnitTest>
+    <UnitTest name="Pharmacy.Week4DemoTests.ExtensionTests.ExtensionPreservesExistingOtcRestrictions(requiresPrescription: True, controlled: False)" storage="c:\hocbai\oop\oop\examples\week4.extensibilitydemo.tests\bin\release\net10.0\week4.extensibilitydemo.tests.dll" id="34c72266-8b0d-d1f6-bfb9-ddcb3f3b5bfc">
+      <Execution id="a5da964f-09af-41ad-8e64-1ef2d7070e66" />
+      <TestMethod codeBase="C:\HocBai\OOP\OOP\examples\Week4.ExtensibilityDemo.Tests\bin\Release\net10.0\Week4.ExtensibilityDemo.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Pharmacy.Week4DemoTests.ExtensionTests" name="ExtensionPreservesExistingOtcRestrictions" />
+    </UnitTest>
+    <UnitTest name="Pharmacy.Week4DemoTests.ExtensionTests.ExistingPrescriptionSubtypeUsesSameCaller" storage="c:\hocbai\oop\oop\examples\week4.extensibilitydemo.tests\bin\release\net10.0\week4.extensibilitydemo.tests.dll" id="54cd127c-0831-be2d-e21b-25ee5251423b">
+      <Execution id="e9fb57ab-fdaf-4ee7-acc8-6d0d4efe6673" />
+      <TestMethod codeBase="C:\HocBai\OOP\OOP\examples\Week4.ExtensibilityDemo.Tests\bin\Release\net10.0\Week4.ExtensibilityDemo.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Pharmacy.Week4DemoTests.ExtensionTests" name="ExistingPrescriptionSubtypeUsesSameCaller" />
+    </UnitTest>
+    <UnitTest name="Pharmacy.Week4DemoTests.ExtensionTests.ExtensionPreservesExistingOtcRestrictions(requiresPrescription: True, controlled: True)" storage="c:\hocbai\oop\oop\examples\week4.extensibilitydemo.tests\bin\release\net10.0\week4.extensibilitydemo.tests.dll" id="7d262bb6-594f-ec55-cab8-d0b429b38b9a">
+      <Execution id="5d06e4d9-a086-4887-932a-8c17df312f65" />
+      <TestMethod codeBase="C:\HocBai\OOP\OOP\examples\Week4.ExtensibilityDemo.Tests\bin\Release\net10.0\Week4.ExtensibilityDemo.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Pharmacy.Week4DemoTests.ExtensionTests" name="ExtensionPreservesExistingOtcRestrictions" />
+    </UnitTest>
+    <UnitTest name="Pharmacy.Week4DemoTests.ExtensionTests.CompletedSaleCannotBeRevalidatedAsDraft" storage="c:\hocbai\oop\oop\examples\week4.extensibilitydemo.tests\bin\release\net10.0\week4.extensibilitydemo.tests.dll" id="26f21216-421a-621c-2600-17bedb5cbaf8">
+      <Execution id="b318b548-17b3-4b40-9caa-c11ea102c1e0" />
+      <TestMethod codeBase="C:\HocBai\OOP\OOP\examples\Week4.ExtensibilityDemo.Tests\bin\Release\net10.0\Week4.ExtensibilityDemo.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Pharmacy.Week4DemoTests.ExtensionTests" name="CompletedSaleCannotBeRevalidatedAsDraft" />
+    </UnitTest>
+    <UnitTest name="Pharmacy.Week4DemoTests.ExtensionTests.ExistingCallerAcceptsNewSubtypeAndLimitBoundary(quantity: 3, expected: False)" storage="c:\hocbai\oop\oop\examples\week4.extensibilitydemo.tests\bin\release\net10.0\week4.extensibilitydemo.tests.dll" id="c4d7b7ea-44ae-b7d2-1547-bebc2f6104af">
+      <Execution id="f846a1b2-6fa2-4a3a-9bf6-2b7869ce578f" />
+      <TestMethod codeBase="C:\HocBai\OOP\OOP\examples\Week4.ExtensibilityDemo.Tests\bin\Release\net10.0\Week4.ExtensibilityDemo.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Pharmacy.Week4DemoTests.ExtensionTests" name="ExistingCallerAcceptsNewSubtypeAndLimitBoundary" />
+    </UnitTest>
+    <UnitTest name="Pharmacy.Week4DemoTests.ExtensionTests.LimitedOtcDoesNotConsumePrescriptionQuota" storage="c:\hocbai\oop\oop\examples\week4.extensibilitydemo.tests\bin\release\net10.0\week4.extensibilitydemo.tests.dll" id="5c758d54-ae23-1b88-1acf-50eb3d0aa20d">
+      <Execution id="8d7a9789-6f1a-4b67-8b61-9bb977f5c7c7" />
+      <TestMethod codeBase="C:\HocBai\OOP\OOP\examples\Week4.ExtensibilityDemo.Tests\bin\Release\net10.0\Week4.ExtensibilityDemo.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Pharmacy.Week4DemoTests.ExtensionTests" name="LimitedOtcDoesNotConsumePrescriptionQuota" />
+    </UnitTest>
+    <UnitTest name="Pharmacy.Week4DemoTests.ExtensionTests.ExistingCallerAcceptsNewSubtypeAndLimitBoundary(quantity: 1, expected: True)" storage="c:\hocbai\oop\oop\examples\week4.extensibilitydemo.tests\bin\release\net10.0\week4.extensibilitydemo.tests.dll" id="b93b411e-6e11-e7d3-efca-bc6e10390ac5">
+      <Execution id="ff80ba0a-ccba-472b-8ef1-d69f8e1e18df" />
+      <TestMethod codeBase="C:\HocBai\OOP\OOP\examples\Week4.ExtensibilityDemo.Tests\bin\Release\net10.0\Week4.ExtensibilityDemo.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Pharmacy.Week4DemoTests.ExtensionTests" name="ExistingCallerAcceptsNewSubtypeAndLimitBoundary" />
+    </UnitTest>
+    <UnitTest name="Pharmacy.Week4DemoTests.ExtensionTests.LimitMustBePositive(limit: -1)" storage="c:\hocbai\oop\oop\examples\week4.extensibilitydemo.tests\bin\release\net10.0\week4.extensibilitydemo.tests.dll" id="b1fbefaa-9151-745f-5845-db94c67ef698">
+      <Execution id="41294399-8786-4d7c-8f0c-49cb49d586b7" />
+      <TestMethod codeBase="C:\HocBai\OOP\OOP\examples\Week4.ExtensibilityDemo.Tests\bin\Release\net10.0\Week4.ExtensibilityDemo.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Pharmacy.Week4DemoTests.ExtensionTests" name="LimitMustBePositive" />
+    </UnitTest>
+    <UnitTest name="Pharmacy.Week4DemoTests.ExtensionTests.ExistingCallerAcceptsNewSubtypeAndLimitBoundary(quantity: 2, expected: True)" storage="c:\hocbai\oop\oop\examples\week4.extensibilitydemo.tests\bin\release\net10.0\week4.extensibilitydemo.tests.dll" id="6c3ccac6-86b4-98b0-a9aa-f08b82a9ddfb">
+      <Execution id="ea3322a3-2cc6-4449-9d92-b8f0d80e9c53" />
+      <TestMethod codeBase="C:\HocBai\OOP\OOP\examples\Week4.ExtensibilityDemo.Tests\bin\Release\net10.0\Week4.ExtensibilityDemo.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Pharmacy.Week4DemoTests.ExtensionTests" name="ExistingCallerAcceptsNewSubtypeAndLimitBoundary" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="b1fbefaa-9151-745f-5845-db94c67ef698" executionId="41294399-8786-4d7c-8f0c-49cb49d586b7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6c3ccac6-86b4-98b0-a9aa-f08b82a9ddfb" executionId="ea3322a3-2cc6-4449-9d92-b8f0d80e9c53" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="26f21216-421a-621c-2600-17bedb5cbaf8" executionId="b318b548-17b3-4b40-9caa-c11ea102c1e0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5c758d54-ae23-1b88-1acf-50eb3d0aa20d" executionId="8d7a9789-6f1a-4b67-8b61-9bb977f5c7c7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="54cd127c-0831-be2d-e21b-25ee5251423b" executionId="e9fb57ab-fdaf-4ee7-acc8-6d0d4efe6673" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c4d7b7ea-44ae-b7d2-1547-bebc2f6104af" executionId="f846a1b2-6fa2-4a3a-9bf6-2b7869ce578f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f8575024-e8cb-8914-ea19-d0883ae3a128" executionId="a9c338ba-a474-4d76-a44a-4a2d530adcff" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="34c72266-8b0d-d1f6-bfb9-ddcb3f3b5bfc" executionId="a5da964f-09af-41ad-8e64-1ef2d7070e66" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7d262bb6-594f-ec55-cab8-d0b429b38b9a" executionId="5d06e4d9-a086-4887-932a-8c17df312f65" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b93b411e-6e11-e7d3-efca-bc6e10390ac5" executionId="ff80ba0a-ccba-472b-8ef1-d69f8e1e18df" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="10" executed="10" passed="10" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.12)&#xD;
+[xUnit.net 00:00:01.58]   Discovering: Week4.ExtensibilityDemo.Tests&#xD;
+[xUnit.net 00:00:01.93]   Discovered:  Week4.ExtensibilityDemo.Tests&#xD;
+[xUnit.net 00:00:02.11]   Starting:    Week4.ExtensibilityDemo.Tests&#xD;
+[xUnit.net 00:00:06.11]   Finished:    Week4.ExtensibilityDemo.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

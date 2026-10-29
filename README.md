@@ -19,6 +19,8 @@
 - [SRS v2.0](docs/SRS_v2.0.md) (bản Word: `docs/SRS_OOP.docx`, diagram: `docs/diagrams/`)
 - [Kiến trúc & quyết định](docs/ARCHITECTURE.md) · [API Contract](docs/API_CONTRACT.md)
 - [Kết quả kiểm thử](docs/TEST_STATUS.md) · [Nhật ký sử dụng AI](docs/AI_USAGE_LOG.md)
+- [Báo cáo tuần 4](docs/WEEK4_FINAL_REPORT.md) · [Self-Explanation và 10 câu hỏi bảo vệ](docs/WEEK4_SELF_EXPLANATION_DEFENSE.md)
+- [Demo mở rộng domain](examples/Week4.ExtensibilityDemo/README.md) · [Minh chứng tuần 4](docs/test-results/WEEK4_FINAL_2026-10-29.md)
 
 ## Yêu cầu
 Node.js 22.12+ (khuyến nghị 24), npm, .NET SDK 10.0.400+.
@@ -37,6 +39,17 @@ npm.cmd run dev
 | .NET API (web tự gọi, không cần mở) | http://localhost:5000/api |
 
 Chạy riêng: `npm.cmd run dev:web`, `npm.cmd run dev:api` (API chạy bản build Release để tránh Windows Smart App Control chặn DLL Debug; nếu chạy tay dùng `dotnet run --project backend/Pharmacy.Api --launch-profile http -c Release`). Test backend: `npm.cmd run test` (= `dotnet test Pharmacy.sln`).
+
+## Kiểm tra và demo tuần 4
+
+```powershell
+dotnet run --project examples/Week4.ExtensibilityDemo --configuration Release
+dotnet test examples/Week4.ExtensibilityDemo.Tests --configuration Release
+dotnet test backend/Pharmacy.Tests/Pharmacy.Tests.csproj --configuration Release
+npm.cmd run test:e2e --workspace frontend
+```
+
+Demo mới chỉ mở rộng domain validation qua `Sale`, chưa tích hợp subtype vào API/EF. E2E dùng cổng riêng 3017/5017 và API Release. Có thể đặt `PHARMACY_E2E_CHANNEL=chrome` để dùng Chrome đã cài và `PHARMACY_E2E_EVIDENCE_DIR` để giữ ảnh riêng; nếu không chọn channel thì chuẩn bị Chromium bằng Playwright. Xem hồ sơ tuần 4 để biết nguồn, thời điểm và phạm vi của từng lượt test.
 
 ## Cấu hình
 Sao chép mẫu `.env` sau khi clone (file `.env` bị Git bỏ qua):

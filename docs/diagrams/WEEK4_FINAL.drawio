@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" version="24.7.17">
+  <diagram name="Final core domain class diagram" id="DOMAIN">
+    <mxGraphModel dx="1600" dy="1290" grid="1" page="1" pageWidth="1540" pageHeight="1290">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Drug" value="&lt;b&gt;Drug&lt;/b&gt;&lt;hr&gt;- batches: List&amp;lt;DrugBatch&amp;gt;&lt;br&gt;+ Batches: IReadOnlyCollection&amp;lt;DrugBatch&amp;gt;&lt;br&gt;+ GetAvailableQuantity(date, reservations = 0): int&lt;br&gt;+ PlanFEFO(quantity, date): IReadOnlyList&amp;lt;BatchPlan&amp;gt;&lt;br&gt;+ AddBatch(batch): void" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="90" width="430" height="205" />
+        </mxCell>
+        <mxCell id="DrugBatch" value="&lt;b&gt;DrugBatch&lt;/b&gt;&lt;hr&gt;+ Quantity: int {private set}&lt;br&gt;+ InitialQuantity: int {private set}&lt;br&gt;+ ExpiryDate: DateOnly {private set}&lt;br&gt;+ Deduct(quantity, businessDate): void" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="520" y="90" width="430" height="205" />
+        </mxCell>
+        <mxCell id="Sale" value="&lt;b&gt;Sale&lt;/b&gt;&lt;hr&gt;&amp;lt;&amp;lt;abstract&amp;gt;&amp;gt; extends VersionedEntity&lt;br&gt;+ Items: IReadOnlyCollection&amp;lt;SaleItem&amp;gt;&lt;br&gt;+ Validate(ctx): ValidationResult {abstract}&lt;br&gt;+ ApplyCompletionEffects(items): void {virtual}&lt;br&gt;+ Complete(now, method): void&lt;br&gt;+ ReplaceItems(lines): void" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1000" y="90" width="460" height="230" />
+        </mxCell>
+        <mxCell id="Prescription" value="&lt;b&gt;Prescription&lt;/b&gt;&lt;hr&gt;- items: List&amp;lt;PrescriptionItem&amp;gt;&lt;br&gt;+ Items: IReadOnlyCollection&amp;lt;PrescriptionItem&amp;gt;&lt;br&gt;+ SetDetails(prescriber, issued, until, lines): void&lt;br&gt;+ Approve(reviewer, now): void&lt;br&gt;+ Validate(patientId, date): bool" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="380" width="430" height="220" />
+        </mxCell>
+        <mxCell id="PrescriptionItem" value="&lt;b&gt;PrescriptionItem&lt;/b&gt;&lt;hr&gt;extends VersionedEntity&lt;br&gt;+ DispensedQuantity: int {private set}&lt;br&gt;+ PrescribedQuantity: int {private set}&lt;br&gt;+ Remaining(activeReservations): int&lt;br&gt;+ RecordDispense(quantity): void" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="520" y="380" width="430" height="200" />
+        </mxCell>
+        <mxCell id="OTCSale" value="&lt;b&gt;OTCSale&lt;/b&gt;&lt;hr&gt;extends Sale&lt;br&gt;+ Validate(ctx): ValidationResult&lt;br&gt;ApplyCompletionEffects inherited" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1000" y="400" width="210" height="150" />
+        </mxCell>
+        <mxCell id="PrescriptionSale" value="&lt;b&gt;PrescriptionSale&lt;/b&gt;&lt;hr&gt;extends Sale&lt;br&gt;+ Validate(ctx): ValidationResult&lt;br&gt;+ ApplyCompletionEffects(items): void&lt;br&gt;Checks patient, owner and quota" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1240" y="400" width="220" height="190" />
+        </mxCell>
+        <mxCell id="QuantityLimitedOTCSale" value="&lt;b&gt;QuantityLimitedOTCSale&lt;/b&gt;&lt;hr&gt;&amp;lt;&amp;lt;example only&amp;gt;&amp;gt; extends Sale&lt;br&gt;+ MaxUnitsPerDrug: int {get only}&lt;br&gt;+ Validate(ctx): ValidationResult&lt;br&gt;Composes existing OTCSale validation&lt;br&gt;Not mapped in production API / EF Core" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#ecfdf5;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="730" width="430" height="205" />
+        </mxCell>
+        <mxCell id="BatchAllocation" value="&lt;b&gt;BatchAllocation&lt;/b&gt;&lt;hr&gt;+ SaleItemId: string&lt;br&gt;+ BatchId: string&lt;br&gt;+ Quantity: int {private set}" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="520" y="730" width="430" height="150" />
+        </mxCell>
+        <mxCell id="SaleItem" value="&lt;b&gt;SaleItem&lt;/b&gt;&lt;hr&gt;+ Quantity: int {private set}&lt;br&gt;+ UnitPrice: decimal {private set}&lt;br&gt;+ Allocations: IReadOnlyCollection&amp;lt;BatchAllocation&amp;gt;&lt;br&gt;+ SetPrice(price): void&lt;br&gt;+ AddAllocation(allocation): void&lt;br&gt;~ Seal(): void" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1000" y="730" width="460" height="200" />
+        </mxCell>
+        <mxCell id="Invoice" value="&lt;b&gt;Invoice&lt;/b&gt;&lt;hr&gt;+ SaleId: string&lt;br&gt;+ Sale: Sale&lt;br&gt;+ ReadDetails(): IReadOnlyCollection&amp;lt;SaleItem&amp;gt;" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1000" y="1030" width="460" height="140" />
+        </mxCell>
+        <mxCell id="VersionedEntity" value="&lt;b&gt;VersionedEntity&lt;/b&gt;&lt;hr&gt;&amp;lt;&amp;lt;abstract&amp;gt;&amp;gt;&lt;br&gt;+ Version: int {private set}" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1050" width="430" height="100" />
+        </mxCell>
+        <mxCell id="e0" value="Batches 0..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startArrow=diamond;startFill=1;" edge="1" source="Drug" target="DrugBatch" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="Items 0..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startArrow=diamond;startFill=1;" edge="1" source="Prescription" target="PrescriptionItem" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;" edge="1" source="OTCSale" target="Sale" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;" edge="1" source="PrescriptionSale" target="Sale" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="new variant" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;" edge="1" source="QuantityLimitedOTCSale" target="Sale" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="Items 0..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startArrow=diamond;startFill=1;" edge="1" source="Sale" target="SaleItem" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="Allocations 0..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startArrow=diamond;startFill=1;" edge="1" source="SaleItem" target="BatchAllocation" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e7" value="Sale 1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;" edge="1" source="Invoice" target="Sale" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Final core services and interfaces" id="SERVICES">
+    <mxGraphModel dx="1600" dy="1130" grid="1" page="1" pageWidth="1600" pageHeight="1130">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="IBusinessClock" value="&lt;b&gt;IBusinessClock&lt;/b&gt;&lt;hr&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;br&gt;+ Today: DateOnly {get}&lt;br&gt;+ Now: DateTimeOffset {get}" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="90" width="340" height="170" />
+        </mxCell>
+        <mxCell id="BusinessClock" value="&lt;b&gt;BusinessClock&lt;/b&gt;&lt;hr&gt;+ Today: DateOnly&lt;br&gt;+ Now: DateTimeOffset&lt;br&gt;Implements IBusinessClock" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="430" y="90" width="340" height="170" />
+        </mxCell>
+        <mxCell id="IFileStorage" value="&lt;b&gt;IFileStorage&lt;/b&gt;&lt;hr&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;br&gt;+ SaveAsync(...): Task&amp;lt;string&amp;gt;&lt;br&gt;+ OpenRead(category, fileName): Stream" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="830" y="90" width="340" height="170" />
+        </mxCell>
+        <mxCell id="LocalFileStorage" value="&lt;b&gt;LocalFileStorage&lt;/b&gt;&lt;hr&gt;+ SaveAsync(...): Task&amp;lt;string&amp;gt;&lt;br&gt;+ OpenRead(category, fileName): Stream&lt;br&gt;Implements IFileStorage" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1230" y="90" width="340" height="170" />
+        </mxCell>
+        <mxCell id="InventoryReader" value="&lt;b&gt;InventoryReader&lt;/b&gt;&lt;hr&gt;+ Snapshot(ct): Task&amp;lt;IReadOnlyList&amp;lt;DrugStock&amp;gt;&amp;gt;&lt;br&gt;Reads drugs, batches and active reservations&lt;br&gt;Uses PharmacyDbContext and IBusinessClock" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="430" width="340" height="190" />
+        </mxCell>
+        <mxCell id="InventoryReportService" value="&lt;b&gt;InventoryReportService&lt;/b&gt;&lt;hr&gt;+ LowStock(ct): Task&amp;lt;IReadOnlyList&amp;lt;LowStockRow&amp;gt;&amp;gt;&lt;br&gt;+ NearExpiry(days = 30, ct):&lt;br&gt;  Task&amp;lt;IReadOnlyList&amp;lt;ExpiringRow&amp;gt;&amp;gt;" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="430" y="430" width="340" height="190" />
+        </mxCell>
+        <mxCell id="SaleEvaluation" value="&lt;b&gt;SaleEvaluation&lt;/b&gt;&lt;hr&gt;+ Evaluate(Sale sale, ct):&lt;br&gt;  Task&amp;lt;SaleEvaluationResult&amp;gt;&lt;br&gt;Calls sale.Validate(context)" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="830" y="430" width="340" height="190" />
+        </mxCell>
+        <mxCell id="CheckoutService" value="&lt;b&gt;CheckoutService&lt;/b&gt;&lt;hr&gt;+ Checkout(Sale sale, actorId, cashReceived, ct)&lt;br&gt;+ Fulfill(orderId, actorId, ct)&lt;br&gt;- CheckoutWithin(Sale sale, session, ct)&lt;br&gt;Calls sale.ApplyCompletionEffects(items)" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1230" y="430" width="340" height="220" />
+        </mxCell>
+        <mxCell id="InventoryService" value="&lt;b&gt;InventoryService&lt;/b&gt;&lt;hr&gt;+ Execute&amp;lt;T&amp;gt;(action, ct): Task&amp;lt;T&amp;gt;&lt;br&gt;+ AllocateFEFO(lines, orderId, ct)&lt;br&gt;+ Deduct(lines, orderId, ct)&lt;br&gt;Owns lock and database transaction boundary" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="810" width="340" height="200" />
+        </mxCell>
+        <mxCell id="InventoryTransaction" value="&lt;b&gt;InventoryTransaction&lt;/b&gt;&lt;hr&gt;+ Reserve(orderId, ct)&lt;br&gt;+ Release(orderId, ct)&lt;br&gt;+ AllocateFEFO(lines, orderId, ct)&lt;br&gt;+ Deduct(lines, orderId, ct)" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="430" y="810" width="340" height="200" />
+        </mxCell>
+        <mxCell id="IInventoryLock" value="&lt;b&gt;IInventoryLock&lt;/b&gt;&lt;hr&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;br&gt;+ AcquireAsync(ct): Task&amp;lt;IDisposable&amp;gt;" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="830" y="810" width="340" height="155" />
+        </mxCell>
+        <mxCell id="InventoryLock" value="&lt;b&gt;InventoryLock&lt;/b&gt;&lt;hr&gt;+ AcquireAsync(ct): Task&amp;lt;IDisposable&amp;gt;&lt;br&gt;SemaphoreSlim, one process" style="rounded=0;html=1;whiteSpace=wrap;verticalAlign=top;align=left;spacing=10;fillColor=#f1f5f9;strokeColor=#334155;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1230" y="810" width="340" height="155" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;dashed=1;" edge="1" source="BusinessClock" target="IBusinessClock" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;dashed=1;" edge="1" source="LocalFileStorage" target="IFileStorage" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="clock" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;" edge="1" source="InventoryReader" target="IBusinessClock" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="snapshot" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;" edge="1" source="InventoryReportService" target="InventoryReader" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="evaluate" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;" edge="1" source="CheckoutService" target="SaleEvaluation" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="read" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;" edge="1" source="InventoryService" target="InventoryReader" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="creates" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;" edge="1" source="InventoryService" target="InventoryTransaction" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;dashed=1;" edge="1" source="InventoryLock" target="IInventoryLock" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e8" value="Execute / session" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;" edge="1" source="CheckoutService" target="InventoryService" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e9" value="snapshot" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;" edge="1" source="SaleEvaluation" target="InventoryReader" parent="1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

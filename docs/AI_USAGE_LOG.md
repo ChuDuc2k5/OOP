@@ -1,5 +1,11 @@
 # Nhật ký sử dụng AI
 
+## Hoàn thiện tuần 4 ngày 29/10/2026
+
+Codex hỗ trợ đọc kế hoạch 4 tuần/rubric, thêm demo QuantityLimitedOTCSale và bộ test riêng, thêm ba test tích hợp, chạy hồi quy backend/Playwright, chỉnh runner test, cập nhật UML và biên tập báo cáo. Người dùng xác nhận trước đó chưa có test/demo mới, yêu cầu thực hiện, chia trách nhiệm hai thành viên như tuần 3 và để phần khai báo AI riêng để copy.
+
+Kết quả mới và dữ liệu gốc: [hồ sơ tuần 4](test-results/WEEK4_FINAL_2026-10-29.md). Nhật ký prompt, đầu ra, kiểm chứng, giới hạn và vai trò thực tế: [AI_USAGE_WEEK4.md](AI_USAGE_WEEK4.md). Chưa ghi nhận model cụ thể của phiên và chưa có xác nhận hai thành viên đã hoàn thành mock defense không dùng AI.
+
 ## Phạm vi hỗ trợ đã ghi nhận
 
 Nhóm có sử dụng AI trong quá trình phát triển. Tài liệu quy trình và prompt đã lưu ở các phiên bản trước ghi nhận Claude Code hỗ trợ tài liệu và review, ChatGPT Codex hỗ trợ backend, Antigravity hỗ trợ frontend. Việc ghi nhận này phản ánh phạm vi công cụ được sử dụng, không xác định công cụ đã tạo ra từng dòng code.

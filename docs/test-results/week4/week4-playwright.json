@@ -1,0 +1,1799 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\HocBai\\OOP\\OOP\\node_modules\\playwright\\cli.js",
+      "test",
+      "--reporter=list,json"
+    ],
+    "configFile": "C:\\HocBai\\OOP\\OOP\\frontend\\playwright.config.ts",
+    "rootDir": "C:/HocBai/OOP/OOP/frontend/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/HocBai/OOP/OOP/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "1366",
+        "name": "1366",
+        "testDir": "C:/HocBai/OOP/OOP/frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "C:/HocBai/OOP/OOP/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "390",
+        "name": "390",
+        "testDir": "C:/HocBai/OOP/OOP/frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "1366",
+        "testDir": "C:\\HocBai\\OOP\\OOP\\frontend\\e2e",
+        "snapshotDir": "C:\\HocBai\\OOP\\OOP\\frontend\\e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 120000,
+        "use": {
+          "channel": "chrome",
+          "actionTimeout": 15000,
+          "baseURL": "http://localhost:3017",
+          "locale": "vi-VN",
+          "timezoneId": "Asia/Ho_Chi_Minh",
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "browserName": "chromium",
+          "viewport": {
+            "width": 1366,
+            "height": 900
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "1366"
+      },
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "390",
+        "testDir": "C:\\HocBai\\OOP\\OOP\\frontend\\e2e",
+        "snapshotDir": "C:\\HocBai\\OOP\\OOP\\frontend\\e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 120000,
+        "use": {
+          "channel": "chrome",
+          "actionTimeout": 15000,
+          "baseURL": "http://localhost:3017",
+          "locale": "vi-VN",
+          "timezoneId": "Asia/Ho_Chi_Minh",
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "browserName": "chromium",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "390"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "pharmacy.spec.ts",
+      "file": "pharmacy.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "TC09-F004, TC30-F012, TC32-F013, F007/F009: danh mục thật và ảnh giữ tỷ lệ",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7895,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:10:54.347Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC09-F004-real-catalog-home",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-1366\\attachments\\TC09-F004-real-catalog-home-aa29646e82f7aee8cab9e20f999b88274cc00506.png"
+                    },
+                    {
+                      "name": "TC09-F004-real-catalog-detail-TATANOL",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-1366\\attachments\\TC09-F004-real-catalog-detail-TATANOL-7b27a87dbc3865c30521a5e60ff0258572c172fa.png"
+                    },
+                    {
+                      "name": "TC09-F004-real-catalog-detail-ATILENE",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-1366\\attachments\\TC09-F004-real-catalog-detail-ATILENE-4894bdf5e36f1bbbe81144586256c282d5b09877.png"
+                    },
+                    {
+                      "name": "TC30-F012-real-catalog-cart",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-1366\\attachments\\TC30-F012-real-catalog-cart-994b1be2913476d6d87d469a8faeed6d261ebe9f.png"
+                    },
+                    {
+                      "name": "TC32-F013-real-catalog-checkout",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-1366\\attachments\\TC32-F013-real-catalog-checkout-ce104eba844bee5200e8555bdcd838c9335fa5fe.png"
+                    },
+                    {
+                      "name": "F007-real-catalog-inventory",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-1366\\attachments\\F007-real-catalog-inventory-e4419bf1376922373f86b1f776fe15d3fc574e17.png"
+                    },
+                    {
+                      "name": "F007-real-catalog-expired",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-1366\\attachments\\F007-real-catalog-expired-e1eae830d3bd01f0901e30400afc1eacd1f04db8.png"
+                    },
+                    {
+                      "name": "F009-real-catalog-low-stock",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-1366\\attachments\\F009-real-catalog-low-stock-d581189ef0f4c014634edd71fb997ca54aecceb2.png"
+                    },
+                    {
+                      "name": "F009-real-catalog-expiring",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-1366\\attachments\\F009-real-catalog-expiring-41f5b19f411607182c5e5a8650653f3001c5da90.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-47aa44e26a28a88b9f30",
+          "file": "pharmacy.spec.ts",
+          "line": 104,
+          "column": 1
+        },
+        {
+          "title": "TC01-F001: đăng ký tự đăng nhập và chuyển tới next an toàn",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1052,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:11:03.780Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC01-F001-registered-session",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC01-F001-đăng-ký-819ca--và-chuyển-tới-next-an-toàn-1366\\attachments\\TC01-F001-registered-session-ac15a49657a381600e9a4c8b7b20e4108dd88bf4.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-f00b26e8f18d06510115",
+          "file": "pharmacy.spec.ts",
+          "line": 144,
+          "column": 1
+        },
+        {
+          "title": "TC01-F001: token lỗi liên tiếp chỉ thử lại một lần",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 719,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:11:04.845Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-0081b81ddc1e775358e4",
+          "file": "pharmacy.spec.ts",
+          "line": 164,
+          "column": 1
+        },
+        {
+          "title": "TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: luồng khách và nhân viên",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 41612,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:11:05.574Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC09-F004-guest",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC09-F004-guest-43af4d5ff8ecb8aa1375b860793fbe4454f39af0.png"
+                    },
+                    {
+                      "name": "TC09-F004-guest-detail",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC09-F004-guest-detail-ae54446491e955a1bc63123b91b18a103c6c0a52.png"
+                    },
+                    {
+                      "name": "TC29-F012-add-toast",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC29-F012-add-toast-90ecec02c34151a5f457e4a22f6e22c8b8ae2ce4.png"
+                    },
+                    {
+                      "name": "TC32-F013-checkout",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC32-F013-checkout-e480cbd7295df9a8e8a2a7855bf523eb023be912.png"
+                    },
+                    {
+                      "name": "TC42-F017-qr",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC42-F017-qr-393784f6e51299291c545b0a921bb4afe6ff67e8.png"
+                    },
+                    {
+                      "name": "TC32-F014-pickup-qr-closed",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC32-F014-pickup-qr-closed-fa262e5a2a9a322e09dac9b72920579b407769fb.png"
+                    },
+                    {
+                      "name": "TC43-F014-pending-next-step",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC43-F014-pending-next-step-e2ddb6c82d6469acfd99a99636e432d7a0c184b1.png"
+                    },
+                    {
+                      "name": "TC46-F018-short-payment",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC46-F018-short-payment-b8e847ab3c9231bf7cf5e90db0f4527e64869c1c.png"
+                    },
+                    {
+                      "name": "TC46-F017-user-review-note",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC46-F017-user-review-note-82abb81ff068e1e0cace1bf819cd556d95d9871b.png"
+                    },
+                    {
+                      "name": "TC45-F018-one-tap",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC45-F018-one-tap-7994af927055d8a1130e68fdf357f14e66010f18.png"
+                    },
+                    {
+                      "name": "TC45-F018-approved",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC45-F018-approved-240b668fe2648fc271dc5de71338bc1f9b12c6a6.png"
+                    },
+                    {
+                      "name": "TC45-F014-pickup-paid",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC45-F014-pickup-paid-c3a6d9898494168ea8f118666be5856814acc337.png"
+                    },
+                    {
+                      "name": "TC37-F019-fulfill",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC37-F019-fulfill-a300311ea6dd78e44c6eb769f4b65d0e354c39d8.png"
+                    },
+                    {
+                      "name": "TC37-F015-ready-pickup",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC37-F015-ready-pickup-32caf8d28f8ca7799fa7490b5a281cf383863928.png"
+                    },
+                    {
+                      "name": "TC37-F015-completed",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC37-F015-completed-33051f675233e69e81a67b04efbe550d2810ab3a.png"
+                    },
+                    {
+                      "name": "TC53-F020-user-invoice",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC53-F020-user-invoice-05a8fbfcff1485786b94133cd9c8dbec970a3c1b.png"
+                    },
+                    {
+                      "name": "TC17-F002-user-blocked-staff",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-1366\\attachments\\TC17-F002-user-blocked-staff-90041b29efd299f32737703bca73cc2cfa8ff1ea.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-fdd5d69606bfcf6ab577",
+          "file": "pharmacy.spec.ts",
+          "line": 183,
+          "column": 1
+        },
+        {
+          "title": "TC29-F012, TC24-F010: phản hồi giỏ và gửi ảnh đơn thuốc",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11411,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:11:47.220Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC29-F012-home-add-toast",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC29-F012-TC24-F0-6e15c-ồi-giỏ-và-gửi-ảnh-đơn-thuốc-1366\\attachments\\TC29-F012-home-add-toast-e8edbc4a185a380ce300fb26ec7b3ff79bf9ced7.png"
+                    },
+                    {
+                      "name": "TC24-F010-sent-banner",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC29-F012-TC24-F0-6e15c-ồi-giỏ-và-gửi-ảnh-đơn-thuốc-1366\\attachments\\TC24-F010-sent-banner-937e51be75d652dc7070a9d6fad008547f8ee0f0.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-9fd5b69a3d5932ace3d5",
+          "file": "pharmacy.spec.ts",
+          "line": 320,
+          "column": 1
+        },
+        {
+          "title": "TC32/TC42/TC45/TC37: giao hàng và thử xuất kho lại sau xác nhận tiền",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 27202,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:11:58.712Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC42-F017-delivery-qr",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-1366\\attachments\\TC42-F017-delivery-qr-aaccc53cbd2bb51539d59ded9721257d60e86f12.png"
+                    },
+                    {
+                      "name": "TC45-F018-prefilled-review",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-1366\\attachments\\TC45-F018-prefilled-review-a0fc721cd58d511956b1d5e68621fb96aa581511.png"
+                    },
+                    {
+                      "name": "TC37-F019-fulfill-retry",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-1366\\attachments\\TC37-F019-fulfill-retry-595f08550e7d103f3285beaf45507789ab8df245.png"
+                    },
+                    {
+                      "name": "TC45-F014-delivery-paid",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-1366\\attachments\\TC45-F014-delivery-paid-60161c784924af4b95ad21dad39139b55528a9b0.png"
+                    },
+                    {
+                      "name": "TC37-F015-delivering",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-1366\\attachments\\TC37-F015-delivering-4ea27e96d43d280fe72ac4a87afe5b586250315d.png"
+                    },
+                    {
+                      "name": "TC37-F015-delivery-completed",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-1366\\attachments\\TC37-F015-delivery-completed-d0df65fee359295245c93c31133290c2a01082f1.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-7a84282e80d780d39406",
+          "file": "pharmacy.spec.ts",
+          "line": 365,
+          "column": 1
+        },
+        {
+          "title": "TC31-F012: hết hàng bị khóa và backend từ chối số lượng vượt tồn",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4487,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:12:25.974Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC31-F012-out-of-stock-home",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC31-F012-hết-hàn-ab99f-d-từ-chối-số-lượng-vượt-tồn-1366\\attachments\\TC31-F012-out-of-stock-home-db5ece8f2da4f8801a955ac3f4679a3b54e6bd9d.png"
+                    },
+                    {
+                      "name": "TC31-F012-out-of-stock-detail",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC31-F012-hết-hàn-ab99f-d-từ-chối-số-lượng-vượt-tồn-1366\\attachments\\TC31-F012-out-of-stock-detail-5277357ecaf018e5cf7e4527e3c90d45ed98b9b2.png"
+                    },
+                    {
+                      "name": "TC31-F012-insufficient-stock",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC31-F012-hết-hàn-ab99f-d-từ-chối-số-lượng-vượt-tồn-1366\\attachments\\TC31-F012-insufficient-stock-779ab3f41af9c028a128892607d2b8fd8bd975b5.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-bbd1c6b14e62c80abb66",
+          "file": "pharmacy.spec.ts",
+          "line": 424,
+          "column": 1
+        },
+        {
+          "title": "TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt chưa mở QR",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 18328,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:12:30.512Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC32-F013-payment-open-error",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-1366\\attachments\\TC32-F013-payment-open-error-1ccca21342b12a0f486cfeda65ae386b6818f9b8.png"
+                    },
+                    {
+                      "name": "TC33-F013-inline-prescription",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-1366\\attachments\\TC33-F013-inline-prescription-36eeb5391c0b3dd9fbff9651826ceffbe2b7a021.png"
+                    },
+                    {
+                      "name": "TC33-F013-waiting-prescription",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-1366\\attachments\\TC33-F013-waiting-prescription-730a31b1f09598219e2c6abc5454ca425701ef64.png"
+                    },
+                    {
+                      "name": "TC26-F011-online-prefilled",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-1366\\attachments\\TC26-F011-online-prefilled-d8d0e94fa2b6401e3d24fb36e5c2446bd4b28109.png"
+                    },
+                    {
+                      "name": "TC26-F011-online-approved",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-1366\\attachments\\TC26-F011-online-approved-f6dd819bc423aa127846e25c29fc0932e90d82fa.png"
+                    },
+                    {
+                      "name": "TC33-F014-prescription-approved",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-1366\\attachments\\TC33-F014-prescription-approved-37ad427f7ee42788fca9b3d21d4421689981b7dd.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-1ec5c082a87e18b43e69",
+          "file": "pharmacy.spec.ts",
+          "line": 447,
+          "column": 1
+        },
+        {
+          "title": "TC33-F017: duyệt qua API tự mở QR trong 15 giây và lỗi giữ đơn",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 16904,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:12:48.903Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC33-F017-auto-qr",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC33-F017-duyệt-q-fa73b-rong-15-giây-và-lỗi-giữ-đơn-1366\\attachments\\TC33-F017-auto-qr-8d2374ab53b1960f004e59df35956756bff44617.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-d1bcb67ca1e2ce6d6df6",
+          "file": "pharmacy.spec.ts",
+          "line": 573,
+          "column": 1
+        },
+        {
+          "title": "TC38-F016/F019: bán OTC tại quầy bằng form",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2988,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:13:05.863Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC38-F016-counter-one-screen",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC38-F016-F019-bán-OTC-tại-quầy-bằng-form-1366\\attachments\\TC38-F016-counter-one-screen-3ab5552281354a32223ec8bc9cc246e02852660b.png"
+                    },
+                    {
+                      "name": "TC38-F016-counter-retry",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC38-F016-F019-bán-OTC-tại-quầy-bằng-form-1366\\attachments\\TC38-F016-counter-retry-1378ca6f4e00fffeac6c0b274ee65bdfcc69f7f7.png"
+                    },
+                    {
+                      "name": "TC38-F019-counter-checkout",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC38-F016-F019-bán-OTC-tại-quầy-bằng-form-1366\\attachments\\TC38-F019-counter-checkout-e8f3fa5b1ebd47e36925352b1a3a9585d954d3f5.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-40f990ab9d137cae0110",
+          "file": "pharmacy.spec.ts",
+          "line": 655,
+          "column": 1
+        },
+        {
+          "title": "TC26-F011: lưu chi tiết và chấp nhận một nút",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1899,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:13:08.885Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC26-F011-save-approve",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC26-F011-lưu-chi-tiết-và-chấp-nhận-một-nút-1366\\attachments\\TC26-F011-save-approve-6503710ce1a2097dcdf77bfc9ef8a65036d078ba.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-5d85baa0296b748d3903",
+          "file": "pharmacy.spec.ts",
+          "line": 677,
+          "column": 1
+        },
+        {
+          "title": "TC11-F005, TC14-F006: tạo thuốc kèm ảnh và lô đầu",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2681,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:13:10.802Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC11-F005-create-image-batch",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC11-F005-TC14-F006-tạo-thuốc-kèm-ảnh-và-lô-đầu-1366\\attachments\\TC11-F005-create-image-batch-dedec57c1d9144655a5df6c8ae28dfb50ce9a9b1.png"
+                    },
+                    {
+                      "name": "TC14-F006-first-batch",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC11-F005-TC14-F006-tạo-thuốc-kèm-ảnh-và-lô-đầu-1366\\attachments\\TC14-F006-first-batch-4336a65d4b3b439fd36b9f28173d9bc104a22a18.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-ad77d17d05b3217c14ce",
+          "file": "pharmacy.spec.ts",
+          "line": 689,
+          "column": 1
+        },
+        {
+          "title": "F017: Admin cấu hình QR và lỗi theo trường giữ dữ liệu",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2467,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:13:13.503Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC07-F003-field-error",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-F017-Admin-cấu-hì-23446-lỗi-theo-trường-giữ-dữ-liệu-1366\\attachments\\TC07-F003-field-error-8be7bef858473263c9775af60adb5b034264ae55.png"
+                    },
+                    {
+                      "name": "F017-admin-qr-settings",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-F017-Admin-cấu-hì-23446-lỗi-theo-trường-giữ-dữ-liệu-1366\\attachments\\F017-admin-qr-settings-78d97155a6e54fa0db3ac837ae12506349cbf64e.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-52f72e47b9be70979365",
+          "file": "pharmacy.spec.ts",
+          "line": 710,
+          "column": 1
+        },
+        {
+          "title": "AC02: dashboard quản lý và chuyển sang giao diện nhân viên",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1929,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:13:15.985Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "AC02-admin-dashboard",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-AC02-dashboard-qu-81eed-ển-sang-giao-diện-nhân-viên-1366\\attachments\\AC02-admin-dashboard-95cc50d76d162a53b151620ab779e50612209099.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-96b222a1c0078966c24f",
+          "file": "pharmacy.spec.ts",
+          "line": 742,
+          "column": 1
+        },
+        {
+          "title": "M4: rà tất cả route, loading/rỗng/lỗi và menu mobile",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "1366",
+              "projectName": "1366",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14740,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:13:17.925Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "F004-empty",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-M4-rà-tất-cả-route-loading-rỗng-lỗi-và-menu-mobile-1366\\attachments\\F004-empty-0cf18fdb44bcafeceb2dec0961b2d6da4afda2d6.png"
+                    },
+                    {
+                      "name": "F004-network-error",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-M4-rà-tất-cả-route-loading-rỗng-lỗi-và-menu-mobile-1366\\attachments\\F004-network-error-d41c55e13252396c75ba9d26161ea66349f7cbcc.png"
+                    },
+                    {
+                      "name": "F007-staff-inventory",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-M4-rà-tất-cả-route-loading-rỗng-lỗi-và-menu-mobile-1366\\attachments\\F007-staff-inventory-073fc6815ba37bdcecb25e2d662afba7c9c2b5ed.png"
+                    },
+                    {
+                      "name": "F005-F006-admin-drug",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-M4-rà-tất-cả-route-loading-rỗng-lỗi-và-menu-mobile-1366\\attachments\\F005-F006-admin-drug-6dfaaf67b0b132b728ab30889b24109ccb1e55ec.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-d101056ae586adb6c79d",
+          "file": "pharmacy.spec.ts",
+          "line": 780,
+          "column": 1
+        },
+        {
+          "title": "TC09-F004, TC30-F012, TC32-F013, F007/F009: danh mục thật và ảnh giữ tỷ lệ",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6556,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:13:34.050Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC09-F004-real-catalog-home",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-390\\attachments\\TC09-F004-real-catalog-home-8ea4db97e4bbba7c3252ea79749a8eb73cd7babe.png"
+                    },
+                    {
+                      "name": "TC09-F004-real-catalog-detail-TATANOL",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-390\\attachments\\TC09-F004-real-catalog-detail-TATANOL-3797539cab92ae9b84b2f4f8434343f49c11265b.png"
+                    },
+                    {
+                      "name": "TC09-F004-real-catalog-detail-ATILENE",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-390\\attachments\\TC09-F004-real-catalog-detail-ATILENE-e6053405e62e7967491d4172696f04a24ef181a4.png"
+                    },
+                    {
+                      "name": "TC30-F012-real-catalog-cart",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-390\\attachments\\TC30-F012-real-catalog-cart-f631138301cceb1197d2ad8b151538c7af385be4.png"
+                    },
+                    {
+                      "name": "TC32-F013-real-catalog-checkout",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-390\\attachments\\TC32-F013-real-catalog-checkout-ebd56b13392307e718a352f66afbc4e6c1a75dbc.png"
+                    },
+                    {
+                      "name": "F007-real-catalog-inventory",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-390\\attachments\\F007-real-catalog-inventory-987e8b2bb35862a125b7047ce120454b62bae6ff.png"
+                    },
+                    {
+                      "name": "F007-real-catalog-expired",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-390\\attachments\\F007-real-catalog-expired-c830d687af9bf3288a38e3115419b8560fe12d7a.png"
+                    },
+                    {
+                      "name": "F009-real-catalog-low-stock",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-390\\attachments\\F009-real-catalog-low-stock-89bf97f24a19fef2afa63c6290c10708aedbf0ca.png"
+                    },
+                    {
+                      "name": "F009-real-catalog-expiring",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC30-F0-4ad29-h-mục-thật-và-ảnh-giữ-tỷ-lệ-390\\attachments\\F009-real-catalog-expiring-ba027c6bfd5f754948be481a887b455732d6b3c7.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-1c9edfdf35c2882638ad",
+          "file": "pharmacy.spec.ts",
+          "line": 104,
+          "column": 1
+        },
+        {
+          "title": "TC01-F001: đăng ký tự đăng nhập và chuyển tới next an toàn",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1177,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:13:41.490Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC01-F001-registered-session",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC01-F001-đăng-ký-819ca--và-chuyển-tới-next-an-toàn-390\\attachments\\TC01-F001-registered-session-2c739418493a6e83da22b85dd6d02ec849a51966.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-b8cd6a2577491c1ca51e",
+          "file": "pharmacy.spec.ts",
+          "line": 144,
+          "column": 1
+        },
+        {
+          "title": "TC01-F001: token lỗi liên tiếp chỉ thử lại một lần",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 817,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:13:42.686Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-cf970836d65dec089c1b",
+          "file": "pharmacy.spec.ts",
+          "line": 164,
+          "column": 1
+        },
+        {
+          "title": "TC09-F004, TC32-F013, TC42-F017, TC45/TC46-F018, TC37-F019, TC53-F020: luồng khách và nhân viên",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 38460,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:13:43.523Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC09-F004-guest",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC09-F004-guest-297325caff326beb3d068a43198e6b7d44d3f63c.png"
+                    },
+                    {
+                      "name": "TC09-F004-guest-detail",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC09-F004-guest-detail-2242bff43481731b51911e3230440f14a903438b.png"
+                    },
+                    {
+                      "name": "TC29-F012-add-toast",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC29-F012-add-toast-101359787966a98e52199f7a5d7e95a2fa783ef3.png"
+                    },
+                    {
+                      "name": "TC32-F013-checkout",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC32-F013-checkout-04c030b6a7353df072135fa97bf2bee06d18165f.png"
+                    },
+                    {
+                      "name": "TC42-F017-qr",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC42-F017-qr-b1b1fdaaf8d534145c4993c3ff605d37d30b8f0a.png"
+                    },
+                    {
+                      "name": "TC32-F014-pickup-qr-closed",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC32-F014-pickup-qr-closed-20da7fa451c4bf50d6b14597ea803374ae407613.png"
+                    },
+                    {
+                      "name": "TC43-F014-pending-next-step",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC43-F014-pending-next-step-c9c2f41a38c36c956da3afe45ab39df08ef0701c.png"
+                    },
+                    {
+                      "name": "TC46-F018-short-payment",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC46-F018-short-payment-97c0a5b35e5fa6ac520836881c7476da8b54cbcb.png"
+                    },
+                    {
+                      "name": "TC46-F017-user-review-note",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC46-F017-user-review-note-a5bca1391fcc7f073e9dd26edd29f5ccd1ec0d0e.png"
+                    },
+                    {
+                      "name": "TC45-F018-one-tap",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC45-F018-one-tap-303fab31cf9692c377d83a086c920fc3a78960a5.png"
+                    },
+                    {
+                      "name": "TC45-F018-approved",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC45-F018-approved-bc9e958b89d37f1ecc2169c282c4fc8a2c7a6439.png"
+                    },
+                    {
+                      "name": "TC45-F014-pickup-paid",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC45-F014-pickup-paid-002f6ce04ed7c45d8d94cbf69aee9de7f3b7e695.png"
+                    },
+                    {
+                      "name": "TC37-F019-fulfill",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC37-F019-fulfill-a39b5f9dac05140223b297cc83e0530b76553e99.png"
+                    },
+                    {
+                      "name": "TC37-F015-ready-pickup",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC37-F015-ready-pickup-9f5b2bcf4d26804205c229862f1ca4a3571228ee.png"
+                    },
+                    {
+                      "name": "TC37-F015-completed",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC37-F015-completed-5618be0d52d4cddc74b5a5a6a2f6f2489a308a19.png"
+                    },
+                    {
+                      "name": "TC53-F020-user-invoice",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC53-F020-user-invoice-8cde4145dda5d27804391c5586e2d0e95b5fd47d.png"
+                    },
+                    {
+                      "name": "TC17-F002-user-blocked-staff",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC09-F004-TC32-F0-51f5a-20-luồng-khách-và-nhân-viên-390\\attachments\\TC17-F002-user-blocked-staff-123daf0d9662147f76d499dde76827e2f8850638.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-87dcd7a10b52d2356748",
+          "file": "pharmacy.spec.ts",
+          "line": 183,
+          "column": 1
+        },
+        {
+          "title": "TC29-F012, TC24-F010: phản hồi giỏ và gửi ảnh đơn thuốc",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8785,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:14:22.010Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC29-F012-home-add-toast",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC29-F012-TC24-F0-6e15c-ồi-giỏ-và-gửi-ảnh-đơn-thuốc-390\\attachments\\TC29-F012-home-add-toast-5c65dbe5bb0b064c35b5d0df62e8cd35f41f0c06.png"
+                    },
+                    {
+                      "name": "TC24-F010-sent-banner",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC29-F012-TC24-F0-6e15c-ồi-giỏ-và-gửi-ảnh-đơn-thuốc-390\\attachments\\TC24-F010-sent-banner-3a328604f9aaef6d222a391978cad275cd4c0369.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-bc6bc16f4a99327cf901",
+          "file": "pharmacy.spec.ts",
+          "line": 320,
+          "column": 1
+        },
+        {
+          "title": "TC32/TC42/TC45/TC37: giao hàng và thử xuất kho lại sau xác nhận tiền",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 24567,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:14:30.823Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC42-F017-delivery-qr",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-390\\attachments\\TC42-F017-delivery-qr-d4b26ecd4787f082fd3e560322deb066c5d4101c.png"
+                    },
+                    {
+                      "name": "TC45-F018-prefilled-review",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-390\\attachments\\TC45-F018-prefilled-review-10a4255b5a109acae3e02be65004bf732eb1f6d2.png"
+                    },
+                    {
+                      "name": "TC37-F019-fulfill-retry",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-390\\attachments\\TC37-F019-fulfill-retry-7e7726c19695e546e234f5e701237b86b34d554f.png"
+                    },
+                    {
+                      "name": "TC45-F014-delivery-paid",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-390\\attachments\\TC45-F014-delivery-paid-3704bf517ae92e64d885a41a512e952b08a555fd.png"
+                    },
+                    {
+                      "name": "TC37-F015-delivering",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-390\\attachments\\TC37-F015-delivering-a795ea99ba461e632d6969046a9cfb368bac970d.png"
+                    },
+                    {
+                      "name": "TC37-F015-delivery-completed",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC42-TC45-TC-cec87-t-kho-lại-sau-xác-nhận-tiền-390\\attachments\\TC37-F015-delivery-completed-08d000194b273003c40e8ec4c65ca30ec4eee5dd.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-79d587b66be970de4d48",
+          "file": "pharmacy.spec.ts",
+          "line": 365,
+          "column": 1
+        },
+        {
+          "title": "TC31-F012: hết hàng bị khóa và backend từ chối số lượng vượt tồn",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2576,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:14:55.438Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC31-F012-out-of-stock-home",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC31-F012-hết-hàn-ab99f-d-từ-chối-số-lượng-vượt-tồn-390\\attachments\\TC31-F012-out-of-stock-home-913aae297f4761e82205106d5084af83251d748d.png"
+                    },
+                    {
+                      "name": "TC31-F012-out-of-stock-detail",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC31-F012-hết-hàn-ab99f-d-từ-chối-số-lượng-vượt-tồn-390\\attachments\\TC31-F012-out-of-stock-detail-b2dac0ea00a8b4df46026eaccb825c39c65d50b4.png"
+                    },
+                    {
+                      "name": "TC31-F012-insufficient-stock",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC31-F012-hết-hàn-ab99f-d-từ-chối-số-lượng-vượt-tồn-390\\attachments\\TC31-F012-insufficient-stock-645fa46944a0ef9714ea6e7d80f53e1d08003742.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-ac60da9a35dc431b1d64",
+          "file": "pharmacy.spec.ts",
+          "line": 424,
+          "column": 1
+        },
+        {
+          "title": "TC32/TC33-F013: lỗi mở QR giữ đơn và đơn thuốc chờ duyệt chưa mở QR",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15412,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:14:58.046Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC32-F013-payment-open-error",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-390\\attachments\\TC32-F013-payment-open-error-c3439b472dc0282e25d702caef3f4ddbdfc283ba.png"
+                    },
+                    {
+                      "name": "TC33-F013-inline-prescription",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-390\\attachments\\TC33-F013-inline-prescription-094f1e4e15c9492aaada9732adde713287493c76.png"
+                    },
+                    {
+                      "name": "TC33-F013-waiting-prescription",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-390\\attachments\\TC33-F013-waiting-prescription-dcb300cdb14e6ffebac2617723d36122dd5192cd.png"
+                    },
+                    {
+                      "name": "TC26-F011-online-prefilled",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-390\\attachments\\TC26-F011-online-prefilled-a3289124be2e03f251942c0d16ac16f8774f317e.png"
+                    },
+                    {
+                      "name": "TC26-F011-online-approved",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-390\\attachments\\TC26-F011-online-approved-52923705aeb0a2f9e215c678b3f372ad01690bb9.png"
+                    },
+                    {
+                      "name": "TC33-F014-prescription-approved",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC32-TC33-F013-lỗ-86e8f--thuốc-chờ-duyệt-chưa-mở-QR-390\\attachments\\TC33-F014-prescription-approved-b4b68e811034b288012fe4fa08f35b0087de1d3d.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-2088465f91f52cabd138",
+          "file": "pharmacy.spec.ts",
+          "line": 447,
+          "column": 1
+        },
+        {
+          "title": "TC33-F017: duyệt qua API tự mở QR trong 15 giây và lỗi giữ đơn",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14424,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:15:13.489Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC33-F017-auto-qr",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC33-F017-duyệt-q-fa73b-rong-15-giây-và-lỗi-giữ-đơn-390\\attachments\\TC33-F017-auto-qr-5049210b74be6bd0d2745565cec001010d133e55.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-42133a6dbc1903b7614b",
+          "file": "pharmacy.spec.ts",
+          "line": 573,
+          "column": 1
+        },
+        {
+          "title": "TC38-F016/F019: bán OTC tại quầy bằng form",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2771,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:15:27.959Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC38-F016-counter-one-screen",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC38-F016-F019-bán-OTC-tại-quầy-bằng-form-390\\attachments\\TC38-F016-counter-one-screen-f4f4efaefb5d9295f9f99619d60332ccbb08fbe7.png"
+                    },
+                    {
+                      "name": "TC38-F016-counter-retry",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC38-F016-F019-bán-OTC-tại-quầy-bằng-form-390\\attachments\\TC38-F016-counter-retry-0513748f2036945471d538dc404ff901473b7ece.png"
+                    },
+                    {
+                      "name": "TC38-F019-counter-checkout",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC38-F016-F019-bán-OTC-tại-quầy-bằng-form-390\\attachments\\TC38-F019-counter-checkout-dbb09a94103466d214ed6a7bfb4cc418594ecac0.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-4a0b37630566a9f1469e",
+          "file": "pharmacy.spec.ts",
+          "line": 655,
+          "column": 1
+        },
+        {
+          "title": "TC26-F011: lưu chi tiết và chấp nhận một nút",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1883,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:15:30.780Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC26-F011-save-approve",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC26-F011-lưu-chi-tiết-và-chấp-nhận-một-nút-390\\attachments\\TC26-F011-save-approve-a01e6e4d860bb38c5497135529c0d405c8724aa6.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-a3de3222c0e1b30511a8",
+          "file": "pharmacy.spec.ts",
+          "line": 677,
+          "column": 1
+        },
+        {
+          "title": "TC11-F005, TC14-F006: tạo thuốc kèm ảnh và lô đầu",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2482,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:15:32.688Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC11-F005-create-image-batch",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC11-F005-TC14-F006-tạo-thuốc-kèm-ảnh-và-lô-đầu-390\\attachments\\TC11-F005-create-image-batch-8a1640e790693dcea300e31b66e2a69380765581.png"
+                    },
+                    {
+                      "name": "TC14-F006-first-batch",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-TC11-F005-TC14-F006-tạo-thuốc-kèm-ảnh-và-lô-đầu-390\\attachments\\TC14-F006-first-batch-fdc29e6e04c4df8522952b6f48dd26bce0f61c6a.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-f2348063bb0196190356",
+          "file": "pharmacy.spec.ts",
+          "line": 689,
+          "column": 1
+        },
+        {
+          "title": "F017: Admin cấu hình QR và lỗi theo trường giữ dữ liệu",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2472,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:15:35.190Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "TC07-F003-field-error",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-F017-Admin-cấu-hì-23446-lỗi-theo-trường-giữ-dữ-liệu-390\\attachments\\TC07-F003-field-error-9458c289d521d649f435eb63d536742441545f64.png"
+                    },
+                    {
+                      "name": "F017-admin-qr-settings",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-F017-Admin-cấu-hì-23446-lỗi-theo-trường-giữ-dữ-liệu-390\\attachments\\F017-admin-qr-settings-91aed788fbe906e4c37d16c8e436f54fa65adec7.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-ea1f544dad2404d75925",
+          "file": "pharmacy.spec.ts",
+          "line": 710,
+          "column": 1
+        },
+        {
+          "title": "AC02: dashboard quản lý và chuyển sang giao diện nhân viên",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6289,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:15:37.680Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "AC02-admin-dashboard",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-AC02-dashboard-qu-81eed-ển-sang-giao-diện-nhân-viên-390\\attachments\\AC02-admin-dashboard-780725fb5129acecc64c0c611a6ee6417029ba56.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-fc6a21eb775b247e4d2a",
+          "file": "pharmacy.spec.ts",
+          "line": 742,
+          "column": 1
+        },
+        {
+          "title": "M4: rà tất cả route, loading/rỗng/lỗi và menu mobile",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "390",
+              "projectName": "390",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 18962,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-29T14:15:43.991Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "F004-empty",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-M4-rà-tất-cả-route-loading-rỗng-lỗi-và-menu-mobile-390\\attachments\\F004-empty-17fcf5179caca412ed856dd9eb75f34568a6351f.png"
+                    },
+                    {
+                      "name": "F004-network-error",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-M4-rà-tất-cả-route-loading-rỗng-lỗi-và-menu-mobile-390\\attachments\\F004-network-error-b4822230797345769d9089c2e286ced9c6ec1bec.png"
+                    },
+                    {
+                      "name": "F007-staff-inventory",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-M4-rà-tất-cả-route-loading-rỗng-lỗi-và-menu-mobile-390\\attachments\\F007-staff-inventory-add6bc3f6d64c2ef79c054c62a3e74bb3457407c.png"
+                    },
+                    {
+                      "name": "M4-sidebar-open",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-M4-rà-tất-cả-route-loading-rỗng-lỗi-và-menu-mobile-390\\attachments\\M4-sidebar-open-3d3cd545f7795432768a113204712a655a443cd4.png"
+                    },
+                    {
+                      "name": "F005-F006-admin-drug",
+                      "contentType": "image/png",
+                      "path": "C:\\HocBai\\OOP\\OOP\\frontend\\test-results\\pharmacy-M4-rà-tất-cả-route-loading-rỗng-lỗi-và-menu-mobile-390\\attachments\\F005-F006-admin-drug-a3594f47d9f6655bf63f6ae5dd5c291d47170d54.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b233241c4a0b814ace63-6d7a4317d0641abd5f8e",
+          "file": "pharmacy.spec.ts",
+          "line": 780,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-29T14:10:53.327Z",
+    "duration": 311187.439,
+    "expected": 30,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

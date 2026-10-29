@@ -1,5 +1,15 @@
 # Tổng hợp kết quả kiểm thử
 
+## Kiểm thử mới phục vụ báo cáo tuần 4 ngày 29/10/2026
+
+- Backend Release: **206 Pass / 0 Fail / 2 Skip**, tổng 208. Hai ca bỏ qua là PostgreSQL và phép đo tải opt-in, không tính thành Pass.
+- Demo extension: **10 Pass / 0 Fail / 0 Skip** trong bộ test riêng; console minh họa **6/6 scenario** khớp kỳ vọng, không cộng chúng vào unit test.
+- Playwright mới: **30 Pass / 0 Fail / 0 Skip**, khoảng 311 giây, hai viewport 1366×900 và 390×844, Chrome headless, frontend production và backend Release thật.
+- Ba test tích hợp mới được kiểm tra lại riêng sau chỉnh predicate analyzer: **3/3**, là phần đã có trong 206 Pass nên không cộng lặp.
+- Frontend lint và production build đạt. Tách ảnh mới khỏi ảnh lịch sử; hồ sơ công bố tám ảnh đại diện, JSON reporter và TRX gốc.
+
+Lệnh, phiên bản nguồn, thời điểm, các lần chuẩn bị bị lỗi và giới hạn: [WEEK4_FINAL_2026-10-29.md](test-results/WEEK4_FINAL_2026-10-29.md). Đây là lượt chạy mới, không phải việc đổi nhãn các kết quả bên dưới.
+
 Tài liệu giữ lại kết quả kỹ thuật đã ghi nhận của dự án. Các số liệu ngày 06–07/10/2026 là kết quả lịch sử, không phải kết quả chạy lại khi cập nhật báo cáo ngày 19/10/2026.
 
 ## Backend

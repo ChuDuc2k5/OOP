@@ -1,0 +1,10 @@
+{
+  "started": "2026-10-29T21:09:29.7220728+07:00",
+  "finished": "2026-10-29T21:16:06.2469437+07:00",
+  "exitCode": 0,
+  "browser": "Chrome headless, Playwright chromium channel chrome",
+  "ports": [
+    3017,
+    5017
+  ]
+}

@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1130" viewBox="0 0 1600 1130">
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto"><path d="M1 1 L11 6 L1 11" fill="none" stroke="#334155" stroke-width="1.4"/></marker>
+<marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="12" markerHeight="12" orient="auto"><path d="M1 1 L13 7 L1 13 Z" fill="white" stroke="#334155" stroke-width="1.3"/></marker>
+<marker id="diamond" viewBox="0 0 16 12" refX="1" refY="6" markerWidth="13" markerHeight="10" orient="auto-start-reverse"><path d="M1 6 L8 1 L15 6 L8 11 Z" fill="#334155"/></marker></defs>
+<rect width="100%" height="100%" fill="white"/>
+<text x="30" y="38" font-family="Segoe UI,Arial" font-size="25" font-weight="700">Final core services and interfaces</text>
+<text x="30" y="65" font-family="Segoe UI,Arial" font-size="14" fill="#475569">Week 4 | selected members; CancellationToken parameters abbreviated | 29 Oct 2026</text>
+<rect x="30" y="90" width="340" height="170" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="30" y="90" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="200.0" y="115" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">IBusinessClock</text>
+<text x="42" y="152" font-family="Segoe UI,Arial" font-size="14">&lt;&lt;interface&gt;&gt;</text>
+<text x="42" y="177" font-family="Segoe UI,Arial" font-size="14">+ Today: DateOnly {get}</text>
+<text x="42" y="202" font-family="Segoe UI,Arial" font-size="14">+ Now: DateTimeOffset {get}</text>
+<rect x="430" y="90" width="340" height="170" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="430" y="90" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="600.0" y="115" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">BusinessClock</text>
+<text x="442" y="152" font-family="Segoe UI,Arial" font-size="14">+ Today: DateOnly</text>
+<text x="442" y="177" font-family="Segoe UI,Arial" font-size="14">+ Now: DateTimeOffset</text>
+<text x="442" y="202" font-family="Segoe UI,Arial" font-size="14">Implements IBusinessClock</text>
+<rect x="830" y="90" width="340" height="170" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="830" y="90" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="1000.0" y="115" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">IFileStorage</text>
+<text x="842" y="152" font-family="Segoe UI,Arial" font-size="14">&lt;&lt;interface&gt;&gt;</text>
+<text x="842" y="177" font-family="Segoe UI,Arial" font-size="14">+ SaveAsync(...): Task&lt;string&gt;</text>
+<text x="842" y="202" font-family="Segoe UI,Arial" font-size="14">+ OpenRead(category, fileName): Stream</text>
+<rect x="1230" y="90" width="340" height="170" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="1230" y="90" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="1400.0" y="115" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">LocalFileStorage</text>
+<text x="1242" y="152" font-family="Segoe UI,Arial" font-size="14">+ SaveAsync(...): Task&lt;string&gt;</text>
+<text x="1242" y="177" font-family="Segoe UI,Arial" font-size="14">+ OpenRead(category, fileName): Stream</text>
+<text x="1242" y="202" font-family="Segoe UI,Arial" font-size="14">Implements IFileStorage</text>
+<rect x="30" y="430" width="340" height="190" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="30" y="430" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="200.0" y="455" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">InventoryReader</text>
+<text x="42" y="492" font-family="Segoe UI,Arial" font-size="14">+ Snapshot(ct): Task&lt;IReadOnlyList&lt;DrugStock&gt;&gt;</text>
+<text x="42" y="517" font-family="Segoe UI,Arial" font-size="14">Reads drugs, batches and active reservations</text>
+<text x="42" y="542" font-family="Segoe UI,Arial" font-size="14">Uses PharmacyDbContext and IBusinessClock</text>
+<rect x="430" y="430" width="340" height="190" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="430" y="430" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="600.0" y="455" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">InventoryReportService</text>
+<text x="442" y="492" font-family="Segoe UI,Arial" font-size="14">+ LowStock(ct): Task&lt;IReadOnlyList&lt;LowStockRow&gt;&gt;</text>
+<text x="442" y="517" font-family="Segoe UI,Arial" font-size="14">+ NearExpiry(days = 30, ct):</text>
+<text x="442" y="542" font-family="Segoe UI,Arial" font-size="14">  Task&lt;IReadOnlyList&lt;ExpiringRow&gt;&gt;</text>
+<rect x="830" y="430" width="340" height="190" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="830" y="430" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="1000.0" y="455" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">SaleEvaluation</text>
+<text x="842" y="492" font-family="Segoe UI,Arial" font-size="14">+ Evaluate(Sale sale, ct):</text>
+<text x="842" y="517" font-family="Segoe UI,Arial" font-size="14">  Task&lt;SaleEvaluationResult&gt;</text>
+<text x="842" y="542" font-family="Segoe UI,Arial" font-size="14">Calls sale.Validate(context)</text>
+<rect x="1230" y="430" width="340" height="220" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="1230" y="430" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="1400.0" y="455" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">CheckoutService</text>
+<text x="1242" y="492" font-family="Segoe UI,Arial" font-size="14">+ Checkout(Sale sale, actorId, cashReceived, ct)</text>
+<text x="1242" y="517" font-family="Segoe UI,Arial" font-size="14">+ Fulfill(orderId, actorId, ct)</text>
+<text x="1242" y="542" font-family="Segoe UI,Arial" font-size="14">- CheckoutWithin(Sale sale, session, ct)</text>
+<text x="1242" y="567" font-family="Segoe UI,Arial" font-size="14">Calls sale.ApplyCompletionEffects(items)</text>
+<rect x="30" y="810" width="340" height="200" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="30" y="810" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="200.0" y="835" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">InventoryService</text>
+<text x="42" y="872" font-family="Segoe UI,Arial" font-size="14">+ Execute&lt;T&gt;(action, ct): Task&lt;T&gt;</text>
+<text x="42" y="897" font-family="Segoe UI,Arial" font-size="14">+ AllocateFEFO(lines, orderId, ct)</text>
+<text x="42" y="922" font-family="Segoe UI,Arial" font-size="14">+ Deduct(lines, orderId, ct)</text>
+<text x="42" y="947" font-family="Segoe UI,Arial" font-size="14">Owns lock and database transaction boundary</text>
+<rect x="430" y="810" width="340" height="200" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="430" y="810" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="600.0" y="835" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">InventoryTransaction</text>
+<text x="442" y="872" font-family="Segoe UI,Arial" font-size="14">+ Reserve(orderId, ct)</text>
+<text x="442" y="897" font-family="Segoe UI,Arial" font-size="14">+ Release(orderId, ct)</text>
+<text x="442" y="922" font-family="Segoe UI,Arial" font-size="14">+ AllocateFEFO(lines, orderId, ct)</text>
+<text x="442" y="947" font-family="Segoe UI,Arial" font-size="14">+ Deduct(lines, orderId, ct)</text>
+<rect x="830" y="810" width="340" height="155" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="830" y="810" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="1000.0" y="835" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">IInventoryLock</text>
+<text x="842" y="872" font-family="Segoe UI,Arial" font-size="14">&lt;&lt;interface&gt;&gt;</text>
+<text x="842" y="897" font-family="Segoe UI,Arial" font-size="14">+ AcquireAsync(ct): Task&lt;IDisposable&gt;</text>
+<rect x="1230" y="810" width="340" height="155" fill="white" stroke="#334155" stroke-width="1.5"/>
+<rect x="1230" y="810" width="340" height="37" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<text x="1400.0" y="835" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700">InventoryLock</text>
+<text x="1242" y="872" font-family="Segoe UI,Arial" font-size="14">+ AcquireAsync(ct): Task&lt;IDisposable&gt;</text>
+<text x="1242" y="897" font-family="Segoe UI,Arial" font-size="14">SemaphoreSlim, one process</text>
+<path d="M 430,175 L 370,175" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#triangle)" stroke-dasharray="6 4"/>
+<path d="M 1230,175 L 1170,175" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#triangle)" stroke-dasharray="6 4"/>
+<path d="M 190,430 L 190,260" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)" stroke-dasharray="6 4"/>
+<text x="195" y="420" text-anchor="start" font-family="Segoe UI,Arial" font-size="12" fill="#475569">clock</text>
+<path d="M 430,520 L 370,520" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)" stroke-dasharray="6 4"/>
+<text x="405.0" y="417" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" fill="#475569">snapshot</text>
+<path d="M 1230,520 L 1170,520" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)" stroke-dasharray="6 4"/>
+<text x="1205.0" y="417" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" fill="#475569">evaluate</text>
+<path d="M 190,810 L 190,620" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)" stroke-dasharray="6 4"/>
+<text x="195" y="800" text-anchor="start" font-family="Segoe UI,Arial" font-size="12" fill="#475569">read</text>
+<path d="M 370,910 L 430,910" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)" stroke-dasharray="6 4"/>
+<text x="405.0" y="797" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" fill="#475569">creates</text>
+<path d="M 1230,890 L 1170,890" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#triangle)" stroke-dasharray="6 4"/>
+<path d="M 1400,650 L 1400,735 L 195,735 L 195,810" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)" stroke-dasharray="6 4"/>
+<text x="1405" y="640" text-anchor="start" font-family="Segoe UI,Arial" font-size="12" fill="#475569">Execute / session</text>
+<path d="M 1000,430 L 1000,365 L 200,365 L 200,430" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)" stroke-dasharray="6 4"/>
+<text x="1005" y="420" text-anchor="start" font-family="Segoe UI,Arial" font-size="12" fill="#475569">snapshot</text>
+<text x="30" y="1068" font-family="Segoe UI,Arial" font-size="14" fill="#475569">Representative dependencies are shown; controllers, payment/order services and persistence mapping are outside this view.</text>
+<text x="30" y="1091" font-family="Segoe UI,Arial" font-size="14" fill="#475569">Hollow triangle with dashed line: interface implementation. No production class was edited for the new sale variant.</text>
+<text x="30" y="1114" font-family="Segoe UI,Arial" font-size="14" fill="#475569">See code and report for full signatures and the separate domain-only extension boundary.</text>
+</svg>
