@@ -46,7 +46,7 @@ try {
     for (const port of [3017, 5017]) {
       if (await occupied(port)) throw new Error(`Cổng ${port} đang được dùng. Hãy dừng server ở cổng này trước e2e.`);
     }
-    let code = await run('dotnet', ['build', 'backend/Pharmacy.Api', '--disable-build-servers'], repo);
+    let code = await run('dotnet', ['build', 'backend/Pharmacy.Api', '--configuration', 'Release', '--disable-build-servers', '-m:1', '-p:NuGetAudit=false'], repo);
     if (code === 0) code = await run(process.execPath, [require.resolve('next/dist/bin/next'), 'build']);
     if (code !== 0) process.exitCode = code;
     else {

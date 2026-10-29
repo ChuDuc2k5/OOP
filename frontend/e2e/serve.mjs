@@ -34,7 +34,7 @@ process.on('SIGINT', () => stop());
 process.on('SIGTERM', () => stop());
 process.on('message', message => { if (message === 'stop') stop(); });
 process.on('disconnect', () => stop());
-launch('dotnet', [join(repo, 'backend/Pharmacy.Api/bin/Debug/net10.0/Pharmacy.Api.dll'), '--urls', 'http://localhost:5017'], {
+launch('dotnet', [join(repo, 'backend/Pharmacy.Api/bin/Release/net10.0/Pharmacy.Api.dll'), '--urls', 'http://localhost:5017'], {
   ASPNETCORE_ENVIRONMENT: 'Development',
   Database__Provider: 'Sqlite', ConnectionStrings__Default: `Data Source=${join(folder, 'pharmacy.db')}`,
   Storage__Root: join(folder, 'storage'), DataProtection__KeyPath: join(folder, 'keys'),

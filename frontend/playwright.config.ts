@@ -10,6 +10,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   outputDir: 'test-results',
   use: {
+    channel: process.env.PHARMACY_E2E_CHANNEL || undefined,
     actionTimeout: 15_000,
     baseURL: 'http://localhost:3017',
     locale: 'vi-VN', timezoneId: 'Asia/Ho_Chi_Minh',

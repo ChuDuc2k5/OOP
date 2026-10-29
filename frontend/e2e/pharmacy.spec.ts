@@ -2,6 +2,7 @@ import { test, expect, type Page, type TestInfo, type APIRequestContext, type Br
 import { mkdir, readdir, writeFile, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 const visitedRoutes = new Set<string>();
+const evidenceFolder = resolve(process.env.PHARMACY_E2E_EVIDENCE_DIR || resolve(process.cwd(), '../docs/screenshots'));
 const businessDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const validUntil = new Date(new Date(`${businessDate}T12:00:00Z`).getTime() + 30 * 86400000).toISOString().slice(0, 10);
 
@@ -52,7 +53,7 @@ async function layout(page: Page) {
 async function shot(page: Page, code: string, info: TestInfo) {
   await ready(page); await layout(page);
   await page.evaluate(() => window.scrollTo(0, 0));
-  const folder = resolve(process.cwd(), '../docs/screenshots');
+  const folder = evidenceFolder;
   await mkdir(folder, { recursive: true });
   const path = resolve(folder, `${code}-${info.project.name}.png`);
   await page.screenshot({ path, fullPage: true, animations: 'disabled' });
@@ -832,11 +833,11 @@ test('M4: rà tất cả route, loading/rỗng/lỗi và menu mobile', async ({ 
     const pattern = new RegExp('^' + route.replace(/\[[^\]]+\]/g, '[^/]+') + '$');
     expect(visited.some(url => pattern.test(url)), `Chưa rà route ${route}`).toBeTruthy();
   }
-  await writeFile(resolve(process.cwd(), `../docs/screenshots/M4-route-audit-${info.project.name}.json`),
+  await writeFile(resolve(evidenceFolder, `M4-route-audit-${info.project.name}.json`),
     JSON.stringify({ viewport: page.viewportSize(), routes: routes.sort(), visited, covered: routes.length }, null, 2) + '\n');
 });
 async function shotLoading(page: Page, info: TestInfo) {
   await page.evaluate(() => window.scrollTo(0, 0));
-  const folder = resolve(process.cwd(), '../docs/screenshots'); await mkdir(folder, { recursive: true });
+  const folder = evidenceFolder; await mkdir(folder, { recursive: true });
   await page.screenshot({ path: resolve(folder, `F004-loading-${info.project.name}.png`), animations: 'disabled' });
 }

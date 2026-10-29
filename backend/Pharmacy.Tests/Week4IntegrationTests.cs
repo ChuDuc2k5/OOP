@@ -96,7 +96,7 @@ public sealed class Week4IntegrationTests : IDisposable
         var low = (await Ok(await staff.GetAsync("/api/reports/low-stock"))).EnumerateArray();
         Assert.Contains(low, x => x.GetProperty("drugId").GetString() == "W4OTC" && x.GetProperty("availableQuantity").GetInt32() == 4);
         var near = (await Ok(await staff.GetAsync("/api/reports/expiring?days=30"))).EnumerateArray();
-        var batch = Assert.Single(near.Where(x => x.GetProperty("drugId").GetString() == "W4OTC"));
+        var batch = Assert.Single(near, x => x.GetProperty("drugId").GetString() == "W4OTC");
         Assert.Equal("SECOND", batch.GetProperty("batchNumber").GetString());
         var before = await factory.WithDb(PersistenceFixture.Snapshot);
         await (await staff.PostAsJsonAsync($"/api/staff/sales/{id}/checkout", new { cashReceived = true })).Error(409, "INVALID_STATE");

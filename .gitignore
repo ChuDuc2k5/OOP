@@ -80,6 +80,8 @@ backend/storage/qr/*
 # Frontend
 node_modules/
 .next/
+.next-e2e/
+playwright-report/
 out/
 .env*.local
 .vercel/
